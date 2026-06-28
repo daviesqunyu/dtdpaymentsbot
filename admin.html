@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111827" />
+    <title>DTD STORE Admin</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="theme.js"></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <nav class="topbar" aria-label="Admin navigation">
+        <a class="brand" href="index.html" aria-label="DTD Store home">
+          <span class="brand-mark" aria-hidden="true"><span>D</span></span>
+          <span class="brand-name">DTD STORE Admin</span>
+        </a>
+        <div class="topbar-actions">
+          <a href="index.html">Storefront</a>
+          <button id="themeToggle" class="icon-button theme-toggle" type="button" aria-label="Toggle color theme">
+            <span class="theme-icon" aria-hidden="true">◐</span>
+          </button>
+          <button id="copyLiveLink" class="icon-button" type="button">Copy live link</button>
+          <button id="publishAllProducts" class="icon-button" type="button">Publish all</button>
+          <button id="resetProducts" class="icon-button" type="button">Reset</button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="admin-shell" aria-labelledby="adminTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Product control</p>
+            <h1 id="adminTitle">Add, edit, and delete products</h1>
+          </div>
+        </div>
+
+        <div id="adminStats" class="admin-stats-strip" aria-label="Admin overview"></div>
+
+        <div class="admin-layout">
+          <div class="admin-form-stack">
+            <div id="adminSessionBar" class="session-bar" hidden>
+              <div>
+                <span class="session-dot"></span>
+                <strong>Admin active</strong>
+                <p id="sessionEmail">Signed in</p>
+              </div>
+              <button id="logoutButton" class="secondary-button" type="button">Sign out</button>
+            </div>
+
+            <form id="loginForm" class="checkout-form admin-login">
+              <p class="eyebrow">Admin login</p>
+              <label>
+                Email
+                <input name="email" type="email" placeholder="admin@email.com" required />
+              </label>
+              <label>
+                Password
+                <input name="password" type="password" placeholder="Your Supabase password" required />
+              </label>
+              <button class="primary-button" type="submit">Sign in</button>
+              <p id="authStatus" class="form-note">Sign in with the Supabase user you created.</p>
+            </form>
+
+          <form id="productForm" class="checkout-form admin-form">
+            <input name="id" type="hidden" />
+            <div class="form-row two-columns">
+              <label>
+                Product name
+                <input name="name" type="text" placeholder="Example: Premium Access" required />
+              </label>
+              <label>
+                Price in USD
+                <input name="price" type="number" min="0.01" step="0.01" placeholder="15.00" required />
+              </label>
+            </div>
+            <label>
+              Description
+              <textarea name="description" rows="4" placeholder="Short product details" required></textarea>
+            </label>
+            <div class="form-row two-columns">
+              <label>
+                Color
+                <input name="color" type="color" value="#0f766e" />
+              </label>
+              <label>
+                Image background URL
+                <input name="imageUrl" type="url" placeholder="https://example.com/product.png" />
+              </label>
+            </div>
+            <div class="form-row two-columns">
+              <label>
+                Store visibility
+                <select name="active">
+                  <option value="true">Visible to users</option>
+                  <option value="false">Hidden</option>
+                </select>
+              </label>
+            </div>
+            <div class="admin-actions">
+              <button class="primary-button" type="submit">Save product</button>
+              <button id="cancelEdit" class="secondary-button" type="button">Cancel edit</button>
+            </div>
+            <p class="form-note">
+              Products are saved in Supabase and appear on the storefront.
+            </p>
+          </form>
+          </div>
+
+          <section class="admin-list-panel" aria-labelledby="currentProductsTitle">
+            <div class="panel-title-row">
+              <h2 id="currentProductsTitle">Current products</h2>
+              <span id="adminProductCount" class="count-pill">0 products</span>
+            </div>
+            <div id="adminProducts" class="admin-products"></div>
+          </section>
+        </div>
+
+        <section class="admin-list-panel orders-panel" aria-labelledby="ordersTitle">
+          <div class="panel-title-row">
+            <h2 id="ordersTitle">Orders and payment checks</h2>
+            <button id="refreshOrders" class="icon-button" type="button">Refresh orders</button>
+          </div>
+          <div id="adminOrders" class="admin-orders"></div>
+        </section>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="admin.js"></script>
+  </body>
+</html>

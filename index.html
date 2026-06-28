@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a1628" />
+    <title>DTD STORE</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="theme.js"></script>
+  </head>
+  <body>
+    <div class="ambient ambient-a" aria-hidden="true"></div>
+    <div class="ambient ambient-b" aria-hidden="true"></div>
+
+    <header class="app-header">
+      <nav class="topbar" aria-label="Main navigation">
+        <a class="brand" href="#home" aria-label="DTD Store home">
+          <span class="brand-mark" aria-hidden="true"><span>D</span></span>
+          <span class="brand-name">DTD STORE</span>
+        </a>
+        <div class="topbar-actions">
+          <a href="#products">Products</a>
+          <a href="#checkout">Checkout</a>
+          <a href="admin.html">Admin</a>
+          <button id="themeToggle" class="icon-button theme-toggle" type="button" aria-label="Toggle color theme">
+            <span class="theme-icon" aria-hidden="true">◐</span>
+          </button>
+          <button class="icon-button cart-toggle" type="button" aria-label="Open cart">
+            <span class="cart-icon" aria-hidden="true">Cart</span>
+            <span id="cartCount" class="cart-count">0</span>
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main id="home">
+      <section class="hero-section" aria-labelledby="pageTitle">
+        <div class="hero-copy">
+          <p class="eyebrow">Trusted digital delivery</p>
+          <h1 id="pageTitle">Buy digital products. Pay your way. Get delivery fast.</h1>
+          <p>
+            DTD Store keeps checkout clear from cart to payment — BTC, cards, bank transfer, USSD,
+            and mobile money through Paystack, with every order tracked in real time.
+          </p>
+          <div id="liveStats" class="trust-row" aria-label="Store highlights"></div>
+          <div class="hero-actions">
+            <a class="primary-button glow" href="#products">Shop products</a>
+            <a class="secondary-button" href="#checkout">Place order</a>
+            <button id="copyStoreLink" class="secondary-button" type="button">Copy link</button>
+          </div>
+        </div>
+        <div class="hero-panel" aria-label="Order preview">
+          <div class="phone-frame float">
+            <div class="phone-top"></div>
+            <div class="phone-title">DTD STORE LIVE</div>
+            <div class="chat-row incoming">Order placed in under 2 minutes</div>
+            <div class="chat-row outgoing">Paystack payment confirmed</div>
+            <div class="chat-row incoming compact">Product delivered — thanks!</div>
+            <div class="phone-glow" aria-hidden="true"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="products" class="section-shell" aria-labelledby="productsTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Catalog</p>
+            <h2 id="productsTitle">Available products</h2>
+            <p id="productCount" class="section-subtext">Loading products...</p>
+          </div>
+          <label class="search-box">
+            <span>Search</span>
+            <input id="productSearch" type="search" placeholder="Find a product" />
+          </label>
+          <button id="refreshProducts" class="icon-button" type="button">Refresh</button>
+        </div>
+        <div id="productsGrid" class="products-grid"></div>
+      </section>
+
+      <section id="checkout" class="checkout-section" aria-labelledby="checkoutTitle">
+        <div class="checkout-summary glass">
+          <p class="eyebrow">Your cart</p>
+          <h2 id="checkoutTitle">Confirm your order</h2>
+          <div id="cartItems" class="cart-items"></div>
+          <div class="total-row">
+            <span>Total</span>
+            <strong id="cartTotal">$0.00</strong>
+          </div>
+        </div>
+
+        <form id="checkoutForm" class="checkout-form glass">
+          <div class="form-row two-columns">
+            <label>
+              Full name
+              <input name="name" type="text" placeholder="Your name" required />
+            </label>
+            <label>
+              Email for product access
+              <input name="email" type="email" placeholder="you@email.com" required />
+            </label>
+          </div>
+          <label>
+            Telegram username (optional)
+            <input name="telegram" type="text" placeholder="@yourusername" />
+          </label>
+          <fieldset class="payment-fieldset">
+            <legend>Payment</legend>
+            <label>
+              Payment option
+              <select id="paymentMethod" name="payment"></select>
+            </label>
+            <div id="cryptoPaymentPanel" class="crypto-payment-card">
+              <div>
+                <span class="payment-badge">Bitcoin</span>
+                <strong id="cryptoNetworkLabel">BTC</strong>
+                <p id="paymentHint" class="form-note"></p>
+              </div>
+              <button id="copyCryptoAddress" class="secondary-button" type="button">Copy address</button>
+            </div>
+            <code id="cryptoAddress" class="crypto-address">Loading BTC address...</code>
+            <div id="paystackPaymentPanel" class="paystack-panel" hidden>
+              <p class="form-note">Secure checkout powered by Paystack — card, bank, USSD, QR, and mobile money.</p>
+              <button id="paystackButton" class="secondary-button full-width paystack-btn" type="button">Pay with Paystack</button>
+            </div>
+            <div id="telegramPaymentPanel" class="telegram-payment-panel">
+              <p class="form-note" id="telegramPaymentNote">Add your Telegram username above for order updates.</p>
+              <a id="telegramPaymentLink" class="secondary-button full-width" href="#" target="_blank" rel="noopener noreferrer" hidden>
+                Contact on Telegram
+              </a>
+            </div>
+          </fieldset>
+          <div class="form-row two-columns">
+            <label>
+              Payment reference / TX hash
+              <input name="paymentReference" type="text" placeholder="Paste Paystack ref or BTC tx hash" />
+            </label>
+            <label>
+              Product account / login
+              <input name="productAccount" type="text" placeholder="Account username or email if needed" />
+            </label>
+          </div>
+          <label>
+            Delivery details
+            <textarea
+              name="orderNote"
+              rows="3"
+              placeholder="Where should this digital product be delivered, and anything admin should know?"
+            ></textarea>
+          </label>
+          <button class="primary-button full-width glow" type="submit">Submit order for review</button>
+          <p class="form-note">Your order is saved as pending until payment is confirmed. You'll get updates via Telegram.</p>
+        </form>
+      </section>
+    </main>
+
+    <div id="telegramBot" class="telegram-bot" aria-live="polite">
+      <div id="telegramBotPanel" class="telegram-bot-panel" hidden>
+        <header class="telegram-bot-header">
+          <div>
+            <strong>DTD Assistant</strong>
+            <span>Powered by Telegram</span>
+          </div>
+          <button id="telegramBotClose" class="icon-button" type="button" aria-label="Close chat">×</button>
+        </header>
+        <div id="telegramBotMessages" class="telegram-bot-messages"></div>
+        <form id="telegramBotForm" class="telegram-bot-form">
+          <input name="name" type="text" placeholder="Your name" />
+          <input name="contact" type="text" placeholder="Email or @telegram" />
+          <textarea name="message" rows="2" placeholder="Ask about products or your order..." required></textarea>
+          <div class="telegram-bot-actions">
+            <a id="openTelegramLink" class="secondary-button" href="#" target="_blank" rel="noopener noreferrer" hidden>Open in Telegram</a>
+            <button class="primary-button" type="submit">Send</button>
+          </div>
+        </form>
+      </div>
+      <button id="telegramBotToggle" class="telegram-bot-toggle" type="button" aria-expanded="false" aria-controls="telegramBotPanel">
+        <span class="bot-icon" aria-hidden="true">✦</span>
+        <span class="bot-label">Chat</span>
+      </button>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="bot-widget.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "dtd-payments-bot-storefront",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "DTD Payments Bot storefront with Paystack, BTC, and Telegram support.",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "pages:secrets": "node scripts/push-secrets.mjs",
+    "deploy": "wrangler pages deploy . --project-name=dtdpaymentsbot",
+    "deploy:full": "npm run pages:secrets && npm run deploy"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "wrangler": "^4.22.0"
+  }
+}
