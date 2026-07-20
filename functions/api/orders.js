@@ -20,7 +20,9 @@ export async function onRequestPost(context) {
       productAccount,
       deliveryDetails,
       items,
-      totalUsd
+      totalUsd,
+      visitorIp,
+      userAgent
     } = body;
 
     if (!customerName || !customerEmail || !Array.isArray(items) || !items.length) {
@@ -63,7 +65,9 @@ export async function onRequestPost(context) {
       productAccount,
       totalUsd,
       items,
-      orderId
+      orderId,
+      visitorIp: visitorIp || "",
+      userAgent: userAgent || ""
     });
 
     await notifyOrderTelegram(env, telegramMessage);

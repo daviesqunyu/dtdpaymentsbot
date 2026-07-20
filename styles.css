@@ -572,22 +572,35 @@ textarea {
 .checkout-section {
   display: grid;
   grid-template-columns: 0.85fr 1.15fr;
-  gap: 22px;
+  gap: 24px;
   align-items: start;
+  position: relative;
+}
+
+.checkout-section::before {
+  content: "";
+  position: absolute;
+  inset: -60px -40px;
+  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(20,184,166,0.10), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .checkout-summary,
 .checkout-form {
+  position: relative;
+  z-index: 1;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 20px;
   background: var(--surface);
-  padding: 22px;
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
+  padding: 26px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
 }
 
 .glass {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
-  backdrop-filter: blur(16px);
+  background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
 }
 
 .cart-items {
@@ -683,14 +696,19 @@ textarea {
 }
 
 .crypto-payment-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  border: 1px solid rgba(15, 118, 110, 0.22);
-  border-radius: 8px;
-  background: var(--soft);
-  padding: 14px;
+  display: grid;
+  gap: 16px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(245, 158, 11, 0.08), rgba(15, 23, 42, 0.04));
+  padding: 18px;
+  margin-top: 12px;
+}
+
+.crypto-payment-card[hidden],
+.paystack-panel[hidden],
+.telegram-payment-panel[hidden] {
+  display: none !important;
 }
 
 .crypto-payment-card strong {
@@ -730,7 +748,17 @@ textarea {
 
 .paystack-panel {
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(20, 184, 166, 0.28);
+  background: linear-gradient(160deg, rgba(20, 184, 166, 0.1), rgba(15, 23, 42, 0.03));
+}
+
+.paystack-panel .form-note {
+  margin: 0;
+  line-height: 1.45;
 }
 
 .paystack-btn {
@@ -1297,7 +1325,7 @@ body:has(.admin-shell) {
 
 .telegram-payment-panel {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px dashed var(--line);
@@ -1358,4 +1386,504 @@ body:has(.admin-shell) {
 
 [data-theme="dark"] .status-pill.order-delivered {
   color: #86efac;
+}
+
+/* ==========================================================================
+   Apple Pay-inspired Express Checkout Styles
+   ========================================================================== */
+
+.receipt-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line), transparent);
+  margin: 18px 0;
+  border-style: none;
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+  margin-bottom: 10px;
+}
+
+.sheet-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--text), var(--primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.secure-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, rgba(34,197,94,0.18), rgba(34,197,94,0.06));
+  color: #22c55e;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(34,197,94,0.2);
+  letter-spacing: 0.03em;
+}
+
+.secure-badge::before {
+  content: "🔒";
+  font-size: 0.72rem;
+}
+
+.sheet-section {
+  display: grid;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 18px;
+  margin-bottom: 8px;
+}
+
+.sheet-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  margin-top: 6px;
+}
+
+.sheet-section-title::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  background: linear-gradient(180deg, var(--primary), var(--accent));
+  border-radius: 99px;
+}
+
+/* ============================================================
+   PREMIUM PAYMENT METHODS GRID
+   ============================================================ */
+.payment-methods-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.payment-method-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 8px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  text-align: center;
+  overflow: hidden;
+}
+
+.payment-method-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(20,184,166,0.14), transparent 65%);
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.payment-method-btn:hover {
+  border-color: rgba(20,184,166,0.55);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+}
+
+.payment-method-btn:hover::before {
+  opacity: 1;
+}
+
+.payment-method-btn.selected {
+  border-color: var(--primary);
+  background: linear-gradient(160deg, rgba(20,184,166,0.18), rgba(20,184,166,0.06));
+  box-shadow: 0 0 0 3px rgba(20,184,166,0.22), 0 8px 32px rgba(0,0,0,0.2);
+  transform: translateY(-2px);
+}
+
+.payment-method-btn.selected::before {
+  opacity: 1;
+}
+
+.payment-method-btn .method-icon {
+  font-size: 1.6rem;
+  margin-bottom: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.payment-method-btn .method-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text);
+  position: relative;
+  z-index: 1;
+  line-height: 1.2;
+}
+
+.payment-method-btn .method-sub {
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-top: 1px;
+  position: relative;
+  z-index: 1;
+}
+
+.payment-method-btn .select-check {
+  display: none;
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  font-size: 0.6rem;
+  place-items: center;
+  box-shadow: 0 2px 8px var(--primary-glow);
+  z-index: 2;
+}
+
+.payment-method-btn.selected .select-check {
+  display: grid;
+  animation: pop-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pop-in {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+/* ============================================================
+   PREMIUM BTC PAYMENT PANEL
+   ============================================================ */
+.btc-payment-flow {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  position: relative;
+}
+
+.btc-payment-flow::before {
+  display: none;
+}
+
+.btc-qr-container {
+  display: grid;
+  place-items: center;
+  background: #fff;
+  padding: 10px;
+  border-radius: 14px;
+  width: 132px;
+  height: 132px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.btc-qr-container img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.btc-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.btc-amount-row {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.btc-amount-row strong {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--accent);
+  margin-top: 4px;
+}
+
+.btc-address-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.28);
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btc-address-row code {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.copy-btn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 150ms ease;
+  flex-shrink: 0;
+  box-shadow: 0 2px 10px var(--primary-glow);
+}
+
+.copy-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px var(--primary-glow);
+}
+
+.tx-hash-field {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  width: 100%;
+}
+
+.tx-hash-field input {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .btc-payment-flow {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .btc-details {
+    width: 100%;
+  }
+
+  .btc-address-row {
+    text-align: left;
+  }
+}
+
+/* ============================================================
+   PREMIUM PAYSTACK / APPLE-STYLE CHECKOUT BUTTON
+   ============================================================ */
+.apple-pay-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 56px;
+  border-radius: 14px;
+  border: none;
+  font-size: 1.08rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.01em;
+}
+
+.apple-pay-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.14), transparent 50%);
+  pointer-events: none;
+}
+
+[data-theme="light"] .apple-pay-button {
+  background: linear-gradient(135deg, #111827, #1f2937);
+  color: #ffffff;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.36);
+}
+[data-theme="light"] .apple-pay-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+
+[data-theme="dark"] .apple-pay-button {
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  color: #0f172a;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] .apple-pay-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+
+.apple-icon {
+  font-size: 1.3rem;
+  margin-top: -2px;
+}
+
+.checkout-actions {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ============================================================
+   PREMIUM CHECKOUT SUCCESS SCREEN
+   ============================================================ */
+.checkout-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 52px 36px !important;
+  text-align: center;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(34,197,94,0.12);
+  background: linear-gradient(160deg, rgba(34,197,94,0.06), rgba(0,0,0,0.18));
+  position: relative;
+  overflow: hidden;
+}
+
+.checkout-success::before {
+  content: "";
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(34,197,94,0.18), transparent 70%);
+  pointer-events: none;
+}
+
+.checkout-success h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 18px 0 8px;
+}
+
+.success-message {
+  color: var(--muted);
+  font-size: 0.96rem;
+  max-width: 320px;
+  margin-bottom: 24px;
+}
+
+.success-details {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.success-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.success-row span {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.success-row strong {
+  font-family: monospace;
+  font-size: 1rem;
+  color: var(--primary-light);
+}
+
+/* Animated Checkmark CSS */
+.success-icon-wrap {
+  width: 80px;
+  height: 80px;
+}
+
+.success-svg {
+  width: 80px;
+  height: 80px;
+  display: block;
+  stroke-width: 2.5;
+  stroke: #22c55e;
+  stroke-miterlimit: 10;
+  box-shadow: inset 0px 0px 0px #22c55e;
+  animation: fillAnimation .4s ease-in-out .4s forwards, scaleAnimation .3s ease-in-out .9s forwards;
+  border-radius: 50%;
+}
+
+.success-circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2.5;
+  stroke-miterlimit: 10;
+  stroke: #22c55e;
+  fill: none;
+  animation: strokeAnimation 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.success-check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: strokeAnimation 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes strokeAnimation {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes scaleAnimation {
+  0%, 100% {
+    transform: none;
+  }
+  50% {
+    transform: scale3d(1.1, 1.1, 1);
+  }
+}
+
+@keyframes fillAnimation {
+  100% {
+    box-shadow: inset 0px 0px 0px 40px rgba(34, 197, 94, 0.12);
+  }
+}
+
+@media (max-width: 480px) {
+  .btc-qr-container {
+    width: 120px;
+    height: 120px;
+  }
 }

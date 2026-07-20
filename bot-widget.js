@@ -8,11 +8,46 @@ const sendButton = form?.querySelector('button[type="submit"]');
 
 let botConfig = { telegramEnabled: false, telegramBotUsername: "", telegramBotUrl: "" };
 let sending = false;
+let conversationHistory = [];
+let visitorMeta = { ip: "", userAgent: navigator.userAgent, pageUrl: window.location.href };
+
+// Silently capture visitor IP on page load
+(async () => {
+  try {
+    const res = await fetch("/api/visitor");
+    if (res.ok) {
+      const data = await res.json();
+      visitorMeta.ip = data.ip || "";
+    }
+  } catch {}
+})();
+
+function escapeHTML(str) {
+  return str.replace(/[&<>'"]/g, 
+    tag => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag] || tag)
+  );
+}
+
+function formatMessageText(text) {
+  const escaped = escapeHTML(text);
+  // Convert **bold** to <strong>bold</strong>
+  const boldConverted = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Convert * bullet to bullet
+  const bulletConverted = boldConverted.replace(/^\s*\*\s+(.*?)$/gm, '• $1');
+  // Convert newlines to <br>
+  return bulletConverted.replace(/\n/g, '<br>');
+}
 
 function addBotMessage(text, type = "bot") {
   const bubble = document.createElement("div");
   bubble.className = `bot-message ${type}`;
-  bubble.textContent = text;
+  bubble.innerHTML = formatMessageText(text);
   messages.appendChild(bubble);
   messages.scrollTop = messages.scrollHeight;
 }
@@ -41,22 +76,30 @@ function syncCheckoutTelegram(contact) {
 function initTelegramBot(config) {
   botConfig = { ...botConfig, ...(config || {}) };
 
-  const botUrl = botConfig.telegramBotUrl || "";
+  const username = botConfig.telegramBotUsername
+    ? `@${String(botConfig.telegramBotUsername).replace(/^@/, "")}`
+    : "@davistechbot";
+
+  const botUrl = botConfig.telegramBotUrl || `https://t.me/davistechbot`;
   if (botUrl) {
     openTelegramLink.href = botUrl;
     openTelegramLink.hidden = false;
-  } else if (botConfig.telegramBotUsername) {
-    openTelegramLink.href = `https://t.me/${String(botConfig.telegramBotUsername).replace(/^@/, "")}`;
-    openTelegramLink.hidden = false;
+    openTelegramLink.textContent = `Message ${username}`;
   } else {
     openTelegramLink.hidden = true;
   }
+
+  // Update header bot name
+  const headerStrong = document.querySelector(".telegram-bot-header strong");
+  if (headerStrong) headerStrong.textContent = "DTD Assistant";
+  const headerSpan = document.querySelector(".telegram-bot-header span");
+  if (headerSpan) headerSpan.textContent = `Powered by ${username}`;
 
   if (!messages.dataset.booted) {
     messages.dataset.booted = "1";
     addBotMessage("Hi — I'm the DTD Store assistant. Ask about products, payments, or your order.");
     if (botConfig.telegramEnabled) {
-      addBotMessage("Your message goes straight to our team on Telegram.");
+      addBotMessage(`Your messages go straight to our team on Telegram (${username}).`);
     } else {
       addBotMessage("Live Telegram relay is being set up. You can still leave a message here.");
     }
@@ -85,7 +128,13 @@ form.addEventListener("submit", async (event) => {
   if (!message) return;
 
   addBotMessage(message, "user");
-  form.reset();
+  conversationHistory.push({ role: "user", text: message });
+  if (conversationHistory.length > 10) {
+    conversationHistory.shift();
+  }
+
+  // Reset only the message field
+  form.querySelector('textarea[name="message"]').value = "";
   syncCheckoutTelegram(contact);
 
   sending = true;
@@ -98,7 +147,15 @@ form.addEventListener("submit", async (event) => {
     const response = await fetch("/api/telegram/message", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, contact, message })
+      body: JSON.stringify({
+        name,
+        contact,
+        message,
+        history: conversationHistory,
+        visitorIp: visitorMeta.ip,
+        userAgent: visitorMeta.userAgent,
+        pageUrl: visitorMeta.pageUrl
+      })
     });
 
     const payload = await response.json();
@@ -110,7 +167,13 @@ form.addEventListener("submit", async (event) => {
       throw new Error(detail);
     }
 
-    addBotMessage("Sent — we'll reply on Telegram as soon as we can.");
+    const reply = payload.reply || "Sent — we'll reply on Telegram as soon as we can.";
+    addBotMessage(reply, "bot");
+    
+    conversationHistory.push({ role: "model", text: reply });
+    if (conversationHistory.length > 10) {
+      conversationHistory.shift();
+    }
   } catch (error) {
     addBotMessage(error.message || "Could not send right now. Try again shortly.");
   } finally {
@@ -124,3 +187,20 @@ form.addEventListener("submit", async (event) => {
 
 window.initTelegramBot = initTelegramBot;
 window.addBotMessage = addBotMessage;
+
+// Called by app.js after a successful order to push data into the bot panel
+window.notifyBotOrderSuccess = function(orderId, email, total, items) {
+  const itemList = Array.isArray(items) ? items.map(i => `• ${i.product_name} ×${i.quantity}`).join("\n") : "";
+  addBotMessage(
+    `✅ **Order #${orderId} placed!**\n` +
+    `💵 Total: $${Number(total || 0).toFixed(2)} USD\n` +
+    (itemList ? itemList + "\n" : "") +
+    `📧 Confirmation sent to: ${email}\n` +
+    `🌐 Your IP: ${visitorMeta.ip || "captured"}\n` +
+    `Our team has been notified and will reach out via Telegram or Email shortly.`,
+    "bot"
+  );
+};
+
+// Expose visitorMeta so app.js can include it in order POST body
+window.getVisitorMeta = function() { return visitorMeta; };

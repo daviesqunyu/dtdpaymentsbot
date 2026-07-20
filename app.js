@@ -10,13 +10,15 @@ const blockedProductTerms = [
   "cvv"
 ];
 
-let storeConfig = {
+  let storeConfig = {
   paystackPublicKey: "",
+  paystackCurrency: "KES",
+  paystackConversionRate: 129,
   btcAddress: "",
   btcNetwork: "BTC",
   paymentOptions: [
     { id: "Crypto", label: "Bitcoin (BTC)", type: "crypto" },
-    { id: "Paystack Card", label: "Card (Visa / Mastercard)", type: "paystack", channels: ["card"] }
+    { id: "Paystack", label: "Card / Bank / Mobile Money", type: "paystack" }
   ]
 };
 
@@ -97,7 +99,8 @@ const paymentHint = document.querySelector("#paymentHint");
 const cryptoAddress = document.querySelector("#cryptoAddress");
 const cryptoNetworkLabel = document.querySelector("#cryptoNetworkLabel");
 const copyCryptoAddressButton = document.querySelector("#copyCryptoAddress");
-const paymentMethodInput = document.querySelector("#paymentMethod");
+const paymentMethodInput = document.querySelector("#paymentMethodInput");
+const paymentMethodsGrid = document.querySelector("#paymentMethodsGrid");
 const paystackButton = document.querySelector("#paystackButton");
 const refreshProductsButton = document.querySelector("#refreshProducts");
 const copyStoreLinkButton = document.querySelector("#copyStoreLink");
@@ -108,6 +111,12 @@ const telegramPaymentPanel = document.querySelector("#telegramPaymentPanel");
 const telegramPaymentLink = document.querySelector("#telegramPaymentLink");
 const telegramPaymentNote = document.querySelector("#telegramPaymentNote");
 const liveStats = document.querySelector("#liveStats");
+const btcQrCode = document.querySelector("#btcQrCode");
+const btcAmountLabel = document.querySelector("#btcAmountLabel");
+const checkoutSuccess = document.querySelector("#checkoutSuccess");
+const successOrderId = document.querySelector("#successOrderId");
+const successUserContact = document.querySelector("#successUserContact");
+const successCloseButton = document.querySelector("#successCloseButton");
 
 function formatMoney(value) {
   return formatter.format(Number(value || 0));
@@ -138,18 +147,67 @@ function isCryptoPayment() {
   return selectedPaymentOption().type === "crypto";
 }
 
+function renderPaymentMethodsGrid() {
+  if (!paymentMethodsGrid) return;
+  
+  const options = storeConfig.paymentOptions || [];
+  paymentMethodsGrid.innerHTML = options.map((opt) => {
+    const isSelected = opt.id === paymentMethodInput.value;
+    
+    // Choose icon
+    let icon = "💳";
+    if (opt.type === "crypto") icon = "₿";
+    else if (opt.id.includes("Card")) icon = "💳";
+    else if (opt.id.includes("Bank")) icon = "🏛️";
+    else if (opt.id.includes("USSD")) icon = "📱";
+    else if (opt.id.includes("Mobile Money")) icon = "💸";
+    else if (opt.id.includes("QR")) icon = "🔍";
+
+    let sub = "Instant";
+    if (opt.type === "crypto") sub = "Requires confirmation";
+    else if (opt.id.includes("Bank")) sub = "Manual verify option";
+
+    return `
+      <button type="button" class="payment-method-btn ${isSelected ? 'selected' : ''}" data-id="${opt.id}">
+        <span class="method-icon">${icon}</span>
+        <span class="method-label">${opt.label}</span>
+        <span class="method-sub">${sub}</span>
+        <span class="select-check">✓</span>
+      </button>
+    `;
+  }).join("");
+
+  // Add click listeners
+  paymentMethodsGrid.querySelectorAll(".payment-method-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      paymentMethodInput.value = btn.dataset.id;
+      updatePaymentHint();
+      renderPaymentMethodsGrid();
+    });
+  });
+}
+
 async function loadStoreConfig() {
   try {
     const response = await fetch("/api/config");
     if (!response.ok) throw new Error("Config unavailable");
     storeConfig = await response.json();
+    // #region agent log
+    fetch('http://127.0.0.1:7413/ingest/3855ecfa-f160-49a6-b4f2-efca4f443e59',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8491be'},body:JSON.stringify({sessionId:'8491be',runId:'pre-fix',hypothesisId:'B',location:'app.js:loadStoreConfig',message:'Store config loaded',data:{hasPublicKey:Boolean(storeConfig.paystackPublicKey),publicKeyPrefix:String(storeConfig.paystackPublicKey||'').slice(0,8),currency:storeConfig.paystackCurrency,conversionRate:storeConfig.paystackConversionRate,optionCount:(storeConfig.paymentOptions||[]).length,telegramEnabled:storeConfig.telegramEnabled},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
   } catch (error) {
     console.warn("Using fallback store config", error);
+    // #region agent log
+    fetch('http://127.0.0.1:7413/ingest/3855ecfa-f160-49a6-b4f2-efca4f443e59',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8491be'},body:JSON.stringify({sessionId:'8491be',runId:'pre-fix',hypothesisId:'B',location:'app.js:loadStoreConfig',message:'Config load failed',data:{error:String(error&&error.message||error)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
   }
 
-  paymentMethodInput.innerHTML = storeConfig.paymentOptions
-    .map((option) => `<option value="${option.id}">${option.label}</option>`)
-    .join("");
+  // Set default option value
+  if (storeConfig.paymentOptions && storeConfig.paymentOptions.length > 0) {
+    paymentMethodInput.value = storeConfig.paymentOptions[0].id;
+  }
+
+  renderPaymentMethodsGrid();
 
   if (window.initTelegramBot) {
     window.initTelegramBot(storeConfig);
@@ -311,6 +369,7 @@ async function saveOrder(formData) {
   const entries = cartEntries();
   const total = currentTotal();
   const paymentMethod = formData.get("payment") || "Crypto";
+  const meta = window.getVisitorMeta ? window.getVisitorMeta() : {};
 
   const response = await fetch("/api/orders", {
     method: "POST",
@@ -324,6 +383,9 @@ async function saveOrder(formData) {
       productAccount: formData.get("productAccount") || null,
       deliveryDetails: formData.get("orderNote") || null,
       totalUsd: total,
+      visitorIp: meta.ip || "",
+      userAgent: meta.userAgent || navigator.userAgent,
+      pageUrl: meta.pageUrl || window.location.href,
       items: entries.map((product) => ({
         product_id: product.id,
         product_name: product.name,
@@ -366,29 +428,141 @@ function updateTelegramPaymentPanel() {
 function updatePaymentHint() {
   const option = selectedPaymentOption();
   const isCrypto = option.type === "crypto";
-  const address = storeConfig.btcAddress || "";
+  const isPaystack = option.type === "paystack";
+  const isTelegram = option.type === "telegram" || option.id === "Telegram";
 
-  cryptoNetworkLabel.textContent = storeConfig.btcNetwork || "BTC";
-  cryptoAddress.textContent = address || "BTC address not configured in .env";
-  copyCryptoAddressButton.disabled = !address || !isCrypto;
+  const address = storeConfig.btcAddress || "";
+  const total = currentTotal();
 
   cryptoPanel.hidden = !isCrypto;
-  paystackPanel.hidden = isCrypto;
-  cryptoAddress.hidden = !isCrypto;
+  paystackPanel.hidden = !isPaystack;
+  telegramPaymentPanel.hidden = !isTelegram;
+
+  const submitBtn = document.querySelector("#submitButton");
+
+  if (isPaystack) {
+    paystackButton.style.display = "flex";
+    paystackButton.innerHTML = `Pay with Card / Mobile Money`;
+    if (submitBtn) submitBtn.style.display = "none";
+  } else {
+    paystackButton.style.display = "none";
+    if (submitBtn) {
+      submitBtn.style.display = "block";
+      submitBtn.textContent = isCrypto ? "Confirm BTC Payment" : "Complete & Place Order";
+    }
+  }
 
   if (isCrypto) {
-    paymentHint.textContent =
-      "Send the exact BTC total to this address, then paste the transaction hash before submitting.";
-    paystackButton.textContent = "Pay with Paystack";
-  } else {
-    paymentHint.textContent = `Pay with ${option.label}. Complete checkout, then submit your order for delivery.`;
-    paystackButton.textContent = `Pay with ${option.label}`;
+    cryptoAddress.textContent = address || "BTC address not configured";
+    if (copyCryptoAddressButton) {
+      copyCryptoAddressButton.disabled = !address;
+    }
+
+    const btcEstimate = total > 0 ? (total / 65000).toFixed(6) : "0.000000";
+    if (btcAmountLabel) {
+      btcAmountLabel.textContent =
+        total > 0 ? `$${total.toFixed(2)} USD (~${btcEstimate} BTC)` : "Add items to see amount";
+    }
+
+    if (btcQrCode && address && total > 0) {
+      btcQrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=bitcoin:${address}?amount=${btcEstimate}`;
+    }
   }
 
   updateTelegramPaymentPanel();
 }
 
-function startPaystackPayment() {
+async function submitOrderDirectly(paymentReference) {
+  if (!state.cart.size) {
+    showToast("Add at least one product before payment.");
+    return;
+  }
+
+  const name = checkoutForm.elements.name.value.trim();
+  const email = checkoutForm.elements.email.value.trim();
+  if (!name || !email) {
+    showToast("Please enter your name and email to save your order.");
+    return;
+  }
+
+  const submitBtn = document.querySelector("#submitButton");
+  if (paystackButton) {
+    paystackButton.disabled = true;
+    paystackButton.textContent = "Processing Order...";
+  }
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Processing Order...";
+  }
+
+  try {
+    const formData = new FormData(checkoutForm);
+    if (paymentReference) {
+      formData.set("paymentReference", paymentReference);
+    }
+    const orderId = await saveOrder(formData);
+    showCheckoutSuccess(orderId, email);
+  } catch (error) {
+    console.error(error);
+    showToast(error.message || "Failed to submit order. Please contact support.");
+  } finally {
+    if (paystackButton) {
+      paystackButton.disabled = false;
+      paystackButton.innerHTML = `<span class="apple-icon"></span> Pay with Card / Bank`;
+    }
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Complete & Place Order";
+    }
+  }
+}
+
+function showCheckoutSuccess(orderId, email) {
+  checkoutForm.style.display = "none";
+  const cartSummary = document.querySelector(".checkout-summary");
+  if (cartSummary) cartSummary.style.display = "none";
+
+  if (checkoutSuccess) {
+    checkoutSuccess.style.display = "flex";
+  }
+
+  if (successOrderId) {
+    successOrderId.textContent = `#${orderId}`;
+  }
+
+  if (successUserContact) {
+    const telegram = checkoutForm.elements.telegram?.value.trim();
+    successUserContact.textContent = telegram ? `${email} & ${telegram}` : email;
+  }
+
+  state.cart.clear();
+  renderCart();
+  showToast("Order placed successfully!");
+  
+  // Notify the bot panel with full order details
+  if (window.notifyBotOrderSuccess) {
+    const entries = cartEntries();
+    const email = checkoutForm.elements.email?.value.trim() || "";
+    window.notifyBotOrderSuccess(orderId, email, currentTotal(), entries.map(p => ({ product_name: p.name, quantity: p.quantity })));
+  } else if (window.addBotMessage) {
+    window.addBotMessage(`Your order #${orderId} has been placed! Our team has been notified and will verify the transaction.`);
+  }
+}
+
+async function verifyPaystackReference(reference) {
+  const response = await fetch("/api/paystack/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reference })
+  });
+  const payload = await response.json();
+  if (!response.ok || !payload.paid) {
+    throw new Error(payload.error || "Payment not confirmed yet.");
+  }
+  return payload;
+}
+
+async function startPaystackPayment() {
   if (!state.cart.size) {
     showToast("Add at least one product before payment.");
     return;
@@ -402,74 +576,119 @@ function startPaystackPayment() {
     return;
   }
 
-  if (!window.PaystackPop) {
-    showToast("Paystack is still loading. Try again in a moment.");
-    return;
-  }
+  const totalUsd = currentTotal();
+  paymentMethodInput.value = "Paystack";
 
-  if (!storeConfig.paystackPublicKey) {
-    showToast("Paystack public key missing in .env.");
-    return;
-  }
-
-  const option = selectedPaymentOption();
-  const amountCents = Math.round(currentTotal() * 100);
-  const reference = `DTD-${Date.now()}`;
-  const handler = window.PaystackPop.setup({
-    key: storeConfig.paystackPublicKey,
-    email,
-    amount: amountCents,
-    currency: "USD",
-    ref: reference,
-    channels: option.channels || ["card", "bank", "ussd", "qr", "mobile_money", "bank_transfer"],
-    metadata: {
-      customer_name: name,
-      payment_option: option.id,
-      cart_items: cartEntries().map((product) => `${product.name} x${product.quantity}`).join(", ")
-    },
-    callback(response) {
-      paymentMethodInput.value = option.id;
-      checkoutForm.elements.paymentReference.value = response.reference || reference;
-      updatePaymentHint();
-      verifyPaystackReference(response.reference || reference);
-    },
-    onClose() {
-      showToast("Paystack checkout closed.");
-    }
-  });
-
-  handler.openIframe();
-}
-
-async function verifyPaystackReference(reference) {
-  if (!reference) {
-    showToast("Payment reference saved. Submit your order.");
-    return;
+  if (paystackButton) {
+    paystackButton.disabled = true;
+    paystackButton.textContent = "Starting Paystack...";
   }
 
   try {
-    const response = await fetch("/api/paystack/verify", {
+    const initResponse = await fetch("/api/paystack/initialize", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reference })
+      body: JSON.stringify({
+        email,
+        name,
+        amountUsd: totalUsd,
+        cartItems: cartEntries().map((product) => `${product.name} x${product.quantity}`).join(", ")
+      })
     });
-    const payload = await response.json();
+    const initPayload = await initResponse.json();
+    // #region agent log
+    fetch('http://127.0.0.1:7413/ingest/3855ecfa-f160-49a6-b4f2-efca4f443e59',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8491be'},body:JSON.stringify({sessionId:'8491be',runId:'post-fix',hypothesisId:'A',location:'app.js:startPaystackPayment',message:'Initialize result',data:{ok:initResponse.ok,error:initPayload.error,currency:initPayload.currency,amount:initPayload.amount,reference:initPayload.reference,hasUrl:Boolean(initPayload.authorization_url)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
 
-    if (response.ok && payload.paid) {
-      showToast("Payment verified. Submit your order for delivery.");
-      return;
+    if (!initResponse.ok || !initPayload.ok || !initPayload.authorization_url) {
+      throw new Error(initPayload.error || "Could not start Paystack payment.");
     }
 
-    if (response.ok) {
-      showToast("Payment reference saved. Submit your order.");
-      return;
+    // Hosted checkout — uses only channels enabled on the merchant (avoids "No active channel")
+    sessionStorage.setItem(
+      "dtd_pending_paystack",
+      JSON.stringify({
+        reference: initPayload.reference,
+        email,
+        name,
+        telegram: checkoutForm.elements.telegram?.value || "",
+        productAccount: checkoutForm.elements.productAccount?.value || "",
+        orderNote: checkoutForm.elements.orderNote?.value || "",
+        totalUsd,
+        items: cartEntries().map((product) => ({
+          product_id: product.id,
+          product_name: product.name,
+          quantity: product.quantity,
+          unit_price_usd: productPrice(product)
+        }))
+      })
+    );
+    window.location.href = initPayload.authorization_url;
+  } catch (error) {
+    // #region agent log
+    fetch('http://127.0.0.1:7413/ingest/3855ecfa-f160-49a6-b4f2-efca4f443e59',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8491be'},body:JSON.stringify({sessionId:'8491be',runId:'post-fix',hypothesisId:'A',location:'app.js:startPaystackPayment:catch',message:'Paystack start failed',data:{error:String(error&&error.message||error)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    showToast(error.message || "Paystack failed to open.");
+    if (paystackButton) {
+      paystackButton.disabled = false;
+      paystackButton.textContent = "Pay with Card / Mobile Money";
     }
-  } catch {
-    // Soft verify — do not block checkout if verify endpoint is unavailable.
   }
-
-  showToast("Payment reference saved. Submit your order.");
 }
+
+async function resumePaystackReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const reference = params.get("reference") || params.get("trxref");
+  if (!reference) return;
+
+  const pendingRaw = sessionStorage.getItem("dtd_pending_paystack");
+  // #region agent log
+  fetch('http://127.0.0.1:7413/ingest/3855ecfa-f160-49a6-b4f2-efca4f443e59',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8491be'},body:JSON.stringify({sessionId:'8491be',runId:'post-fix',hypothesisId:'A',location:'app.js:resumePaystackReturn',message:'Paystack return',data:{reference,hasPending:Boolean(pendingRaw)},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+
+  try {
+    await verifyPaystackReference(reference);
+
+    let pending = null;
+    if (pendingRaw) {
+      try {
+        pending = JSON.parse(pendingRaw);
+      } catch (_) {}
+    }
+
+    if (pending?.name && checkoutForm.elements.name) checkoutForm.elements.name.value = pending.name;
+    if (pending?.email && checkoutForm.elements.email) checkoutForm.elements.email.value = pending.email;
+    if (pending?.telegram && checkoutForm.elements.telegram) checkoutForm.elements.telegram.value = pending.telegram;
+    if (pending?.productAccount && checkoutForm.elements.productAccount) {
+      checkoutForm.elements.productAccount.value = pending.productAccount;
+    }
+    if (pending?.orderNote && checkoutForm.elements.orderNote) {
+      checkoutForm.elements.orderNote.value = pending.orderNote;
+    }
+
+    paymentMethodInput.value = "Paystack";
+
+    if (pending?.items?.length && !state.cart.size) {
+      for (const item of pending.items) {
+        const id = String(item.product_id || "");
+        if (!id) continue;
+        state.cart.set(id, Number(item.quantity) || 1);
+      }
+      renderCart();
+    }
+
+    await submitOrderDirectly(reference);
+    sessionStorage.removeItem("dtd_pending_paystack");
+    showToast("Payment confirmed.");
+  } catch (error) {
+    showToast(error.message || "Payment not confirmed yet.");
+  } finally {
+    const cleanUrl = window.location.pathname + (window.location.hash || "");
+    window.history.replaceState({}, "", cleanUrl || "/");
+  }
+}
+
+// Paystack verification handled server side or directly via submitOrderDirectly callback.
 
 productsGrid.addEventListener("click", (event) => {
   const button = event.target.closest("[data-add]");
@@ -500,7 +719,7 @@ productSearch.addEventListener("input", (event) => {
 refreshProductsButton.addEventListener("click", loadProducts);
 
 copyStoreLinkButton.addEventListener("click", () => {
-  copyText(window.location.origin, "Store link copied");
+  copyText(storeConfig.storeUrl || window.location.origin || "https://dtdpaymentsbot.pages.dev", "Store link copied");
 });
 
 copyCryptoAddressButton.addEventListener("click", () => {
@@ -517,38 +736,20 @@ paymentMethodInput.addEventListener("change", updatePaymentHint);
 
 checkoutForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-
-  if (!state.cart.size) {
-    showToast("Add at least one product before checkout.");
-    return;
-  }
-
-  const formData = new FormData(checkoutForm);
-  const submitButton = checkoutForm.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
-  submitButton.textContent = "Saving order...";
-
-  try {
-    await saveOrder(formData);
-    showToast("Order saved — admin will confirm and deliver.");
-    if (window.addBotMessage) {
-      window.addBotMessage("Your order was submitted. We'll update you on Telegram.");
-    }
-  } catch (error) {
-    console.error(error);
-    showToast(error.message || "Order not saved. Check server and .env.");
-    submitButton.disabled = false;
-    submitButton.textContent = "Submit order for review";
-    return;
-  }
-
-  checkoutForm.reset();
-  state.cart.clear();
-  renderCart();
-  updatePaymentHint();
-  submitButton.disabled = false;
-  submitButton.textContent = "Submit order for review";
+  submitOrderDirectly();
 });
+
+if (successCloseButton) {
+  successCloseButton.addEventListener("click", () => {
+    checkoutForm.reset();
+    checkoutForm.style.display = "grid";
+    const cartSummary = document.querySelector(".checkout-summary");
+    if (cartSummary) cartSummary.style.display = "block";
+    if (checkoutSuccess) checkoutSuccess.style.display = "none";
+    updatePaymentHint();
+    document.querySelector("#products").scrollIntoView({ behavior: "smooth" });
+  });
+}
 
 function initHeroMotion() {
   const chatRows = document.querySelectorAll(".chat-row");
@@ -561,6 +762,7 @@ async function boot() {
   initHeroMotion();
   await loadStoreConfig();
   await loadProducts();
+  await resumePaystackReturn();
 }
 
 boot();

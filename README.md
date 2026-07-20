@@ -1,115 +1,71 @@
-# DTD Store
+# DTD Store + Payments Bot
 
-A crypto-first product ordering site with Paystack checkout, Telegram notifications, and Supabase-backed products and orders.
+Crypto-first product storefront with Paystack (KES) + BTC checkout, Supabase products/orders,
+Cloudflare Pages API, and Telegram automation for `@Dtdpaymentbot`.
 
-## Run Locally
+Live store: https://dtdpaymentsbot.pages.dev
 
-1. Copy `.env.example` to `.env` and fill in:
-   - `PAYSTACK_PUBLIC_KEY` / `PAYSTACK_SECRET_KEY`
-   - `BTC_ADDRESS`
-   - `TELEGRAM_BOT_TOKEN` / `TELEGRAM_BOT_USERNAME`
-   - `TELEGRAM_ADMIN_CHAT_ID` (private DM for chat widget + admin copies)
-   - `TELEGRAM_CHANNEL_ID` (channel for public order posts; bot must be channel admin)
-   - `SUPABASE_SERVICE_ROLE_KEY` (from Supabase → Settings → API)
-2. Run `supabase-migration.sql` in the Supabase SQL editor (fixes order saves).
-3. Start the app:
+## Goal vs status
+
+| Goal | Status |
+|------|--------|
+| Website store + products DB | Done (Supabase + fallback catalog) |
+| Paystack receive money | Done (KES hosted checkout + verify) |
+| BTC checkout UI | Done (desktop layout fixed) |
+| Telegram bot commands | Done (`/store` `/products` `/pay` `/mirror` …) |
+| Order alerts to channel/group/admin | Done (bot must be **admin**) |
+| Auto-approve join requests | Done (bot needs Invite Users) |
+| Simple channel → group copy (Bot API) | Done (`TELEGRAM_CHANNEL_MIRROR`) |
+| Multi-source listen + rewrite links/usernames + footer + delay → your channel | **Telethon script added** (needs API_ID/HASH + sources) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Still empty in `.env` (orders may fail RLS) |
+| Bot admin on channels/group | **You still must add `@Dtdpaymentbot` as admin** |
+
+## Run locally
 
 ```powershell
+copy .env.example .env
 npm install
 npm run dev
 ```
 
-Open:
+Open http://localhost:5173
 
-```text
-http://localhost:5173
-```
-
-Admin dashboard:
-
-```text
-http://localhost:5173/admin.html
-```
-
-Health check:
-
-```text
-http://localhost:5173/api/health
-```
-
-## Telegram Setup
-
-1. Create a bot with [@BotFather](https://t.me/BotFather) and copy `TELEGRAM_BOT_TOKEN`.
-2. Set `TELEGRAM_BOT_USERNAME` (without `@`).
-3. Send `/start` to your bot in a private chat and set `TELEGRAM_ADMIN_CHAT_ID` to your numeric user ID.
-4. Add the bot to your orders channel as an **admin** (can post messages).
-5. Set `TELEGRAM_CHANNEL_ID` to the channel chat ID (usually starts with `-100`).
-
-Order notifications post to the channel. A copy goes to your admin DM when both IDs are set. The site chat widget sends only to your admin DM.
-
-## Theme
-
-The storefront and admin pages support light/dark mode. The default follows the visitor's system preference. Use the header toggle to override; the choice is saved in `localStorage`.
-
-## Customize
-
-- Edit products in the admin dashboard, or adjust `fallbackProducts` in `app.js` for local fallback items.
-- Product prices are in USD.
-- Set `BTC_ADDRESS` in `.env` for Bitcoin checkout.
-- Checkout supports BTC review and a Paystack popup using the public key from `/api/config`.
-- Never place the Paystack live secret key in frontend code. Put it only in `.env` or Cloudflare Pages secrets.
-- Checkout saves a pending order with customer email, delivery details, product account, and optional payment reference.
-- Use `admin.html` to add, edit, hide, delete, or reset products while testing.
-
-## Supabase
-
-Run `supabase-schema.sql` in the Supabase SQL editor when you are ready for the real backend. It creates:
-
-- `products`
-- `orders`
-- `order_items`
-
-## Deploy to Cloudflare Pages
-
-Deploy uses the repository root (not `dist/`).
+## Deploy (Cloudflare Pages — production branch is `main`)
 
 ```powershell
-npm run pages:secrets   # uploads .env secrets to Pages
-npm run deploy          # wrangler pages deploy .
+npm run deploy:full
+npm run telegram:setup
 ```
 
-Verify live:
+## Telethon rewrite mirror (recommended for multi-channel → DTD MAIN STORE)
 
-```text
-https://your-project.pages.dev/api/health
+Bot API can only *copy* posts. For **edit text / replace links / footer / delay / many sources**, use Telethon:
+
+1. Create API credentials at https://my.telegram.org  
+2. Put `TELEGRAM_API_ID` + `TELEGRAM_API_HASH` in `.env`  
+3. Join source channels with the same Telegram account  
+4. Set:
+
+```env
+MIRROR_SOURCE_CHANNELS=@SomeChannel,-1001234567890
+MIRROR_DEST_CHANNEL=-1004433496789
+STORE_URL=https://dtdpaymentsbot.pages.dev
+TELEGRAM_OWNER_USERNAME=Davetheedev
 ```
 
-Expected health fields: `telegramAdmin`, `telegramChannel`, `supabase`, `paystack`, `btc`.
+5. Run:
 
-## Files
-
-- `index.html` - storefront
-- `styles.css` - responsive design and themes
-- `theme.js` - light/dark mode
-- `app.js` - cart, checkout, Paystack, and orders API
-- `bot-widget.js` - Telegram chat widget
-- `admin.html` / `admin.js` - product and order dashboard
-- `functions/api/*` - Cloudflare Pages Functions (config, orders, Telegram, Paystack verify)
-- `server.js` - local dev API mirror
-- `supabase-config.js` - public Supabase URL and anon key
-
-## Supabase Connection
-
-The app is connected to:
-
-```text
-https://iqoffsnkptulvuqmdcce.supabase.co
+```powershell
+pip install -r requirements-telethon.txt
+npm run mirror:telethon
 ```
 
-Only the public anon key belongs in `supabase-config.js`. Never add the `service_role` key to frontend code or public Pages variables.
+First run asks for phone + login code and creates `telethon_sessions/dtd_mirror.session`.
 
-Before deploying, run `supabase-schema.sql` in Supabase SQL Editor and confirm your admin user can sign in at `/admin.html`.
+Every new source post is rewritten (links → store, usernames → `@Davetheedev`, footer added), delayed 5–30s, then posted to your destination channel **without “forwarded from”**.
 
-## Paystack
+## Telegram bots
 
-The storefront uses the Paystack public key for the browser popup. `/api/paystack/verify` runs server-side with the secret key to confirm payments after checkout.
+- Primary: `@Dtdpaymentbot` (store + webhook automation)
+- Secondary (optional): `@davistechbot`
+- Owner contact: `@Davetheedev`

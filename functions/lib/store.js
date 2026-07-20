@@ -45,20 +45,25 @@ export function buildOrderTelegramMessage({
   productAccount,
   totalUsd,
   items,
-  orderId
+  orderId,
+  visitorIp,
+  userAgent
 }) {
   const itemLines = items.map((item) => `• ${item.product_name} x${item.quantity}`).join("\n");
   return [
-    "<b>New DTD Store order</b>",
-    orderId ? `Order ID: ${orderId}` : null,
-    `Name: ${customerName}`,
-    `Email: ${customerEmail}`,
-    telegramUsername ? `Telegram: @${String(telegramUsername).replace(/^@/, "")}` : null,
-    `Payment: ${normalizedMethod}`,
-    paymentReference ? `Ref: ${paymentReference}` : null,
-    productAccount ? `Account: ${productAccount}` : null,
-    `Total: $${Number(totalUsd || 0).toFixed(2)}`,
+    "<b>🛒 New DTD Store Order</b>",
+    orderId ? `🏷️ Order ID: <code>${orderId}</code>` : null,
+    `👤 Name: ${customerName}`,
+    `📧 Email: ${customerEmail}`,
+    telegramUsername ? `💬 Telegram: @${String(telegramUsername).replace(/^@/, "")}` : null,
+    `💳 Payment: ${normalizedMethod}`,
+    paymentReference ? `🔗 Ref: <code>${paymentReference}</code>` : null,
+    productAccount ? `🔑 Account: ${productAccount}` : null,
+    `💵 Total: $${Number(totalUsd || 0).toFixed(2)} USD`,
+    visitorIp ? `🌐 IP: <code>${visitorIp}</code>` : null,
+    userAgent ? `💻 Device: ${String(userAgent).substring(0, 80)}` : null,
     "",
+    "<b>Items:</b>",
     itemLines
   ]
     .filter(Boolean)
@@ -69,15 +74,20 @@ export async function notifyOrderTelegram(env, message) {
   const token = env.TELEGRAM_BOT_TOKEN;
   if (!token) return;
 
-  const channelId = env.TELEGRAM_CHANNEL_ID;
+  const channelIds = [
+    env.TELEGRAM_CHANNEL_ID,
+    env.TELEGRAM_BACKUP_CHANNEL_ID,
+    env.TELEGRAM_GROUP_ID
+  ].filter((id, index, arr) => id && arr.indexOf(id) === index);
+
   const adminId = env.TELEGRAM_ADMIN_CHAT_ID;
 
-  if (channelId) {
+  for (const channelId of channelIds) {
     await sendTelegram(env, channelId, message);
   }
 
   if (adminId) {
-    const adminNote = channelId
+    const adminNote = channelIds.length
       ? `<b>Order alert (copy)</b>\n${message.replace("<b>New DTD Store order</b>\n", "")}`
       : message;
     await sendTelegram(env, adminId, adminNote);
@@ -92,18 +102,17 @@ export function getStoreConfig(env) {
 
   return {
     paystackPublicKey: env.PAYSTACK_PUBLIC_KEY || "",
+    paystackCurrency: env.PAYSTACK_CURRENCY || "KES",
+    paystackConversionRate: Number(env.PAYSTACK_CONVERSION_RATE || 129),
     btcAddress: env.BTC_ADDRESS || "",
     btcNetwork: "BTC",
+    storeUrl: env.STORE_URL || "https://dtdpaymentsbot.pages.dev",
     telegramBotUsername: botUsername,
     telegramBotUrl: botUsername ? `https://t.me/${botUsername}` : "",
     telegramEnabled: telegramReady,
     paymentOptions: [
       { id: "Crypto", label: "Bitcoin (BTC)", type: "crypto" },
-      { id: "Paystack Card", label: "Card (Visa / Mastercard)", type: "paystack", channels: ["card"] },
-      { id: "Paystack Bank", label: "Bank transfer", type: "paystack", channels: ["bank", "bank_transfer"] },
-      { id: "Paystack USSD", label: "USSD", type: "paystack", channels: ["ussd"] },
-      { id: "Paystack Mobile Money", label: "Mobile money", type: "paystack", channels: ["mobile_money"] },
-      { id: "Paystack QR", label: "QR code", type: "paystack", channels: ["qr"] }
+      { id: "Paystack", label: "Card / Bank / Mobile Money", type: "paystack" }
     ]
   };
 }
@@ -123,7 +132,23 @@ export async function sendTelegram(env, chatId, message) {
   });
 
   if (!response.ok) {
-    console.error("Telegram error:", await response.text());
+    const errText = await response.text();
+    console.error("Telegram error:", errText);
+    // #region agent log
+    fetch("http://127.0.0.1:7413/ingest/3855ecfa-f160-49a6-b4f2-efca4f443e59", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "8491be" },
+      body: JSON.stringify({
+        sessionId: "8491be",
+        runId: "pre-fix",
+        hypothesisId: "E",
+        location: "functions/lib/store.js:sendTelegram",
+        message: "Telegram send failed",
+        data: { chatId: String(chatId), status: response.status, error: String(errText).slice(0, 300) },
+        timestamp: Date.now()
+      })
+    }).catch(() => {});
+    // #endregion
     return { ok: false, reason: "send_failed" };
   }
 

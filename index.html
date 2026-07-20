@@ -85,78 +85,146 @@
       </section>
 
       <section id="checkout" class="checkout-section" aria-labelledby="checkoutTitle">
+        <!-- Left Column: Cart Summary Receipt -->
         <div class="checkout-summary glass">
-          <p class="eyebrow">Your cart</p>
-          <h2 id="checkoutTitle">Confirm your order</h2>
+          <p class="eyebrow">Your order</p>
+          <h2 id="checkoutTitle">Summary</h2>
           <div id="cartItems" class="cart-items"></div>
+          <div class="receipt-divider"></div>
           <div class="total-row">
-            <span>Total</span>
+            <span>Total Amount</span>
             <strong id="cartTotal">$0.00</strong>
           </div>
         </div>
 
+        <!-- Right Column: Apple Pay-style Sheet Form -->
         <form id="checkoutForm" class="checkout-form glass">
-          <div class="form-row two-columns">
+          <div class="sheet-header">
+            <h3>Express Checkout</h3>
+            <span class="secure-badge"> Pay Secure</span>
+          </div>
+
+          <div class="sheet-section">
+            <div class="sheet-section-title">1. Contact Information</div>
+            <div class="form-row two-columns">
+              <label>
+                Full name
+                <input name="name" type="text" placeholder="John Doe" required />
+              </label>
+              <label>
+                Email address
+                <input name="email" type="email" placeholder="john@example.com" required />
+              </label>
+            </div>
+            <div class="form-row two-columns">
+              <label>
+                Telegram username
+                <input name="telegram" type="text" placeholder="@username (for updates)" />
+              </label>
+              <label>
+                Product account / login (optional)
+                <input name="productAccount" type="text" placeholder="Username or username:password" />
+              </label>
+            </div>
+          </div>
+
+          <div class="sheet-section">
+            <div class="sheet-section-title">2. Delivery Instructions</div>
             <label>
-              Full name
-              <input name="name" type="text" placeholder="Your name" required />
-            </label>
-            <label>
-              Email for product access
-              <input name="email" type="email" placeholder="you@email.com" required />
+              Provide any details the admin should know for delivering your product:
+              <textarea
+                name="orderNote"
+                rows="2"
+                placeholder="Where should this digital product be delivered?"
+              ></textarea>
             </label>
           </div>
-          <label>
-            Telegram username (optional)
-            <input name="telegram" type="text" placeholder="@yourusername" />
-          </label>
-          <fieldset class="payment-fieldset">
-            <legend>Payment</legend>
-            <label>
-              Payment option
-              <select id="paymentMethod" name="payment"></select>
-            </label>
-            <div id="cryptoPaymentPanel" class="crypto-payment-card">
-              <div>
-                <span class="payment-badge">Bitcoin</span>
-                <strong id="cryptoNetworkLabel">BTC</strong>
-                <p id="paymentHint" class="form-note"></p>
+
+          <div class="sheet-section">
+            <div class="sheet-section-title">3. Select Payment Method</div>
+            <input type="hidden" id="paymentMethodInput" name="payment" value="" />
+            <div id="paymentMethodsGrid" class="payment-methods-grid"></div>
+
+            <!-- Bitcoin Payment Details Panel -->
+            <div id="cryptoPaymentPanel" class="crypto-payment-card" hidden>
+              <div class="btc-payment-flow">
+                <div class="btc-qr-container">
+                  <img id="btcQrCode" src="" alt="Bitcoin QR Code" />
+                </div>
+                <div class="btc-details">
+                  <div class="btc-amount-row">
+                    <span>Send exactly</span>
+                    <strong id="btcAmountLabel">Add items to see amount</strong>
+                  </div>
+                  <div class="btc-address-row">
+                    <code id="cryptoAddress" class="crypto-address">Loading Address...</code>
+                    <button id="copyCryptoAddress" class="copy-btn" type="button">Copy</button>
+                  </div>
+                  <p class="form-note">Transfer the BTC amount, then paste the transaction hash below.</p>
+                </div>
               </div>
-              <button id="copyCryptoAddress" class="secondary-button" type="button">Copy address</button>
+              <label class="tx-hash-field">
+                Transaction Hash / Reference
+                <input name="paymentReference" type="text" placeholder="Paste BTC transaction hash here" autocomplete="off" />
+              </label>
             </div>
-            <code id="cryptoAddress" class="crypto-address">Loading BTC address...</code>
+
+            <!-- Paystack Payment Panel -->
             <div id="paystackPaymentPanel" class="paystack-panel" hidden>
-              <p class="form-note">Secure checkout powered by Paystack — card, bank, USSD, QR, and mobile money.</p>
-              <button id="paystackButton" class="secondary-button full-width paystack-btn" type="button">Pay with Paystack</button>
+              <p class="form-note">
+                Pay securely with card or mobile money via Paystack. Amount is charged in
+                <strong>KES</strong> (converted from your USD cart total).
+              </p>
             </div>
-            <div id="telegramPaymentPanel" class="telegram-payment-panel">
-              <p class="form-note" id="telegramPaymentNote">Add your Telegram username above for order updates.</p>
-              <a id="telegramPaymentLink" class="secondary-button full-width" href="#" target="_blank" rel="noopener noreferrer" hidden>
-                Contact on Telegram
+
+            <!-- Telegram Payment Panel -->
+            <div id="telegramPaymentPanel" class="telegram-payment-panel" hidden>
+              <p class="form-note" id="telegramPaymentNote">Contact our team on Telegram for delivery updates.</p>
+              <a id="telegramPaymentLink" class="secondary-button full-width" href="#" target="_blank" rel="noopener noreferrer">
+                Message @Dtdpaymentbot
               </a>
             </div>
-          </fieldset>
-          <div class="form-row two-columns">
-            <label>
-              Payment reference / TX hash
-              <input name="paymentReference" type="text" placeholder="Paste Paystack ref or BTC tx hash" />
-            </label>
-            <label>
-              Product account / login
-              <input name="productAccount" type="text" placeholder="Account username or email if needed" />
-            </label>
           </div>
-          <label>
-            Delivery details
-            <textarea
-              name="orderNote"
-              rows="3"
-              placeholder="Where should this digital product be delivered, and anything admin should know?"
-            ></textarea>
-          </label>
-          <button class="primary-button full-width glow" type="submit">Submit order for review</button>
-          <p class="form-note">Your order is saved as pending until payment is confirmed. You'll get updates via Telegram.</p>
+
+          <!-- Checkout Buttons -->
+          <div class="checkout-actions">
+            <!-- Dynamic Paystack Apple-Style Button -->
+            <button id="paystackButton" class="apple-pay-button" type="button" style="display: none;">
+              <span class="apple-icon"></span> Pay with Card / Bank
+            </button>
+
+            <!-- Standard Submit Button (for BTC / Telegram / Manual review) -->
+            <button id="submitButton" class="primary-button full-width glow" type="submit">
+              Complete & Place Order
+            </button>
+          </div>
+          <p class="form-note text-center">Your order will be verified by our team. You'll receive instant updates via Telegram/Email.</p>
         </form>
+
+        <!-- Checkout Success Sheet (Hidden initially) -->
+        <div id="checkoutSuccess" class="checkout-success glass" style="display: none;">
+          <div class="success-icon-wrap">
+            <svg class="success-svg" viewBox="0 0 52 52">
+              <circle class="success-circle" cx="26" cy="26" r="25" fill="none"/>
+              <path class="success-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+          </div>
+          <h2>Payment Received!</h2>
+          <p class="success-message">Your order has been placed successfully and is pending approval.</p>
+          <div class="success-details">
+            <div class="success-row">
+              <span>Order ID</span>
+              <strong id="successOrderId">#--</strong>
+            </div>
+            <div class="success-row">
+              <span>Confirmation</span>
+              <span id="successUserContact">Email & Telegram</span>
+            </div>
+          </div>
+          <button id="successCloseButton" class="primary-button full-width" type="button">
+            Continue Shopping
+          </button>
+        </div>
       </section>
     </main>
 

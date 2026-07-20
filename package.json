@@ -8,7 +8,9 @@
     "dev": "node server.js",
     "start": "node server.js",
     "pages:secrets": "node scripts/push-secrets.mjs",
-    "deploy": "wrangler pages deploy . --project-name=dtdpaymentsbot",
+    "telegram:setup": "node scripts/telegram-setup.mjs",
+    "mirror:telethon": "python scripts/telethon_mirror.py",
+    "deploy": "wrangler pages deploy . --project-name=dtdpaymentsbot --branch=main --commit-dirty=true",
     "deploy:full": "npm run pages:secrets && npm run deploy"
   },
   "dependencies": {
