@@ -27,6 +27,8 @@
         </a>
         <div class="topbar-actions">
           <a href="#products">Products</a>
+          <a href="#telegram">Telegram</a>
+          <a href="#track">Track</a>
           <a href="#checkout">Checkout</a>
           <a href="admin.html">Admin</a>
           <button id="themeToggle" class="icon-button theme-toggle" type="button" aria-label="Toggle color theme">
@@ -45,15 +47,23 @@
         <div class="hero-copy">
           <p class="eyebrow">Trusted digital delivery</p>
           <h1 id="pageTitle">Buy digital products. Pay your way. Get delivery fast.</h1>
-          <p>
-            DTD Store keeps checkout clear from cart to payment — BTC, cards, bank transfer, USSD,
-            and mobile money through Paystack, with every order tracked in real time.
-          </p>
+            <p>
+              DTD Store keeps checkout clear from cart to payment — BTC, cards, bank transfer, USSD,
+              and mobile money through Paystack, with every order tracked in real time.
+              Supported internationally by
+              <a href="https://dvtechnologies.xyz" target="_blank" rel="noopener noreferrer">DV Technologies</a>.
+            </p>
           <div id="liveStats" class="trust-row" aria-label="Store highlights"></div>
           <div class="hero-actions">
             <a class="primary-button glow" href="#products">Shop products</a>
+            <a class="secondary-button" href="#telegram">Telegram hub</a>
             <a class="secondary-button" href="#checkout">Place order</a>
             <button id="copyStoreLink" class="secondary-button" type="button">Copy link</button>
+          </div>
+          <div class="hero-telegram-row" id="heroTelegramLinks" hidden>
+            <a id="heroOpenBot" class="tg-chip" href="#" target="_blank" rel="noopener noreferrer">Open bot</a>
+            <a id="heroOpenChannel" class="tg-chip" href="#" target="_blank" rel="noopener noreferrer">Join channel</a>
+            <a id="heroOpenOwner" class="tg-chip" href="#" target="_blank" rel="noopener noreferrer">Message owner</a>
           </div>
         </div>
         <div class="hero-panel" aria-label="Order preview">
@@ -82,6 +92,100 @@
           <button id="refreshProducts" class="icon-button" type="button">Refresh</button>
         </div>
         <div id="productsGrid" class="products-grid"></div>
+      </section>
+
+      <section id="telegram" class="section-shell telegram-hub" aria-labelledby="telegramTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Telegram tools</p>
+            <h2 id="telegramTitle">Shop + support without leaving Telegram</h2>
+            <p class="section-subtext">Bot commands, channel updates, and direct owner support — linked to this store.</p>
+          </div>
+        </div>
+        <div class="telegram-hub-grid">
+          <article class="hub-card">
+            <h3>DV Technologies</h3>
+            <p>International company supporting DTD Store — products, delivery, and global ops.</p>
+            <a id="hubCompanyLink" class="secondary-button" href="https://dvtechnologies.xyz" target="_blank" rel="noopener noreferrer">Visit dvtechnologies.xyz</a>
+          </article>
+          <article class="hub-card">
+            <h3>Store bot</h3>
+            <p>Catalog, payments help, and order tracking inside Telegram.</p>
+            <ul class="hub-list">
+              <li><code>/products</code> live catalog</li>
+              <li><code>/pay</code> Paystack + BTC</li>
+              <li><code>/order id email</code> track status</li>
+            </ul>
+            <a id="hubBotLink" class="primary-button" href="https://t.me/Dtdpaymentbot" target="_blank" rel="noopener noreferrer">Open @Dtdpaymentbot</a>
+          </article>
+          <article class="hub-card">
+            <h3>Main channel</h3>
+            <p>Drops, how-to posts, and store announcements.</p>
+            <a id="hubChannelLink" class="secondary-button" href="https://t.me/DTDMAINSTORE" target="_blank" rel="noopener noreferrer">Join @DTDMAINSTORE</a>
+          </article>
+          <article class="hub-card">
+            <h3>Owner support</h3>
+            <p>Delivery questions and custom orders.</p>
+            <a id="hubOwnerLink" class="secondary-button" href="https://t.me/Davetheedev" target="_blank" rel="noopener noreferrer">Message @Davetheedev</a>
+          </article>
+        </div>
+      </section>
+
+      <section id="track" class="section-shell track-section" aria-labelledby="trackTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Orders</p>
+            <h2 id="trackTitle">Track your order</h2>
+            <p class="section-subtext">Use the Order ID from checkout plus the email you paid with.</p>
+          </div>
+        </div>
+        <form id="trackOrderForm" class="track-form glass">
+          <label>
+            Order ID
+            <input name="orderId" type="text" placeholder="Paste order UUID" required />
+          </label>
+          <label>
+            Email
+            <input name="email" type="email" placeholder="you@example.com" required />
+          </label>
+          <button class="primary-button" type="submit">Check status</button>
+          <p id="trackOrderResult" class="track-result" role="status"></p>
+        </form>
+      </section>
+
+      <section id="faq" class="section-shell faq-section" aria-labelledby="faqTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Help</p>
+            <h2 id="faqTitle">FAQ</h2>
+          </div>
+        </div>
+        <div class="faq-grid">
+          <details class="faq-item" open>
+            <summary>How do I pay?</summary>
+            <p>Use Paystack (card, bank, or M-Pesa in KES) or Bitcoin at checkout. Keep your Order ID.</p>
+          </details>
+          <details class="faq-item">
+            <summary>How fast is delivery?</summary>
+            <p>Digital delivery is handled after payment confirmation. Updates go to your Telegram and email.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Can I order from Telegram?</summary>
+            <p>Yes — open @Dtdpaymentbot, use /products, then checkout on the website. Track with /order.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Who supports DTD Store?</summary>
+            <p>
+              DTD Store is supported internationally by
+              <a href="https://dvtechnologies.xyz" target="_blank" rel="noopener noreferrer">DV Technologies</a>
+              (dvtechnologies.xyz).
+            </p>
+          </details>
+          <details class="faq-item">
+            <summary>Who do I contact for support?</summary>
+            <p>Message @Davetheedev or use the chat widget on this site.</p>
+          </details>
+        </div>
       </section>
 
       <section id="checkout" class="checkout-section" aria-labelledby="checkoutTitle">

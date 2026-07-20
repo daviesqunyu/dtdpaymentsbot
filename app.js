@@ -79,7 +79,8 @@ const fallbackProducts = [
 
 const state = {
   cart: new Map(),
-  products: []
+  products: [],
+  btcUsdPrice: 65000
 };
 
 const formatter = new Intl.NumberFormat("en-US", {
@@ -208,12 +209,48 @@ async function loadStoreConfig() {
   }
 
   renderPaymentMethodsGrid();
+  wireTelegramHubLinks();
 
   if (window.initTelegramBot) {
     window.initTelegramBot(storeConfig);
   }
 
   updatePaymentHint();
+}
+
+function wireTelegramHubLinks() {
+  const botUrl = storeConfig.telegramBotUrl || "https://t.me/Dtdpaymentbot";
+  const channelUrl = storeConfig.telegramChannelUrl || "https://t.me/DTDMAINSTORE";
+  const ownerUrl = storeConfig.telegramOwnerUrl || "https://t.me/Davetheedev";
+  const companyUrl = storeConfig.companyUrl || "https://dvtechnologies.xyz";
+
+  [
+    ["#hubBotLink", botUrl],
+    ["#hubChannelLink", channelUrl],
+    ["#hubOwnerLink", ownerUrl],
+    ["#hubCompanyLink", companyUrl],
+    ["#heroOpenBot", botUrl],
+    ["#heroOpenChannel", channelUrl],
+    ["#heroOpenOwner", ownerUrl]
+  ].forEach(([sel, href]) => {
+    const el = document.querySelector(sel);
+    if (el) el.href = href;
+  });
+
+  const heroRow = document.querySelector("#heroTelegramLinks");
+  if (heroRow) heroRow.hidden = false;
+}
+
+async function fetchBtcUsdPrice() {
+  try {
+    const response = await fetch("https://api.coinbase.com/v2/prices/BTC-USD/spot");
+    if (!response.ok) return;
+    const payload = await response.json();
+    const price = Number(payload?.data?.amount);
+    if (price > 0) state.btcUsdPrice = price;
+  } catch {
+    /* keep fallback */
+  }
 }
 
 async function loadProducts() {
@@ -458,10 +495,13 @@ function updatePaymentHint() {
       copyCryptoAddressButton.disabled = !address;
     }
 
-    const btcEstimate = total > 0 ? (total / 65000).toFixed(6) : "0.000000";
+    const rate = state.btcUsdPrice > 0 ? state.btcUsdPrice : 65000;
+    const btcEstimate = total > 0 ? (total / rate).toFixed(6) : "0.000000";
     if (btcAmountLabel) {
       btcAmountLabel.textContent =
-        total > 0 ? `$${total.toFixed(2)} USD (~${btcEstimate} BTC)` : "Add items to see amount";
+        total > 0
+          ? `$${total.toFixed(2)} USD (~${btcEstimate} BTC @ $${Math.round(rate).toLocaleString()})`
+          : "Add items to see amount";
     }
 
     if (btcQrCode && address && total > 0) {
@@ -535,18 +575,24 @@ function showCheckoutSuccess(orderId, email) {
     successUserContact.textContent = telegram ? `${email} & ${telegram}` : email;
   }
 
+  const entries = cartEntries();
+  const total = currentTotal();
+  if (window.notifyBotOrderSuccess) {
+    window.notifyBotOrderSuccess(
+      orderId,
+      email,
+      total,
+      entries.map((p) => ({ product_name: p.name, quantity: p.quantity }))
+    );
+  } else if (window.addBotMessage) {
+    window.addBotMessage(
+      `Your order #${orderId} has been placed! Our team has been notified and will verify the transaction.`
+    );
+  }
+
   state.cart.clear();
   renderCart();
   showToast("Order placed successfully!");
-  
-  // Notify the bot panel with full order details
-  if (window.notifyBotOrderSuccess) {
-    const entries = cartEntries();
-    const email = checkoutForm.elements.email?.value.trim() || "";
-    window.notifyBotOrderSuccess(orderId, email, currentTotal(), entries.map(p => ({ product_name: p.name, quantity: p.quantity })));
-  } else if (window.addBotMessage) {
-    window.addBotMessage(`Your order #${orderId} has been placed! Our team has been notified and will verify the transaction.`);
-  }
 }
 
 async function verifyPaystackReference(reference) {
@@ -760,9 +806,39 @@ function initHeroMotion() {
 
 async function boot() {
   initHeroMotion();
-  await loadStoreConfig();
+  await Promise.all([loadStoreConfig(), fetchBtcUsdPrice()]);
   await loadProducts();
   await resumePaystackReturn();
+  bindTrackOrderForm();
+}
+
+function bindTrackOrderForm() {
+  const form = document.querySelector("#trackOrderForm");
+  const result = document.querySelector("#trackOrderResult");
+  if (!form || !result) return;
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const orderId = form.elements.orderId.value.trim();
+    const email = form.elements.email.value.trim();
+    result.textContent = "Checking...";
+    try {
+      const response = await fetch(
+        `/api/orders/status?orderId=${encodeURIComponent(orderId)}&email=${encodeURIComponent(email)}`
+      );
+      const payload = await response.json();
+      if (!response.ok) {
+        result.textContent = payload.error || "Order not found.";
+        return;
+      }
+      const order = payload.order;
+      result.innerHTML = `Order <strong>${order.id}</strong> — status <strong>${order.status}</strong> · $${Number(
+        order.totalUsd || 0
+      ).toFixed(2)} · ${order.paymentMethod || "n/a"}`;
+    } catch {
+      result.textContent = "Could not reach order tracker. Try again or message support.";
+    }
+  });
 }
 
 boot();

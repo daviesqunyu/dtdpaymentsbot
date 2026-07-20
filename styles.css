@@ -462,6 +462,92 @@ textarea {
   font-weight: 700;
 }
 
+.hero-telegram-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.tg-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--panel) 80%, transparent);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.telegram-hub-grid,
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.hub-card,
+.faq-item,
+.track-form {
+  padding: 22px;
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+.hub-card h3,
+.faq-item summary {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+}
+
+.hub-list {
+  margin: 0 0 16px;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+.hub-list code {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.85rem;
+}
+
+.track-form {
+  display: grid;
+  gap: 14px;
+  width: min(520px, 100%);
+}
+
+.track-result {
+  min-height: 1.4em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.faq-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.faq-item summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.faq-item p {
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+
+@media (max-width: 860px) {
+  .telegram-hub-grid,
+  .faq-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .search-box {
   display: grid;
   gap: 8px;

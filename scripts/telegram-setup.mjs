@@ -9,6 +9,8 @@ import { BOT_COMMANDS } from "../functions/lib/bot-commands.js";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const storeUrl = (process.env.STORE_URL || "https://dtdpaymentsbot.pages.dev").replace(/\/$/, "");
+const companyUrl = (process.env.COMPANY_URL || "https://dvtechnologies.xyz").replace(/\/$/, "");
+const companyName = process.env.COMPANY_NAME || "DV Technologies";
 const mainChannel = process.env.TELEGRAM_CHANNEL_ID || "-1004433496789";
 const backupChannel = process.env.TELEGRAM_BACKUP_CHANNEL_ID || "";
 const groupId = process.env.TELEGRAM_GROUP_ID || "";
@@ -36,16 +38,14 @@ async function api(method, body) {
 }
 
 function ensureStoreLink(description) {
-  const base = String(description || "").trim();
-  const contactLine = `📩 Dm Owner @${owner} for inquiries and complaints`;
-  if (base.includes(storeUrl) && base.includes(`@${owner}`)) return base;
-  if (!base) {
-    return ["WEB$TORE💸💻", storeUrl, contactLine].join("\n");
-  }
-  let next = base;
-  if (!next.includes(storeUrl)) next += `\n\n🛒 Official store:\n${storeUrl}`;
-  if (!next.includes(`@${owner}`)) next += `\n${contactLine}`;
-  return next;
+  const about = [
+    "DTD MAIN STORE — powered internationally by DV Technologies.",
+    `🛒 ${storeUrl}`,
+    `🌐 ${companyUrl}`,
+    `🤖 @${botUsername} · 👤 @${owner}`,
+    "Paystack (KES) + Bitcoin"
+  ].join("\n");
+  return about.slice(0, 255);
 }
 
 async function updateChannelDescription(chatId, label) {
@@ -70,25 +70,25 @@ async function main() {
   console.log(`[ok] Bot online: @${me.username} id=${me.id}`);
 
   try {
-    await api("setMyName", { name: "DTD PAYMEN BOT" });
+    await api("setMyName", { name: "DTD PAYMENT BOT" });
   } catch (error) {
     console.warn(`[warn] setMyName skipped: ${error.message}`);
   }
   await api("setMyShortDescription", {
-    short_description: `DTD Store • ${storeUrl} • Support @${owner}`
+    short_description: `DTD Store · Paystack + BTC · @${owner}`.slice(0, 120)
   });
   await api("setMyDescription", {
     description: [
-      "Official DTD Payments bot — products, Paystack/BTC, and channel tools.",
+      "Official DTD Store bot — shop digital products, pay with Paystack or Bitcoin, track orders.",
       "",
       `🛒 Store: ${storeUrl}`,
+      `🌐 ${companyName}: ${companyUrl}`,
       `📢 Channel: https://t.me/${channelUser}`,
-      "💳 Paystack (card/bank/mobile money) + Bitcoin",
       "",
-      "Commands: /store /products /pay /channel /support /help",
-      "Admin: /status /orders /post /config",
+      "Commands: /start /products /pay /order /channel /support /help",
+      "Admin: /status /orders /post /config /mirror",
       "",
-      `Owner / support: @${owner}`
+      `Owner: @${owner}`
     ].join("\n")
   });
   await api("setMyCommands", { commands: BOT_COMMANDS });

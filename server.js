@@ -269,6 +269,8 @@ app.get("/api/config", (_req, res) => {
     btcAddress: process.env.BTC_ADDRESS || "",
     btcNetwork: "BTC",
     storeUrl: process.env.STORE_URL || "https://dtdpaymentsbot.pages.dev",
+    companyUrl: process.env.COMPANY_URL || "https://dvtechnologies.xyz",
+    companyName: process.env.COMPANY_NAME || "DV Technologies",
     telegramBotUsername: botUsername,
     telegramBotUrl: botUsername ? `https://t.me/${botUsername}` : "",
     telegramEnabled: telegramReady,

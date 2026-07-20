@@ -10,6 +10,10 @@
     "pages:secrets": "node scripts/push-secrets.mjs",
     "telegram:setup": "node scripts/telegram-setup.mjs",
     "mirror:telethon": "python scripts/telethon_mirror.py",
+    "mirror:list": "python scripts/telethon_list_chats.py",
+    "mirror:start": "powershell -ExecutionPolicy Bypass -File scripts/start-mirror.ps1",
+    "mirror:autostart": "powershell -ExecutionPolicy Bypass -File scripts/install-mirror-autostart.ps1",
+    "mirror:polish": "python scripts/push_channel_polish.py",
     "deploy": "wrangler pages deploy . --project-name=dtdpaymentsbot --branch=main --commit-dirty=true",
     "deploy:full": "npm run pages:secrets && npm run deploy"
   },

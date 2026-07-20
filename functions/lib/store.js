@@ -96,6 +96,8 @@ export async function notifyOrderTelegram(env, message) {
 
 export function getStoreConfig(env) {
   const botUsername = String(env.TELEGRAM_BOT_USERNAME || "").replace(/^@/, "");
+  const channelUsername = String(env.TELEGRAM_CHANNEL_USERNAME || "DTDMAINSTORE").replace(/^@/, "");
+  const ownerUsername = String(env.TELEGRAM_OWNER_USERNAME || "Davetheedev").replace(/^@/, "");
   const telegramReady = Boolean(
     env.TELEGRAM_BOT_TOKEN && (env.TELEGRAM_ADMIN_CHAT_ID || env.TELEGRAM_CHANNEL_ID)
   );
@@ -107,8 +109,14 @@ export function getStoreConfig(env) {
     btcAddress: env.BTC_ADDRESS || "",
     btcNetwork: "BTC",
     storeUrl: env.STORE_URL || "https://dtdpaymentsbot.pages.dev",
+    companyUrl: env.COMPANY_URL || "https://dvtechnologies.xyz",
+    companyName: env.COMPANY_NAME || "DV Technologies",
     telegramBotUsername: botUsername,
     telegramBotUrl: botUsername ? `https://t.me/${botUsername}` : "",
+    telegramChannelUsername: channelUsername,
+    telegramChannelUrl: channelUsername ? `https://t.me/${channelUsername}` : "",
+    telegramOwnerUsername: ownerUsername,
+    telegramOwnerUrl: ownerUsername ? `https://t.me/${ownerUsername}` : "",
     telegramEnabled: telegramReady,
     paymentOptions: [
       { id: "Crypto", label: "Bitcoin (BTC)", type: "crypto" },
@@ -117,38 +125,29 @@ export function getStoreConfig(env) {
   };
 }
 
-export async function sendTelegram(env, chatId, message) {
+export async function sendTelegram(env, chatId, message, options = {}) {
   const token = env.TELEGRAM_BOT_TOKEN;
   if (!token || !chatId) return { ok: false, reason: "not_configured" };
+
+  const text = typeof message === "string" ? message : String(message?.text || "");
+  const body = {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true
+  };
+  const markup = options.reply_markup || (typeof message === "object" && message?.reply_markup);
+  if (markup) body.reply_markup = markup;
 
   const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text: message,
-      parse_mode: "HTML"
-    })
+    body: JSON.stringify(body)
   });
 
   if (!response.ok) {
     const errText = await response.text();
     console.error("Telegram error:", errText);
-    // #region agent log
-    fetch("http://127.0.0.1:7413/ingest/3855ecfa-f160-49a6-b4f2-efca4f443e59", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "8491be" },
-      body: JSON.stringify({
-        sessionId: "8491be",
-        runId: "pre-fix",
-        hypothesisId: "E",
-        location: "functions/lib/store.js:sendTelegram",
-        message: "Telegram send failed",
-        data: { chatId: String(chatId), status: response.status, error: String(errText).slice(0, 300) },
-        timestamp: Date.now()
-      })
-    }).catch(() => {});
-    // #endregion
     return { ok: false, reason: "send_failed" };
   }
 

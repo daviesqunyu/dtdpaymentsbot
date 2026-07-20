@@ -10,6 +10,14 @@ export function storeUrl(env) {
   return String(env.STORE_URL || DEFAULT_STORE).replace(/\/$/, "");
 }
 
+export function companyUrl(env) {
+  return String(env.COMPANY_URL || "https://dvtechnologies.xyz").replace(/\/$/, "");
+}
+
+export function companyName(env) {
+  return String(env.COMPANY_NAME || "DV Technologies").trim() || "DV Technologies";
+}
+
 export function ownerHandle(env) {
   return String(env.TELEGRAM_OWNER_USERNAME || OWNER).replace(/^@/, "");
 }
@@ -37,18 +45,26 @@ export function channelMirrorEnabled(env) {
 }
 
 export function mirrorSourceIds(env) {
-  const raw = [
+  // Prefer explicit source list; do not treat destination channel as a source.
+  const explicit = [
     env.TELEGRAM_MIRROR_FROM_CHANNEL_ID,
-    env.TELEGRAM_CHANNEL_ID,
-    env.TELEGRAM_BACKUP_CHANNEL_ID
+    ...(String(env.MIRROR_SOURCE_CHANNELS || "").split(/[\s,]+/))
   ]
-    .filter(Boolean)
-    .join(",");
-  return [...new Set(String(raw).split(/[\s,]+/).filter(Boolean))];
+    .map((id) => String(id || "").trim())
+    .filter(Boolean);
+
+  const sources = explicit.length
+    ? explicit
+    : [env.TELEGRAM_CHANNEL_ID, env.TELEGRAM_BACKUP_CHANNEL_ID].filter(Boolean);
+
+  const target = mirrorTargetId(env);
+  return [...new Set(sources.map(String).filter((id) => id && id !== target))];
 }
 
 export function mirrorTargetId(env) {
-  return String(env.TELEGRAM_MIRROR_TO_CHAT_ID || env.TELEGRAM_GROUP_ID || "").trim();
+  return String(
+    env.TELEGRAM_MIRROR_TO_CHAT_ID || env.MIRROR_DEST_CHANNEL || env.TELEGRAM_GROUP_ID || ""
+  ).trim();
 }
 
 export const BOT_COMMANDS = [
@@ -57,6 +73,7 @@ export const BOT_COMMANDS = [
   { command: "store", description: "Official website link" },
   { command: "products", description: "Live products from the store DB" },
   { command: "pay", description: "Paystack + Bitcoin payment info" },
+  { command: "order", description: "Track order: /order <id> <email>" },
   { command: "channel", description: "Main Telegram channel" },
   { command: "support", description: "Contact @davetheedev" },
   { command: "status", description: "Admin: system status" },
@@ -67,6 +84,25 @@ export const BOT_COMMANDS = [
   { command: "mods", description: "Admin: required bot admin permissions" },
   { command: "mirror", description: "Admin: channel→group mirror status" }
 ];
+
+function storeKeyboard(env) {
+  const store = storeUrl(env);
+  const company = companyUrl(env);
+  const channel = channelUsername(env);
+  const bot = botUsername(env);
+  const owner = ownerHandle(env);
+  return {
+    inline_keyboard: [
+      [{ text: "🛒 Open store", url: store }],
+      [{ text: "🌐 DV Technologies", url: company }],
+      [
+        { text: "📢 Channel", url: `https://t.me/${channel}` },
+        { text: "💬 Support", url: `https://t.me/${owner}` }
+      ],
+      [{ text: "🤖 Bot menu", url: `https://t.me/${bot}?start=help` }]
+    ]
+  };
+}
 
 function esc(text) {
   return String(text || "")
@@ -118,6 +154,7 @@ function helpText(admin) {
     "/store — website link",
     "/products — live catalog",
     "/pay — Paystack + BTC",
+    "/order &lt;id&gt; &lt;email&gt; — track order",
     "/channel — main channel",
     "/support — contact owner",
     "/help — this list"
@@ -148,28 +185,37 @@ export async function handleBotCommand(env, { text, chatId, from }, deps) {
   const arg = rest.join(" ").trim();
   const admin = isAdmin(env, chatId);
   const store = storeUrl(env);
+  const company = companyUrl(env);
+  const companyLabel = companyName(env);
   const owner = ownerHandle(env);
   const channel = channelUsername(env);
   const bot = botUsername(env);
 
   let reply = "";
+  let replyMarkup = null;
 
   switch (command) {
     case "start":
       reply = [
         "<b>Welcome to DTD Store</b>",
         "",
+        "Digital products · Paystack (KES) · Bitcoin",
+        `Supported internationally by <b>${esc(companyLabel)}</b>`,
+        "",
         `🛒 Shop: ${store}`,
+        `🌐 Company: ${company}`,
         `📢 Channel: https://t.me/${channel}`,
         `🤖 Bot: @${bot}`,
         `👤 Owner: @${owner}`,
         "",
-        "Use /products /pay /store /help"
+        "Tap a button below, or try /products /pay /order /help"
       ].join("\n");
+      replyMarkup = storeKeyboard(env);
       break;
 
     case "help":
       reply = helpText(admin);
+      replyMarkup = storeKeyboard(env);
       break;
 
     case "store":
@@ -179,6 +225,7 @@ export async function handleBotCommand(env, { text, chatId, from }, deps) {
         "",
         `Questions? @${owner}`
       ].join("\n");
+      replyMarkup = storeKeyboard(env);
       break;
 
     case "channel":
@@ -188,6 +235,7 @@ export async function handleBotCommand(env, { text, chatId, from }, deps) {
         `Backup / support: @${owner}`,
         `Store: ${store}`
       ].join("\n");
+      replyMarkup = storeKeyboard(env);
       break;
 
     case "support":
@@ -197,6 +245,7 @@ export async function handleBotCommand(env, { text, chatId, from }, deps) {
         `Store: ${store}`,
         `Channel: https://t.me/${channel}`
       ].join("\n");
+      replyMarkup = storeKeyboard(env);
       break;
 
     case "pay":
@@ -207,9 +256,63 @@ export async function handleBotCommand(env, { text, chatId, from }, deps) {
         "₿ <b>Bitcoin (BTC)</b> — pay via QR on checkout, then admin confirms",
         "",
         `Open checkout: ${store}/#checkout`,
+        `Track order: /order &lt;id&gt; &lt;email&gt;`,
         `Need help? @${owner}`
       ].join("\n");
+      replyMarkup = storeKeyboard(env);
       break;
+
+    case "order": {
+      const parts = rest.filter(Boolean);
+      const orderId = parts[0] || "";
+      const email = parts[1] || "";
+      if (!orderId || !email) {
+        reply = [
+          "<b>Track an order</b>",
+          "Usage: <code>/order ORDER_ID email@example.com</code>",
+          "",
+          `Or website tracker: ${store}/#track`
+        ].join("\n");
+        break;
+      }
+      try {
+        const supabase = getSupabase(env);
+        if (!supabase) {
+          reply = `Order lookup unavailable. Message @${owner}`;
+          break;
+        }
+        const { data, error } = await supabase
+          .from("orders")
+          .select("id,status,payment_method,payment_status,total_usd,created_at,customer_email")
+          .eq("id", orderId)
+          .maybeSingle();
+        if (error || !data) {
+          reply = "Order not found. Check the ID and try again.";
+          break;
+        }
+        const emailOk =
+          String(data.customer_email || data.customer_phone || "")
+            .trim()
+            .toLowerCase() === email.trim().toLowerCase();
+        if (!emailOk) {
+          reply = "Email does not match this order.";
+          break;
+        }
+        reply = [
+          "<b>Order status</b>",
+          `ID: <code>${esc(data.id)}</code>`,
+          `Status: <b>${esc(data.status || data.payment_status || "pending")}</b>`,
+          `Payment: ${esc(data.payment_method || "n/a")}`,
+          `Total: $${Number(data.total_usd || 0).toFixed(2)}`,
+          `Created: ${esc(data.created_at || "")}`,
+          "",
+          `Support: @${owner}`
+        ].join("\n");
+      } catch {
+        reply = `Could not look up order. Contact @${owner}`;
+      }
+      break;
+    }
 
     case "products": {
       const products = await listProducts(env, getSupabase);
@@ -223,6 +326,7 @@ export async function handleBotCommand(env, { text, chatId, from }, deps) {
         `Buy here: ${store}`,
         `Support: @${owner}`
       ].join("\n");
+      replyMarkup = storeKeyboard(env);
       break;
     }
 
@@ -393,6 +497,8 @@ export async function handleBotCommand(env, { text, chatId, from }, deps) {
       reply = `Unknown command. Try /help\nStore: ${store}\nSupport: @${owner}`;
   }
 
+  if (!reply) return null;
+  if (replyMarkup) return { text: reply, reply_markup: replyMarkup };
   return reply;
 }
 
@@ -554,6 +660,12 @@ export async function processTelegramUpdate(env, update, deps) {
 
   if (!reply) return { handled: false };
 
-  await deps.sendTelegram(env, message.chat.id, reply);
+  if (typeof reply === "object" && reply.text) {
+    await deps.sendTelegram(env, message.chat.id, reply.text, {
+      reply_markup: reply.reply_markup
+    });
+  } else {
+    await deps.sendTelegram(env, message.chat.id, reply);
+  }
   return { handled: true };
 }
