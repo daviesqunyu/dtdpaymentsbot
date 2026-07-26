@@ -24,7 +24,7 @@ const blockedProductTerms = [
     { id: "USDT", label: "USDT (TRC20)", type: "crypto", asset: "USDT", network: "TRC20" },
     { id: "Bitcoin", label: "Bitcoin (BTC)", type: "crypto", asset: "BTC", network: "BTC" },
     { id: "Stars", label: "Telegram Stars ⭐", type: "stars", asset: "XTR" },
-    { id: "Paystack", label: "Card / Bank / Mobile Money", type: "paystack" }
+    { id: "Paystack", label: "Card / Bank / Local (USSD · M-Pesa)", type: "paystack" }
   ]
 };
 

@@ -466,40 +466,51 @@ function productPayKeyboard(productId, env) {
     rows.push([blue({ text: "⭐ Telegram Stars", callback_data: `shop:pay:${productId}:stars` })]);
   }
   rows.push(
+    // Global fiat (USD priced) — no standalone M-Pesa
     [
-      green({ text: "💳 Card", callback_data: `shop:pay:${productId}:card` }),
-      green({ text: "📱 M-Pesa", callback_data: `shop:pay:${productId}:momo` })
+      green({ text: "💳 Card (global)", callback_data: `shop:pay:${productId}:card` }),
+      blue({ text: "🏦 Bank (global)", callback_data: `shop:pay:${productId}:bank` })
     ],
-    [
-      blue({ text: "🔢 USSD", callback_data: `shop:pay:${productId}:ussd` }),
-      blue({ text: "🏦 Bank", callback_data: `shop:pay:${productId}:bank` })
-    ],
+    // Local options live under USSD
+    [green({ text: "🔢 Local · USSD / M-Pesa", callback_data: `shop:local:${productId}` })],
     [red({ text: "‼️ Back to catalog", callback_data: "shop:menu" })]
   );
   return { inline_keyboard: rows };
 }
 
+function localPayKeyboard(productId) {
+  return {
+    inline_keyboard: [
+      [green({ text: "🔢 Local · USSD", callback_data: `shop:pay:${productId}:ussd` })],
+      [blue({ text: "📱 Local · M-Pesa", callback_data: `shop:pay:${productId}:momo` })],
+      [red({ text: "‼️ Back to methods", callback_data: `shop:p:${productId}` })]
+    ]
+  };
+}
+
 function paymentSummary(env) {
-  const currency = env.PAYSTACK_CURRENCY || "KES";
+  const local = env.PAYSTACK_CURRENCY || "KES";
   const usdt = usdtAddress(env);
   const btc = btcAddress(env);
   return [
-    section("Payments", [
+    section("Payments (USD base)", [
       usdt
-        ? "₮ USDT (TRC20) → DTD wallet + QR at checkout (preferred)"
+        ? "₮ USDT (TRC20) → global crypto (preferred)"
         : "₮ USDT (TRC20) → not configured yet",
-      btc ? "₿ Bitcoin → DTD BTC wallet + QR at checkout" : "₿ Bitcoin → not configured yet",
+      btc ? "₿ Bitcoin → global crypto" : "₿ Bitcoin → not configured yet",
       starsEnabled(env)
-        ? `⭐ Telegram Stars → ~${usdToStars(env, 1)} ★ per $1 (instant in-app)`
+        ? `⭐ Telegram Stars → ~${usdToStars(env, 1)} ★ per $1`
         : null,
-      `Card · M-Pesa · USSD · Bank → Paystack (${currency})`
+      "💳 Card / 🏦 Bank → Paystack (global, priced in USD)",
+      `🔢 Local · USSD / M-Pesa → Paystack local (${local}) under USSD`
     ].filter(Boolean))
   ].join("\n");
 }
 
 function productDetailMessage(product, env) {
-  const kesRate = Number(env.PAYSTACK_CONVERSION_RATE || 129);
-  const kes = Math.round(Number(product.price_usd || 0) * kesRate);
+  const local = env.PAYSTACK_CURRENCY || "KES";
+  const rate = Number(env.PAYSTACK_CONVERSION_RATE || 129);
+  const localAmt = Math.round(Number(product.price_usd || 0) * rate);
   const title = displayName(product.name);
   const desc = displayDescription(product.description, 180);
   return {
@@ -510,23 +521,46 @@ function productDetailMessage(product, env) {
       esc(desc),
       "",
       section("Price", [
-        `${money(product.price_usd)} USD`,
-        `≈ ${kes.toLocaleString()} ${esc(env.PAYSTACK_CURRENCY || "KES")} via Paystack`
+        `<b>${money(product.price_usd)} USD</b> (store currency)`,
+        `Local option ≈ ${localAmt.toLocaleString()} ${esc(local)} via USSD / M-Pesa`
       ]),
       "",
       paymentSummary(env),
       "",
-      `${PX.gem} <b>Choose a payment method</b>`
+      `${PX.gem} <b>Choose a payment method</b>`,
+      "<i>Global methods first · Local (USSD / M-Pesa) is a separate button</i>"
     ].join("\n"),
     reply_markup: productPayKeyboard(product.id, env)
+  };
+}
+
+function localPayMessage(product, env) {
+  const local = env.PAYSTACK_CURRENCY || "KES";
+  const rate = Number(env.PAYSTACK_CONVERSION_RATE || 129);
+  const localAmt = Math.round(Number(product.price_usd || 0) * rate);
+  return {
+    text: [
+      premiumHeader("Local payment · USSD / M-Pesa", PX.phone),
+      premiumDivider(),
+      `<b>${esc(displayName(product.name))}</b>`,
+      `Store price: <b>${money(product.price_usd)} USD</b>`,
+      `You pay locally ≈ <b>${localAmt.toLocaleString()} ${esc(local)}</b> via Paystack`,
+      "",
+      "Pick your local method:",
+      "🔢 <b>USSD</b> — dial bank / mobile USSD",
+      "📱 <b>M-Pesa</b> — Kenya mobile money (if enabled on Paystack)",
+      "",
+      "<i>If M-Pesa fails on your Paystack account, use USSD or Card (global).</i>"
+    ].join("\n"),
+    reply_markup: localPayKeyboard(product.id)
   };
 }
 
 function paystackPromptKeyboard(productId) {
   return {
     inline_keyboard: [
-      [{ text: `${PX.bolt} Change payment method`, callback_data: `shop:p:${productId}` }],
-      [{ text: `${PX.bag} Back to catalog`, callback_data: "shop:menu" }]
+      [blue({ text: "⚡ Change payment method", callback_data: `shop:p:${productId}` })],
+      [red({ text: "‼️ Back to catalog", callback_data: "shop:menu" })]
     ]
   };
 }
@@ -573,47 +607,50 @@ const PAYSTACK_METHOD_MAP = {
     channels: ["card"],
     label: "Card",
     emoji: "💳",
-    promptTitle: "Card payment",
+    promptTitle: "Card · global",
+    local: false,
     how: [
       "Open the secure Paystack page.",
-      "Pay by debit or credit card.",
-      "Price is shown in USD; you are charged the KES equivalent.",
+      "Pay by debit or credit card (global).",
+      "Store price is USD; gateway may show a local equivalent.",
       "After payment, send your delivery email here."
     ]
   },
   momo: {
-    channels: ["mobile_money"],
+    channels: ["mobile_money", "ussd"],
     label: "M-Pesa",
     emoji: "📱",
-    promptTitle: "M-Pesa / mobile money",
+    promptTitle: "Local · M-Pesa",
+    local: true,
     how: [
-      "Open the secure Paystack page.",
-      "Choose M-Pesa or another mobile-money option.",
-      "Approve the prompt on your phone.",
+      "Open Paystack and choose M-Pesa / mobile money.",
+      "Enter your phone and approve the prompt.",
+      "Local currency charge from the USD store price.",
       "After payment, send your delivery email here."
     ]
   },
   ussd: {
-    channels: ["ussd"],
+    channels: ["ussd", "mobile_money"],
     label: "USSD",
     emoji: "🔢",
-    promptTitle: "USSD payment",
+    promptTitle: "Local · USSD",
+    local: true,
     how: [
-      "Open the secure Paystack page.",
-      "Dial the USSD code shown for your bank.",
-      "Complete the local KES payment.",
+      "Open Paystack and choose USSD (M-Pesa may also appear).",
+      "Dial / follow the local network steps.",
+      "Local currency charge from the USD store price.",
       "After payment, send your delivery email here."
     ]
   },
   bank: {
     channels: ["bank", "bank_transfer"],
-    label: "Bank transfer",
+    label: "Bank",
     emoji: "🏦",
-    promptTitle: "Bank transfer",
+    promptTitle: "Bank · global",
+    local: false,
     how: [
       "Open the secure Paystack page.",
-      "Choose bank / bank transfer.",
-      "Complete the local KES transfer.",
+      "Pay by bank transfer / account.",
       "After payment, send your delivery email here."
     ]
   },
@@ -622,24 +659,28 @@ const PAYSTACK_METHOD_MAP = {
     label: "Paystack",
     emoji: "💳",
     promptTitle: "Paystack checkout",
+    local: false,
     how: [
-      "Open Paystack and pick Card, Bank, USSD, or M-Pesa.",
-      "Complete payment on the secure page.",
+      "Card/Bank = global · USSD/M-Pesa = local under Local menu.",
       "After payment, send your delivery email here."
     ]
   }
 };
 
 function buildPaystackMethodPrompt(env, product, payMethod) {
-  const kesRate = Number(env.PAYSTACK_CONVERSION_RATE || 129);
-  const kes = Math.round(Number(product.price_usd) * kesRate);
+  const rate = Number(env.PAYSTACK_CONVERSION_RATE || 129);
+  const local = env.PAYSTACK_CURRENCY || "KES";
+  const localAmt = Math.round(Number(product.price_usd) * rate);
   const title = displayName(product.name);
+  const chargeLine = payMethod.local
+    ? `Local charge ≈ <b>${localAmt.toLocaleString()} ${esc(local)}</b>`
+    : `Priced in <b>USD</b> · gateway may show ${esc(local)} equivalent`;
   return [
     `${payMethod.emoji} <b>${esc(payMethod.promptTitle)}</b>`,
     "────────────────",
     `Product: <b>${esc(title)}</b>`,
-    `Total: <b>${money(product.price_usd)} USD</b>`,
-    `You pay ≈ <b>${kes.toLocaleString()} ${esc(env.PAYSTACK_CURRENCY || "KES")}</b>`,
+    `Store price: <b>${money(product.price_usd)} USD</b>`,
+    chargeLine,
     "",
     section("Steps", payMethod.how.map((line, i) => `${i + 1}. ${line}`)),
     "",
@@ -928,6 +969,20 @@ export async function handleShopCallback(env, query, deps) {
       }
       const detail = productDetailMessage(product, env);
       await editOrSend(detail.text, detail.reply_markup);
+      return { handled: true };
+    }
+
+    if (data.startsWith("shop:local:")) {
+      const productId = data.slice("shop:local:".length);
+      const product = await getProduct(env, deps.getSupabase, productId);
+      if (!product) {
+        await editOrSend("Product not found. Open /buy again.", {
+          inline_keyboard: [[{ text: "🛍️ Back to catalog", callback_data: "shop:menu" }]]
+        });
+        return { handled: true };
+      }
+      const local = localPayMessage(product, env);
+      await editOrSend(local.text, local.reply_markup);
       return { handled: true };
     }
 

@@ -60,7 +60,7 @@ export function buildPremiumStartKeyboard(env, products = []) {
       green({ text: "⭐ Stars", callback_data: "shop:menu" })
     ],
     // Rules / paystack — red full width like screenshot bottom
-    [red({ text: "‼️ Pay · Card / M-Pesa", callback_data: "shop:menu" })],
+    [red({ text: "‼️ Pay · Card / Local USSD", callback_data: "shop:menu" })],
     // MORE — blue + green
     [
       blue({ text: "📈 Trade", web_app: { url: miniAppUrl(env, "trade") } }),

@@ -285,7 +285,7 @@ export function getStoreConfig(env) {
       !["0", "false", "off", "no"].includes(String(env.STARS_ENABLED ?? "true").trim().toLowerCase())
         ? [{ id: "Stars", label: "Telegram Stars ⭐", type: "stars", asset: "XTR" }]
         : []),
-      { id: "Paystack", label: "Card / Bank / Mobile Money", type: "paystack" }
+      { id: "Paystack", label: "Card / Bank / Local (USSD · M-Pesa)", type: "paystack" }
     ]
   };
 }

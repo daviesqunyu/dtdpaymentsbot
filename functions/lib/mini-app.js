@@ -61,7 +61,7 @@ export function miniAppPrivateKeyboard(env) {
         blue({ text: "₮ USDT / ₿ BTC", callback_data: "shop:menu" }),
         green({ text: "⭐ Stars", callback_data: "shop:menu" })
       ],
-      [red({ text: "‼️ Pay · Card / M-Pesa", callback_data: "shop:menu" })],
+      [red({ text: "‼️ Pay · Card / Local USSD", callback_data: "shop:menu" })],
       [
         blue({ text: "📈 Trade", web_app: { url: miniAppUrl(env, "trade") } }),
         green({ text: "💬 Chat", web_app: { url: miniAppUrl(env, "chat") } })
