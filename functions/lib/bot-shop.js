@@ -12,12 +12,14 @@ import {
 import {
   PX,
   colorDot,
-  colorPaletteLine,
   numberEmoji,
-  premiumBanner,
   premiumDivider,
+  premiumField,
   premiumHeader,
+  premiumProductCard,
   premiumSteps,
+  premiumSubtitle,
+  premiumTitle,
   reactToMessage
 } from "./tg-premium.js";
 import { createStarsCheckout, starsEnabled, usdToStars } from "./stars.js";
@@ -133,7 +135,7 @@ function displayDescription(description, max = 110) {
 }
 
 function section(title, lines) {
-  return [`<b>${title}</b>`, ...lines].join("\n");
+  return [premiumTitle(title, PX.pin), ...lines.map((line) => `• ${line}`)].join("\n");
 }
 
 function money(usd) {
@@ -512,23 +514,27 @@ function productDetailMessage(product, env) {
   const rate = Number(env.PAYSTACK_CONVERSION_RATE || 129);
   const localAmt = Math.round(Number(product.price_usd || 0) * rate);
   const title = displayName(product.name);
-  const desc = displayDescription(product.description, 180);
+  const desc = displayDescription(product.description, 220);
   return {
     text: [
       premiumHeader("Checkout", PX.cart),
       premiumDivider(),
-      `<b>${esc(title)}</b>`,
-      esc(desc),
-      "",
-      section("Price", [
-        `<b>${money(product.price_usd)} USD</b> (store currency)`,
-        `Local option ≈ ${localAmt.toLocaleString()} ${esc(local)} via USSD / M-Pesa`
-      ]),
+      premiumProductCard({
+        title: esc(title),
+        subtitle: esc(desc),
+        priceUsd: product.price_usd,
+        extra: [
+          premiumField(
+            "Local option",
+            `≈ <code>${localAmt.toLocaleString()} ${esc(local)}</code> via USSD / M-Pesa`
+          )
+        ]
+      }),
       "",
       paymentSummary(env),
       "",
-      `${PX.gem} <b>Choose a payment method</b>`,
-      "<i>Global methods first · Local (USSD / M-Pesa) is a separate button</i>"
+      premiumTitle("Choose a payment method", PX.gem),
+      premiumSubtitle("Global methods first · Local (USSD / M-Pesa) is a separate button")
     ].join("\n"),
     reply_markup: productPayKeyboard(product.id, env)
   };
@@ -538,19 +544,29 @@ function localPayMessage(product, env) {
   const local = env.PAYSTACK_CURRENCY || "KES";
   const rate = Number(env.PAYSTACK_CONVERSION_RATE || 129);
   const localAmt = Math.round(Number(product.price_usd || 0) * rate);
+  const title = displayName(product.name);
+  const desc = displayDescription(product.description, 160);
   return {
     text: [
       premiumHeader("Local payment · USSD / M-Pesa", PX.phone),
       premiumDivider(),
-      `<b>${esc(displayName(product.name))}</b>`,
-      `Store price: <b>${money(product.price_usd)} USD</b>`,
-      `You pay locally ≈ <b>${localAmt.toLocaleString()} ${esc(local)}</b> via Paystack`,
+      premiumProductCard({
+        title: esc(title),
+        subtitle: esc(desc),
+        priceUsd: product.price_usd,
+        extra: [
+          premiumField(
+            "You pay locally",
+            `≈ <code>${localAmt.toLocaleString()} ${esc(local)}</code> via Paystack`
+          )
+        ]
+      }),
       "",
-      "Pick your local method:",
-      "🔢 <b>USSD</b> — dial bank / mobile USSD",
-      "📱 <b>M-Pesa</b> — Kenya mobile money (if enabled on Paystack)",
+      premiumTitle("Pick your local method", PX.target),
+      `🔢 <b>USSD</b> — dial bank / mobile USSD`,
+      `📱 <b>M-Pesa</b> — Kenya mobile money (if enabled on Paystack)`,
       "",
-      "<i>If M-Pesa fails on your Paystack account, use USSD or Card (global).</i>"
+      premiumSubtitle("If M-Pesa fails on your Paystack account, use USSD or Card (global).")
     ].join("\n"),
     reply_markup: localPayKeyboard(product.id)
   };
@@ -573,13 +589,13 @@ export function buildShopCatalogMessage(products, env) {
   const catalogLines = products.length
     ? products.map((p, i) => {
         const title = displayName(p.name);
-        const desc = displayDescription(p.description, 90);
+        const desc = displayDescription(p.description, 100);
         const price = money(p.price_usd);
         return [
-          `${colorDot(i)} <b>${esc(title)}</b>`,
-          `   ${PX.money} <code>${price}</code> USD`,
-          desc ? `   <i>${esc(desc)}</i>` : null,
-          "   ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
+          `${colorDot(i)} <b><u>${esc(title)}</u></b>`,
+          `${PX.money} <b>Price:</b> <code>${price} USD</code>`,
+          desc ? premiumSubtitle(esc(desc)) : null,
+          premiumDivider()
         ]
           .filter(Boolean)
           .join("\n");
@@ -588,15 +604,16 @@ export function buildShopCatalogMessage(products, env) {
 
   return {
     text: [
-      `${PX.crown} <b>DTD · PRODUCTS</b>`,
+      premiumHeader("DTD · PRODUCTS", PX.crown),
       premiumDivider(),
-      `<blockquote>Blue / green / red buttons — tap a product row to checkout</blockquote>`,
+      premiumSubtitle("Blue / green / red buttons — tap a product row to checkout"),
       "",
-      `${PX.live} <b>${products.length}</b> live · USD`,
+      `${PX.live} <b>${products.length}</b> live · prices in <b>USD</b>`,
+      "",
+      premiumTitle("Catalog", PX.pin),
       "",
       ...catalogLines,
-      "",
-      `🛍 Open catalog = Mini App · or tap a product button below`
+      premiumSubtitle("Open catalog = Mini App · or tap a colored product button below")
     ].join("\n"),
     reply_markup: shopMenuKeyboard(products, env)
   };
@@ -676,15 +693,19 @@ function buildPaystackMethodPrompt(env, product, payMethod) {
     ? `Local charge ≈ <b>${localAmt.toLocaleString()} ${esc(local)}</b>`
     : `Priced in <b>USD</b> · gateway may show ${esc(local)} equivalent`;
   return [
-    `${payMethod.emoji} <b>${esc(payMethod.promptTitle)}</b>`,
-    "────────────────",
-    `Product: <b>${esc(title)}</b>`,
-    `Store price: <b>${money(product.price_usd)} USD</b>`,
-    chargeLine,
+    premiumHeader(payMethod.promptTitle, payMethod.emoji),
+    premiumDivider(),
+    premiumProductCard({
+      title: esc(title),
+      subtitle: esc(displayDescription(product.description, 140)),
+      priceUsd: product.price_usd,
+      extra: [chargeLine]
+    }),
     "",
-    section("Steps", payMethod.how.map((line, i) => `${i + 1}. ${line}`)),
+    premiumTitle("Steps", PX.target),
+    ...payMethod.how.map((line, i) => `${numberEmoji(i + 1)} ${line}`),
     "",
-    "Tap <b>Pay now</b> below. Delivery email comes after payment."
+    premiumSubtitle("Tap Pay now below. Delivery email comes after payment.")
   ].join("\n");
 }
 
@@ -1090,30 +1111,35 @@ export async function handleShopCallback(env, query, deps) {
 
         await editOrSend(
           [
-            "<b>₮ USDT (TRC20) checkout</b>",
-            "────────────────",
-            `Product: <b>${esc(displayName(product.name))}</b>`,
-            `Total: <b>${started.amount} USDT</b> (= $${started.amount} USD)`,
-            "Network: <b>Tron (TRC20)</b> only",
+            premiumHeader("USDT (TRC20) checkout", "₮"),
+            premiumDivider(),
+            premiumProductCard({
+              title: esc(displayName(product.name)),
+              subtitle: esc(displayDescription(product.description, 140)),
+              priceUsd: started.amount,
+              extra: [
+                premiumField("Send amount", `<code>${started.amount} USDT</code> (= $${started.amount} USD)`),
+                premiumField("Network", "<b>Tron (TRC20)</b> only"),
+                premiumField("Order", `<code>${esc(started.orderId)}</code>`)
+              ]
+            }),
             "",
-            section("Send to DTD wallet", [`<code>${esc(started.address)}</code>`]),
+            premiumTitle("Send to DTD wallet", PX.key),
+            `<code>${esc(started.address)}</code>`,
             "",
-            `Order: <code>${esc(started.orderId)}</code>`,
+            premiumSubtitle("A QR code follows — scan with any Tron / USDT wallet."),
             "",
-            "A QR code follows — scan with any Tron / USDT wallet.",
+            premiumTitle("How it works", PX.target),
+            `${numberEmoji(1)} Copy address or scan QR`,
+            `${numberEmoji(2)} Send exact USDT on TRC20 (not ERC20 / BEP20)`,
+            `${numberEmoji(3)} Paste your tx hash here (or /tx HASH)`,
+            `${numberEmoji(4)} Send your delivery email`,
             "",
-            section("How it works", [
-              "1. Copy address or scan QR",
-              "2. Send exact USDT on TRC20 (not ERC20 / BEP20)",
-              "3. Paste your tx hash here (or /tx HASH)",
-              "4. Send your delivery email"
-            ]),
-            "",
-            "<i>Don’t send NFTs. Wrong network = lost funds.</i>"
+            premiumSubtitle("Don’t send NFTs. Wrong network = lost funds.")
           ].join("\n"),
           {
             inline_keyboard: [
-              [{ text: "⚡ Change payment method", callback_data: `shop:p:${product.id}` }],
+              [blue({ text: "⚡ Change payment method", callback_data: `shop:p:${product.id}` })],
               ...footerLinksKeyboard(env)
             ]
           }
@@ -1123,9 +1149,9 @@ export async function handleShopCallback(env, query, deps) {
           chat_id: chatId,
           photo: qrUrl,
           caption: [
-            `${PX.qr} <b>Scan to pay · USDT TRC20</b>`,
-            `${PX.money} Amount: <b>${started.amount} USDT</b>`,
-            `${PX.bolt} Network: <b>Tron (TRC20)</b> only`,
+            `${PX.qr} <b><u>Scan to pay · USDT TRC20</u></b>`,
+            `${PX.money} <b>Amount:</b> <code>${started.amount} USDT</code>`,
+            `${PX.bolt} <b>Network:</b> Tron (TRC20) only`,
             `${PX.key} <code>${esc(started.address)}</code>`
           ].join("\n"),
           parse_mode: "HTML"
@@ -1157,29 +1183,33 @@ export async function handleShopCallback(env, query, deps) {
 
         await editOrSend(
           [
-            "<b>₿ Bitcoin checkout</b>",
-            "────────────────",
-            `Product: <b>${esc(displayName(product.name))}</b>`,
-            `Total: <b>${money(product.price_usd)} USD</b>`,
-            `Send exactly: <b>${started.amount} BTC</b>`,
-            `Rate ≈ $${Math.round(started.rate).toLocaleString()} / BTC`,
+            premiumHeader("Bitcoin checkout", "₿"),
+            premiumDivider(),
+            premiumProductCard({
+              title: esc(displayName(product.name)),
+              subtitle: esc(displayDescription(product.description, 140)),
+              priceUsd: product.price_usd,
+              extra: [
+                premiumField("Send exactly", `<code>${started.amount} BTC</code>`),
+                premiumField("Rate", `≈ $${Math.round(started.rate).toLocaleString()} / BTC`),
+                premiumField("Order", `<code>${esc(started.orderId)}</code>`)
+              ]
+            }),
             "",
-            section("Send to DTD wallet", [`<code>${esc(started.address)}</code>`]),
+            premiumTitle("Send to DTD wallet", PX.key),
+            `<code>${esc(started.address)}</code>`,
             "",
-            `Order: <code>${esc(started.orderId)}</code>`,
+            premiumSubtitle("A QR code follows — scan with any Bitcoin wallet."),
             "",
-            "A QR code follows — scan with any Bitcoin wallet.",
-            "",
-            section("How it works", [
-              "1. Copy address or scan QR",
-              "2. Send the exact BTC amount",
-              "3. Paste your txid here (or /tx HASH)",
-              "4. Send your delivery email"
-            ])
+            premiumTitle("How it works", PX.target),
+            `${numberEmoji(1)} Copy address or scan QR`,
+            `${numberEmoji(2)} Send the exact BTC amount`,
+            `${numberEmoji(3)} Paste your txid here (or /tx HASH)`,
+            `${numberEmoji(4)} Send your delivery email`
           ].join("\n"),
           {
             inline_keyboard: [
-              [{ text: "⚡ Change payment method", callback_data: `shop:p:${product.id}` }],
+              [blue({ text: "⚡ Change payment method", callback_data: `shop:p:${product.id}` })],
               ...footerLinksKeyboard(env)
             ]
           }
@@ -1189,8 +1219,8 @@ export async function handleShopCallback(env, query, deps) {
           chat_id: chatId,
           photo: qrUrl,
           caption: [
-            `${PX.qr} <b>Scan to pay · Bitcoin</b>`,
-            `${PX.btc} Amount: <b>${started.amount} BTC</b>`,
+            `${PX.qr} <b><u>Scan to pay · Bitcoin</u></b>`,
+            `${PX.btc} <b>Amount:</b> <code>${started.amount} BTC</code>`,
             `${PX.key} <code>${esc(started.address)}</code>`
           ].join("\n"),
           parse_mode: "HTML"

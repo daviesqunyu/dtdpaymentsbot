@@ -84,7 +84,36 @@ export function premiumRule() {
 }
 
 export function premiumHeader(title, emoji = PX.spark) {
-  return `${emoji} <b>${title}</b>`;
+  return `${emoji} <b><u>${title}</u></b>`;
+}
+
+/** Bold + underlined section title (Telegram can’t do real text colors). */
+export function premiumTitle(title, emoji = "") {
+  const e = emoji ? `${emoji} ` : "";
+  return `${e}<b><u>${title}</u></b>`;
+}
+
+/** Highlighted subtitle / description paragraph. */
+export function premiumSubtitle(text) {
+  const clean = String(text || "").trim();
+  if (!clean) return "";
+  return `<blockquote><i>${clean}</i></blockquote>`;
+}
+
+/** Label (bold) + value on one line. */
+export function premiumField(label, value) {
+  return `<b>${label}</b>\n${value}`;
+}
+
+/** Compact product “card” for checkout / pay screens. */
+export function premiumProductCard({ title, subtitle = "", priceUsd = null, extra = [] }) {
+  const lines = [
+    premiumTitle(title, PX.bag),
+    subtitle ? premiumSubtitle(subtitle) : null,
+    priceUsd != null ? `${PX.money} <b>Price:</b> <code>$${Number(priceUsd).toFixed(2)} USD</code>` : null,
+    ...(Array.isArray(extra) ? extra.filter(Boolean) : [])
+  ].filter(Boolean);
+  return lines.join("\n");
 }
 
 export function premiumSection(title, lines = [], emoji = PX.pin) {
@@ -92,7 +121,7 @@ export function premiumSection(title, lines = [], emoji = PX.pin) {
     .filter((line) => line != null && String(line).trim() !== "")
     .map((line) => `• ${line}`)
     .join("\n");
-  return [`${emoji} <b>${title}</b>`, body].filter(Boolean).join("\n");
+  return [premiumTitle(title, emoji), body].filter(Boolean).join("\n");
 }
 
 export function premiumSteps(title, steps = [], emoji = PX.target) {
