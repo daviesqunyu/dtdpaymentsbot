@@ -3,6 +3,8 @@
  * Private chats: web_app buttons. Channels/groups: t.me deep links + HTTPS URLs.
  */
 
+import { blue, green, red } from "./tg-buttons.js";
+
 export function miniAppBaseUrl(env) {
   return String(env.STORE_URL || "https://dtdpaymentsbot.pages.dev").replace(/\/$/, "");
 }
@@ -47,25 +49,28 @@ export function miniAppPrivateKeyboard(env) {
   const channel = String(env.TELEGRAM_CHANNEL_USERNAME || "DTDMAINSTORE").replace(/^@/, "");
   return {
     inline_keyboard: [
-      [{ text: "🔵 PRODUCTS · Open catalog", web_app: { url: miniAppUrl(env, "products") } }],
-      [{ text: "🔴 PRODUCTS · Buy in this chat", callback_data: "shop:menu" }],
       [
-        { text: "🟣 ORDERS · Checkout", web_app: { url: miniAppUrl(env, "checkout") } },
-        { text: "🟠 ORDERS · Track", web_app: { url: miniAppUrl(env, "track") } }
+        blue({ text: "🛍 Products", web_app: { url: miniAppUrl(env, "products") } }),
+        blue({ text: "💳 Buy in chat", callback_data: "shop:menu" })
       ],
       [
-        { text: "🩵 PAY · Crypto", callback_data: "shop:menu" },
-        { text: "🩷 PAY · Stars", callback_data: "shop:menu" }
+        green({ text: "🛒 Checkout", web_app: { url: miniAppUrl(env, "checkout") } }),
+        green({ text: "📦 Track order", web_app: { url: miniAppUrl(env, "track") } })
       ],
       [
-        { text: "🟢 MORE · Trade", web_app: { url: miniAppUrl(env, "trade") } },
-        { text: "🟡 MORE · Chat", web_app: { url: miniAppUrl(env, "chat") } }
+        blue({ text: "₮ USDT / ₿ BTC", callback_data: "shop:menu" }),
+        green({ text: "⭐ Stars", callback_data: "shop:menu" })
+      ],
+      [red({ text: "‼️ Pay · Card / M-Pesa", callback_data: "shop:menu" })],
+      [
+        blue({ text: "📈 Trade", web_app: { url: miniAppUrl(env, "trade") } }),
+        green({ text: "💬 Chat", web_app: { url: miniAppUrl(env, "chat") } })
       ],
       [
-        { text: "📢 MORE · Channel", url: `https://t.me/${channel}` },
-        { text: "💬 MORE · Support", url: `https://t.me/${owner}` }
+        green({ text: "📢 Channel", url: `https://t.me/${channel}` }),
+        blue({ text: "🎧 Support", url: `https://t.me/${owner}` })
       ],
-      [{ text: "🌐 MORE · Website", url: miniAppBaseUrl(env) }]
+      [blue({ text: "🌐 Website", url: miniAppBaseUrl(env) })]
     ]
   };
 }
@@ -78,16 +83,16 @@ export function miniAppChannelKeyboard(env) {
   const channel = String(env.TELEGRAM_CHANNEL_USERNAME || "DTDMAINSTORE").replace(/^@/, "");
   return {
     inline_keyboard: [
-      [{ text: "✨ Open Mini App · Shop", url: miniAppDeepLink(env, "shop") }],
+      [blue({ text: "🛍 Open shop", url: miniAppDeepLink(env, "shop") })],
       [
-        { text: "🛒 Web catalog", url: `${store}/#products` },
-        { text: `🤖 @${bot} · /buy`, url: `https://t.me/${bot}?start=buy` }
+        green({ text: "🛒 Catalog", url: `${store}/#products` }),
+        blue({ text: `🤖 @${bot}`, url: `https://t.me/${bot}?start=buy` })
       ],
       [
-        { text: "₮ USDT · ₿ BTC · 💳 Pay", url: `https://t.me/${bot}?start=pay` },
-        { text: `📢 @${channel}`, url: `https://t.me/${channel}` }
+        green({ text: "📢 Channel", url: `https://t.me/${channel}` }),
+        blue({ text: "🎧 Support", url: `https://t.me/${owner}` })
       ],
-      [{ text: `💬 Support @${owner}`, url: `https://t.me/${owner}` }]
+      [red({ text: "‼️ Pay guide", url: `https://t.me/${bot}?start=pay` })]
     ]
   };
 }

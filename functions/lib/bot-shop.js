@@ -21,6 +21,7 @@ import {
   reactToMessage
 } from "./tg-premium.js";
 import { createStarsCheckout, starsEnabled, usdToStars } from "./stars.js";
+import { blue, green, red, productStyle, styled } from "./tg-buttons.js";
 
 const USDT_TRC20_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 
@@ -173,12 +174,12 @@ function officialLinksKeyboardRows(env) {
   // Telegram inline URL buttons only accept http/https/tg:// — never mailto:
   return [
     [
-      { text: "🌐 MORE · Website", url: store },
-      { text: "💬 MORE · Support", url: `https://t.me/${owner}` }
+      blue({ text: "🌐 Website", url: store }),
+      blue({ text: "🎧 Support", url: `https://t.me/${owner}` })
     ],
     [
-      { text: "🏢 MORE · DV Tech", url: company },
-      { text: `🤖 MORE · @${bot}`, url: `https://t.me/${bot}?start=buy` }
+      green({ text: "🏢 DV Tech", url: company }),
+      green({ text: `🤖 @${bot}`, url: `https://t.me/${bot}?start=buy` })
     ]
   ];
 }
@@ -419,27 +420,38 @@ async function confirmPaystackOrder(env, { orderId, reference }) {
 
 function shopMenuKeyboard(products, env) {
   const rows = [
-    [{ text: "🔵 PRODUCTS · Open catalog", web_app: { url: `${storeUrl(env)}/?utm_source=telegram_miniapp#products` } }],
-    [{ text: "🔴 PRODUCTS · Refresh list", callback_data: "shop:menu" }]
+    [
+      blue({
+        text: "🛍 Products",
+        web_app: { url: `${storeUrl(env)}/?utm_source=telegram_miniapp#products` }
+      }),
+      blue({ text: "🔄 Refresh", callback_data: "shop:menu" })
+    ]
   ];
   products.forEach((product, i) => {
     const price = `$${Number(product.price_usd || 0).toFixed(0)}`;
     rows.push([
-      {
-        text: `${colorDot(i)} PRODUCTS · ${truncateLabel(product.name, 20)} · ${price}`,
-        callback_data: `shop:p:${product.id}`
-      }
+      styled(
+        {
+          text: `${truncateLabel(product.name, 22)} · ${price}`,
+          callback_data: `shop:p:${product.id}`
+        },
+        productStyle(i)
+      )
     ]);
   });
   rows.push(
     [
-      { text: "🟣 ORDERS · Checkout", web_app: { url: `${storeUrl(env)}/?utm_source=telegram_miniapp#checkout` } },
-      { text: "🟠 ORDERS · Track", web_app: { url: `${storeUrl(env)}/?utm_source=telegram_miniapp#track` } }
+      green({
+        text: "🛒 Checkout",
+        web_app: { url: `${storeUrl(env)}/?utm_source=telegram_miniapp#checkout` }
+      }),
+      green({
+        text: "📦 Track",
+        web_app: { url: `${storeUrl(env)}/?utm_source=telegram_miniapp#track` }
+      })
     ],
-    [
-      { text: "🩵 PAY · pick a product ↑", callback_data: "shop:menu" },
-      { text: "🏠 MORE · Home", callback_data: "shop:home" }
-    ]
+    [red({ text: "‼️ Home /start", callback_data: "shop:home" })]
   );
   rows.push(...footerLinksKeyboard(env));
   return { inline_keyboard: rows };
@@ -447,22 +459,22 @@ function shopMenuKeyboard(products, env) {
 
 function productPayKeyboard(productId, env) {
   const rows = [
-    [{ text: "🔵 PAY · USDT (TRC20) preferred", callback_data: `shop:pay:${productId}:usdt` }],
-    [{ text: "🔴 PAY · Bitcoin", callback_data: `shop:pay:${productId}:btc` }]
+    [blue({ text: "₮ USDT (TRC20) · Preferred", callback_data: `shop:pay:${productId}:usdt` })],
+    [green({ text: "₿ Bitcoin", callback_data: `shop:pay:${productId}:btc` })]
   ];
   if (starsEnabled(env)) {
-    rows.push([{ text: "🟡 PAY · Telegram Stars", callback_data: `shop:pay:${productId}:stars` }]);
+    rows.push([blue({ text: "⭐ Telegram Stars", callback_data: `shop:pay:${productId}:stars` })]);
   }
   rows.push(
     [
-      { text: "🟢 PAY · Card", callback_data: `shop:pay:${productId}:card` },
-      { text: "🟣 PAY · M-Pesa", callback_data: `shop:pay:${productId}:momo` }
+      green({ text: "💳 Card", callback_data: `shop:pay:${productId}:card` }),
+      green({ text: "📱 M-Pesa", callback_data: `shop:pay:${productId}:momo` })
     ],
     [
-      { text: "🟠 PAY · USSD", callback_data: `shop:pay:${productId}:ussd` },
-      { text: "🩵 PAY · Bank", callback_data: `shop:pay:${productId}:bank` }
+      blue({ text: "🔢 USSD", callback_data: `shop:pay:${productId}:ussd` }),
+      blue({ text: "🏦 Bank", callback_data: `shop:pay:${productId}:bank` })
     ],
-    [{ text: "⚪ PRODUCTS · Back to catalog", callback_data: "shop:menu" }]
+    [red({ text: "‼️ Back to catalog", callback_data: "shop:menu" })]
   );
   return { inline_keyboard: rows };
 }
@@ -543,21 +555,14 @@ export function buildShopCatalogMessage(products, env) {
   return {
     text: [
       `${PX.crown} <b>DTD · PRODUCTS</b>`,
-      colorPaletteLine(),
       premiumDivider(),
-      `<blockquote>Each button starts with a color + section name — match the list below</blockquote>`,
+      `<blockquote>Blue / green / red buttons — tap a product row to checkout</blockquote>`,
       "",
-      `${PX.live} <b>${products.length}</b> live products · USD`,
-      "",
-      `🔵 <b>PRODUCTS</b> — tap a colored row to buy`,
+      `${PX.live} <b>${products.length}</b> live · USD`,
       "",
       ...catalogLines,
       "",
-      `🟣 <b>ORDERS</b> · Checkout / Track`,
-      `🩵 <b>PAY</b> · choose method after you tap a product`,
-      "",
-      `1️⃣ <b>🔵 PRODUCTS · Open catalog</b> = Mini App`,
-      `2️⃣ Or tap <b>🟢 PRODUCTS · Name · $</b> to buy in chat`
+      `🛍 Open catalog = Mini App · or tap a product button below`
     ].join("\n"),
     reply_markup: shopMenuKeyboard(products, env)
   };

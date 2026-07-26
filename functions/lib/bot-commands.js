@@ -46,6 +46,7 @@ import {
   processDueReminders
 } from "./bot-secretary.js";
 import { buildPremiumStartKeyboard } from "./start-keyboard.js";
+import { blue, green, red } from "./tg-buttons.js";
 
 const OWNER = "davetheedev";
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -114,13 +115,15 @@ export function officialLinksKeyboard(env, extraRows = []) {
   // Telegram rejects mailto: on inline buttons (BUTTON_URL_INVALID) — keep email in text only.
   return {
     inline_keyboard: [
-      [{ text: "✨ Open Mini App · Shop", web_app: { url: `${links.store}/?utm_source=telegram_miniapp#products` } }],
-      [{ text: "💎 Pay in bot · /buy", url: `${links.botUrl}?start=buy` }],
       [
-        { text: "🌐 Web store", url: links.store },
-        { text: "💬 Support", url: links.ownerUrl }
+        blue({ text: "🛍 Products", web_app: { url: `${links.store}/?utm_source=telegram_miniapp#products` } }),
+        blue({ text: "💳 Buy in chat", url: `${links.botUrl}?start=buy` })
       ],
-      [{ text: "🏢 DV Technologies", url: links.company }],
+      [
+        green({ text: "🌐 Website", url: links.store }),
+        green({ text: "🎧 Support", url: links.ownerUrl })
+      ],
+      [red({ text: "‼️ DV Technologies", url: links.company })],
       ...extraRows
     ]
   };

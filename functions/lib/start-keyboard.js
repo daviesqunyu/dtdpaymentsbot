@@ -1,10 +1,9 @@
 /**
- * /start keyboard — section-named buttons with strong color markers.
- * Note: Telegram cannot color button backgrounds; colors = leading emoji only.
+ * /start keyboard — section layout + real blue/green/red button styles (Bot API 9.4+).
  */
 
 import { miniAppUrl, miniAppBaseUrl, ownerUsername, botUsername } from "./mini-app.js";
-import { COLORS } from "./tg-premium.js";
+import { blue, green, red, productStyle, styled } from "./tg-buttons.js";
 
 function money(n) {
   return `$${Number(n || 0).toFixed(0)}`;
@@ -28,46 +27,52 @@ export function buildPremiumStartKeyboard(env, products = []) {
   const list = Array.isArray(products) ? products.slice(0, 8) : [];
 
   const rows = [
-    // —— PRODUCTS section ——
-    [{ text: "🔵 PRODUCTS · Open catalog", web_app: { url: miniAppUrl(env, "products") } }],
-    [{ text: "🔴 PRODUCTS · Buy in this chat", callback_data: "shop:menu" }]
+    // PRODUCTS — blue like screenshot top row
+    [
+      blue({ text: "🛍 Products", web_app: { url: miniAppUrl(env, "products") } }),
+      blue({ text: "💳 Buy in chat", callback_data: "shop:menu" })
+    ]
   ];
 
+  // Live products — cycle blue / green / red
   list.forEach((p, i) => {
     if (!p?.id) return;
-    const dot = COLORS[i % COLORS.length];
     rows.push([
-      {
-        text: `${dot} PRODUCTS · ${truncate(p.name)} · ${money(p.price_usd)}`,
-        callback_data: `shop:p:${p.id}`
-      }
+      styled(
+        {
+          text: `${truncate(p.name)} · ${money(p.price_usd)}`,
+          callback_data: `shop:p:${p.id}`
+        },
+        productStyle(i)
+      )
     ]);
   });
 
   rows.push(
-    // —— ORDERS section ——
+    // ORDERS — green like screenshot middle row
     [
-      { text: "🟣 ORDERS · Checkout", web_app: { url: miniAppUrl(env, "checkout") } },
-      { text: "🟠 ORDERS · Track", web_app: { url: miniAppUrl(env, "track") } }
+      green({ text: "🛒 Checkout", web_app: { url: miniAppUrl(env, "checkout") } }),
+      green({ text: "📦 Track order", web_app: { url: miniAppUrl(env, "track") } })
     ],
-    // —— PAY section ——
+    // PAY — blue + green
     [
-      { text: "🩵 PAY · USDT / BTC", callback_data: "shop:menu" },
-      { text: "🩷 PAY · Stars", callback_data: "shop:menu" }
+      blue({ text: "₮ USDT / ₿ BTC", callback_data: "shop:menu" }),
+      green({ text: "⭐ Stars", callback_data: "shop:menu" })
     ],
-    [{ text: "🟤 PAY · Card / M-Pesa", callback_data: "shop:menu" }],
-    // —— MORE section ——
+    // Rules / paystack — red full width like screenshot bottom
+    [red({ text: "‼️ Pay · Card / M-Pesa", callback_data: "shop:menu" })],
+    // MORE — blue + green
     [
-      { text: "🟢 MORE · Trade", web_app: { url: miniAppUrl(env, "trade") } },
-      { text: "🟡 MORE · Chat", web_app: { url: miniAppUrl(env, "chat") } }
-    ],
-    [
-      { text: `📢 MORE · Channel`, url: `https://t.me/${channel}` },
-      { text: `💬 MORE · Support`, url: `https://t.me/${owner}` }
+      blue({ text: "📈 Trade", web_app: { url: miniAppUrl(env, "trade") } }),
+      green({ text: "💬 Chat", web_app: { url: miniAppUrl(env, "chat") } })
     ],
     [
-      { text: "🌐 MORE · Website", url: store },
-      { text: "⭐ MORE · Earn", url: `https://t.me/${bot}?start=earn` }
+      green({ text: "📢 Channel", url: `https://t.me/${channel}` }),
+      blue({ text: "🎧 Support", url: `https://t.me/${owner}` })
+    ],
+    [
+      blue({ text: "🌐 Website", url: store }),
+      red({ text: "⭐ Earn / Ads", url: `https://t.me/${bot}?start=earn` })
     ]
   );
 
