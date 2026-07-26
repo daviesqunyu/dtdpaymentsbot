@@ -142,35 +142,37 @@ export function premiumWelcomeMessage({
 }) {
   const list = Array.isArray(products) ? products.slice(0, 8) : [];
   const productBlock = list.length
-    ? [
-        `${PX.live} <b>Live products</b> · tap a button below`,
-        ...list.map((p, i) => {
-          const name = String(p.name || "Product").slice(0, 42);
-          const price = Number(p.price_usd || 0).toFixed(2);
-          return `${colorDot(i)} <b>${name}</b> — <code>$${price}</code>`;
-        }),
-        ""
-      ]
-    : [`${PX.warn} Catalog loading… use <b>/products</b> or Mini App.`, ""];
+    ? list.map((p, i) => {
+        const name = String(p.name || "Product").slice(0, 36);
+        const price = Number(p.price_usd || 0).toFixed(0);
+        return `${colorDot(i)}  <b>${name}</b>   <code>$${price}</code>`;
+      })
+    : [`${PX.warn} No products loaded — tap <b>🔴 PRODUCTS · Buy in this chat</b>`];
 
   return [
-    premiumBanner("DTD MAIN STORE", "Premium Telegram shop · Mini App · in-chat pay"),
-    `${PX.gem} Digital products with fast delivery`,
-    `${PX.usdt} USDT (TRC20)  ·  ${PX.btc} BTC  ·  ${PX.star} Stars  ·  ${PX.card} Paystack`,
-    `🏢 Powered by <b>${companyLabel}</b>`,
+    `${PX.crown} <b>DTD MAIN STORE</b> ${PX.spark}`,
+    colorPaletteLine(),
+    premiumDivider(),
+    `<blockquote>Buttons below are color-coded by section — PRODUCTS · ORDERS · PAY · MORE</blockquote>`,
     "",
+    `🏢 <b>${companyLabel}</b>`,
+    `${PX.usdt} USDT  ·  ${PX.btc} BTC  ·  ${PX.star} Stars  ·  ${PX.card} Paystack`,
+    "",
+    `🔵 <b>PRODUCTS</b>`,
     ...productBlock,
-    premiumSteps("Shop in 3 taps", [
-      "🔵 <b>Mini App · Products</b> — full catalog inside Telegram",
-      "🔴 <b>/buy</b> — pay in this chat with QR / Stars",
-      "🟢 Paste tx hash (or verify Paystack) → send delivery email"
-    ]),
     "",
-    `${PX.bot} @${bot}   ${PX.support} @${owner}`,
+    `🟣 <b>ORDERS</b> — Checkout · Track`,
+    `🩵 <b>PAY</b> — USDT / BTC · Stars · Card/M-Pesa`,
+    `🟢 <b>MORE</b> — Trade · Chat · Channel · Earn`,
+    "",
+    `<b>How to use</b>`,
+    `1️⃣ Tap <b>🔵 PRODUCTS · Open catalog</b> (Mini App)`,
+    `2️⃣ Or tap a colored <b>PRODUCTS · …</b> row to buy here`,
+    `3️⃣ Pay → send delivery email`,
+    "",
+    `${PX.bot} @${bot}  ·  ${PX.support} @${owner}`,
     `${PX.mail} ${email}`,
-    `${PX.web} ${store}`,
-    "",
-    `${PX.bolt} /app · /products · /buy · /pay · /earn · /help`
+    `${PX.web} ${store}`
   ].join("\n");
 }
 

@@ -47,28 +47,25 @@ export function miniAppPrivateKeyboard(env) {
   const channel = String(env.TELEGRAM_CHANNEL_USERNAME || "DTDMAINSTORE").replace(/^@/, "");
   return {
     inline_keyboard: [
-      [{ text: "🔵✨ Mini App · Products", web_app: { url: miniAppUrl(env, "products") } }],
+      [{ text: "🔵 PRODUCTS · Open catalog", web_app: { url: miniAppUrl(env, "products") } }],
+      [{ text: "🔴 PRODUCTS · Buy in this chat", callback_data: "shop:menu" }],
       [
-        { text: "🔴 Checkout", web_app: { url: miniAppUrl(env, "checkout") } },
-        { text: "🟢 Track order", web_app: { url: miniAppUrl(env, "track") } }
+        { text: "🟣 ORDERS · Checkout", web_app: { url: miniAppUrl(env, "checkout") } },
+        { text: "🟠 ORDERS · Track", web_app: { url: miniAppUrl(env, "track") } }
       ],
       [
-        { text: "🛍️ Buy in chat", callback_data: "shop:menu" },
-        { text: "📋 Catalog", callback_data: "shop:menu" }
+        { text: "🩵 PAY · Crypto", callback_data: "shop:menu" },
+        { text: "🩷 PAY · Stars", callback_data: "shop:menu" }
       ],
       [
-        { text: "💎 ₮ / ₿ Pay", callback_data: "shop:menu" },
-        { text: "⭐ Stars", callback_data: "shop:menu" }
+        { text: "🟢 MORE · Trade", web_app: { url: miniAppUrl(env, "trade") } },
+        { text: "🟡 MORE · Chat", web_app: { url: miniAppUrl(env, "chat") } }
       ],
       [
-        { text: "📈 Trade desk", web_app: { url: miniAppUrl(env, "trade") } },
-        { text: "💬 Chat", web_app: { url: miniAppUrl(env, "chat") } }
+        { text: "📢 MORE · Channel", url: `https://t.me/${channel}` },
+        { text: "💬 MORE · Support", url: `https://t.me/${owner}` }
       ],
-      [
-        { text: `📢 @${channel}`, url: `https://t.me/${channel}` },
-        { text: `💬 @${owner}`, url: `https://t.me/${owner}` }
-      ],
-      [{ text: "🌐 Web store", url: miniAppBaseUrl(env) }]
+      [{ text: "🌐 MORE · Website", url: miniAppBaseUrl(env) }]
     ]
   };
 }

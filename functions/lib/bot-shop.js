@@ -172,14 +172,13 @@ function officialLinksKeyboardRows(env) {
   const company = companyUrl(env);
   // Telegram inline URL buttons only accept http/https/tg:// — never mailto:
   return [
-    [{ text: "✨ Open Mini App · Shop", web_app: { url: `${store}/?utm_source=telegram_miniapp#products` } }],
     [
-      { text: "🌐 Web store", url: store },
-      { text: "💬 Support", url: `https://t.me/${owner}` }
+      { text: "🌐 MORE · Website", url: store },
+      { text: "💬 MORE · Support", url: `https://t.me/${owner}` }
     ],
     [
-      { text: "🏢 DV Tech", url: company },
-      { text: `💎 @${bot} · /buy`, url: `https://t.me/${bot}?start=buy` }
+      { text: "🏢 MORE · DV Tech", url: company },
+      { text: `🤖 MORE · @${bot}`, url: `https://t.me/${bot}?start=buy` }
     ]
   ];
 }
@@ -420,42 +419,50 @@ async function confirmPaystackOrder(env, { orderId, reference }) {
 
 function shopMenuKeyboard(products, env) {
   const rows = [
-    [{ text: "🔵✨ Open Mini App · Products", web_app: { url: `${storeUrl(env)}/?utm_source=telegram_miniapp#products` } }]
+    [{ text: "🔵 PRODUCTS · Open catalog", web_app: { url: `${storeUrl(env)}/?utm_source=telegram_miniapp#products` } }],
+    [{ text: "🔴 PRODUCTS · Refresh list", callback_data: "shop:menu" }]
   ];
   products.forEach((product, i) => {
+    const price = `$${Number(product.price_usd || 0).toFixed(0)}`;
     rows.push([
       {
-        text: `${colorDot(i)} ${truncateLabel(product.name)} · ${money(product.price_usd)}`,
+        text: `${colorDot(i)} PRODUCTS · ${truncateLabel(product.name, 20)} · ${price}`,
         callback_data: `shop:p:${product.id}`
       }
     ]);
   });
-  rows.push([
-    { text: `${PX.bolt} Refresh catalog`, callback_data: "shop:menu" },
-    { text: "🏠 Main menu", callback_data: "shop:home" }
-  ]);
+  rows.push(
+    [
+      { text: "🟣 ORDERS · Checkout", web_app: { url: `${storeUrl(env)}/?utm_source=telegram_miniapp#checkout` } },
+      { text: "🟠 ORDERS · Track", web_app: { url: `${storeUrl(env)}/?utm_source=telegram_miniapp#track` } }
+    ],
+    [
+      { text: "🩵 PAY · pick a product ↑", callback_data: "shop:menu" },
+      { text: "🏠 MORE · Home", callback_data: "shop:home" }
+    ]
+  );
   rows.push(...footerLinksKeyboard(env));
   return { inline_keyboard: rows };
 }
 
 function productPayKeyboard(productId, env) {
   const rows = [
-    [{ text: "💎 ₮ USDT (TRC20) · Preferred", callback_data: `shop:pay:${productId}:usdt` }],
-    [{ text: "⚡ ₿ Bitcoin", callback_data: `shop:pay:${productId}:btc` }]
+    [{ text: "🔵 PAY · USDT (TRC20) preferred", callback_data: `shop:pay:${productId}:usdt` }],
+    [{ text: "🔴 PAY · Bitcoin", callback_data: `shop:pay:${productId}:btc` }]
   ];
   if (starsEnabled(env)) {
-    rows.push([{ text: "⭐ Telegram Stars · Instant", callback_data: `shop:pay:${productId}:stars` }]);
+    rows.push([{ text: "🟡 PAY · Telegram Stars", callback_data: `shop:pay:${productId}:stars` }]);
   }
   rows.push(
     [
-      { text: "💳 Card", callback_data: `shop:pay:${productId}:card` },
-      { text: "📱 M-Pesa", callback_data: `shop:pay:${productId}:momo` }
+      { text: "🟢 PAY · Card", callback_data: `shop:pay:${productId}:card` },
+      { text: "🟣 PAY · M-Pesa", callback_data: `shop:pay:${productId}:momo` }
     ],
     [
-      { text: "🔢 USSD", callback_data: `shop:pay:${productId}:ussd` },
-      { text: "🏦 Bank", callback_data: `shop:pay:${productId}:bank` }
+      { text: "🟠 PAY · USSD", callback_data: `shop:pay:${productId}:ussd` },
+      { text: "🩵 PAY · Bank", callback_data: `shop:pay:${productId}:bank` }
     ],
-    [{ text: `${PX.bag} Back to catalog`, callback_data: "shop:menu" }]
+    [{ text: "⚪ PRODUCTS · Back to catalog", callback_data: "shop:menu" }]
   );
   return { inline_keyboard: rows };
 }
@@ -535,23 +542,22 @@ export function buildShopCatalogMessage(products, env) {
 
   return {
     text: [
-      premiumBanner("DTD PRODUCTS", "Tap a colored button below to checkout"),
-      `${PX.bag} Shop  ·  ${PX.money} Pay  ·  ${PX.package} Delivery`,
+      `${PX.crown} <b>DTD · PRODUCTS</b>`,
       colorPaletteLine(),
+      premiumDivider(),
+      `<blockquote>Each button starts with a color + section name — match the list below</blockquote>`,
       "",
-      `${PX.live} <b>${products.length}</b> live · prices in <b>USD</b>`,
+      `${PX.live} <b>${products.length}</b> live products · USD`,
       "",
-      premiumSteps("How it works", [
-        "🔵 Tap a product (or Mini App · Products)",
-        `🔴 Pay ${PX.usdt} USDT · ${PX.btc} BTC · ${PX.star} Stars · Paystack`,
-        "🟢 Crypto: QR → paste tx hash → delivery email"
-      ]),
-      "",
-      `${PX.pin} <b>Catalog listing</b>`,
+      `🔵 <b>PRODUCTS</b> — tap a colored row to buy`,
       "",
       ...catalogLines,
       "",
-      `${PX.spark} Buttons below are color-coded to match the list.`
+      `🟣 <b>ORDERS</b> · Checkout / Track`,
+      `🩵 <b>PAY</b> · choose method after you tap a product`,
+      "",
+      `1️⃣ <b>🔵 PRODUCTS · Open catalog</b> = Mini App`,
+      `2️⃣ Or tap <b>🟢 PRODUCTS · Name · $</b> to buy in chat`
     ].join("\n"),
     reply_markup: shopMenuKeyboard(products, env)
   };
