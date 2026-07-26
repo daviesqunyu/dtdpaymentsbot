@@ -14,6 +14,8 @@ const supabaseAdmin = supabaseUrl && serviceKey ? createClient(supabaseUrl, serv
 
 const PAYMENT_METHODS = new Set([
   "Crypto",
+  "USDT",
+  "Bitcoin",
   "Paystack",
   "Paystack Card",
   "Paystack Bank",
@@ -23,71 +25,57 @@ const PAYMENT_METHODS = new Set([
 ]);
 
 function normalizePaymentMethod(method) {
-  const value = String(method || "Crypto").trim();
+  const value = String(method || "USDT").trim();
   if (PAYMENT_METHODS.has(value)) return value;
-  if (value.toLowerCase().includes("paystack")) return "Paystack";
-  return "Crypto";
+  const lower = value.toLowerCase();
+  if (lower.includes("paystack")) return "Paystack";
+  if (lower.includes("usdt") || lower.includes("trc20") || lower.includes("tron")) return "USDT";
+  if (lower.includes("bitcoin") || lower === "btc") return "Bitcoin";
+  if (lower.includes("crypto")) return "Crypto";
+  return "USDT";
 }
 
 function dbPaymentMethod(method) {
-  const normalized = normalizePaymentMethod(method);
-  return normalized === "Crypto" ? "Crypto" : "Paystack";
+  const value = String(method || "").toLowerCase();
+  if (
+    value.includes("crypto") ||
+    value.includes("bitcoin") ||
+    value === "btc" ||
+    value.includes("usdt") ||
+    value.includes("trc20") ||
+    value.includes("tron")
+  ) {
+    return "Crypto";
+  }
+  return "Paystack";
 }
 
-async function sendTelegram(chatId, message) {
+async function sendTelegram(chatId, message, options = {}) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token || !chatId) return { ok: false, reason: "not_configured" };
+
+  const text = typeof message === "string" ? message : String(message?.text || "");
+  const body = {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true
+  };
+  const markup = options.reply_markup || (typeof message === "object" && message?.reply_markup);
+  if (markup) body.reply_markup = markup;
 
   const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text: message,
-      parse_mode: "HTML"
-    })
+    body: JSON.stringify(body)
   });
 
   if (!response.ok) {
     const error = await response.text();
     console.error("Telegram error:", error);
-    // #region agent log
-    try {
-      const fs = await import("node:fs");
-      fs.appendFileSync(
-        "debug-8491be.log",
-        `${JSON.stringify({
-          sessionId: "8491be",
-          runId: "post-fix",
-          hypothesisId: "E",
-          location: "server.js:sendTelegram",
-          message: "Telegram send failed",
-          data: { chatId: String(chatId), status: response.status, error: String(error).slice(0, 300) },
-          timestamp: Date.now()
-        })}\n`
-      );
-    } catch (_) {}
-    // #endregion
     return { ok: false, reason: response.status === 401 ? "unauthorized" : "send_failed" };
   }
 
-  // #region agent log
-  try {
-    const fs = await import("node:fs");
-    fs.appendFileSync(
-      "debug-8491be.log",
-      `${JSON.stringify({
-        sessionId: "8491be",
-        runId: "pre-fix",
-        hypothesisId: "E",
-        location: "server.js:sendTelegram",
-        message: "Telegram send ok",
-        data: { chatId: String(chatId) },
-        timestamp: Date.now()
-      })}\n`
-    );
-  } catch (_) {}
-  // #endregion
   return { ok: true };
 }
 
@@ -251,6 +239,7 @@ app.get("/api/health", (_req, res) => {
     ),
     telegramAdmin: Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_ADMIN_CHAT_ID),
     telegramChannel: Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHANNEL_ID),
+    usdt: Boolean(process.env.USDT_TRC20_ADDRESS),
     btc: Boolean(process.env.BTC_ADDRESS)
   });
 });
@@ -266,16 +255,20 @@ app.get("/api/config", (_req, res) => {
     paystackPublicKey: process.env.PAYSTACK_PUBLIC_KEY || "",
     paystackCurrency: process.env.PAYSTACK_CURRENCY || "KES",
     paystackConversionRate: Number(process.env.PAYSTACK_CONVERSION_RATE || 129),
+    usdtTrc20Address: process.env.USDT_TRC20_ADDRESS || "",
+    usdtNetwork: "TRC20",
     btcAddress: process.env.BTC_ADDRESS || "",
     btcNetwork: "BTC",
     storeUrl: process.env.STORE_URL || "https://dtdpaymentsbot.pages.dev",
     companyUrl: process.env.COMPANY_URL || "https://dvtechnologies.xyz",
     companyName: process.env.COMPANY_NAME || "DV Technologies",
+    supportEmail: String(process.env.SUPPORT_EMAIL || "contact@dvtechnologies.xyz").trim().toLowerCase(),
     telegramBotUsername: botUsername,
     telegramBotUrl: botUsername ? `https://t.me/${botUsername}` : "",
     telegramEnabled: telegramReady,
     paymentOptions: [
-      { id: "Crypto", label: "Bitcoin (BTC)", type: "crypto" },
+      { id: "USDT", label: "USDT (TRC20)", type: "crypto", asset: "USDT", network: "TRC20" },
+      { id: "Bitcoin", label: "Bitcoin (BTC)", type: "crypto", asset: "BTC", network: "BTC" },
       { id: "Paystack", label: "Card / Bank / Mobile Money", type: "paystack" }
     ]
   });
@@ -398,32 +391,6 @@ app.post("/api/paystack/initialize", async (req, res) => {
     });
 
     const payload = await response.json();
-    // #region agent log
-    try {
-      const fs = await import("node:fs");
-      fs.appendFileSync(
-        "debug-8491be.log",
-        `${JSON.stringify({
-          sessionId: "8491be",
-          runId: "post-fix",
-          hypothesisId: "A",
-          location: "server.js:paystack/initialize",
-          message: "Initialize payment",
-          data: {
-            currency,
-            rate,
-            amountUsd,
-            amount,
-            httpStatus: response.status,
-            ok: payload.status,
-            message: payload.message,
-            hasAuthUrl: Boolean(payload.data && payload.data.authorization_url)
-          },
-          timestamp: Date.now()
-        })}\n`
-      );
-    } catch (_) {}
-    // #endregion
 
     if (!response.ok || !payload.status) {
       return res.status(400).json({
@@ -459,30 +426,6 @@ app.post("/api/paystack/verify", async (req, res) => {
     });
 
     const payload = await response.json();
-    // #region agent log
-    try {
-      const fs = await import("node:fs");
-      fs.appendFileSync(
-        "debug-8491be.log",
-        `${JSON.stringify({
-          sessionId: "8491be",
-          runId: "post-fix",
-          hypothesisId: "A",
-          location: "server.js:paystack/verify",
-          message: "Verify response",
-          data: {
-            reference,
-            httpOk: response.ok,
-            status: payload.status,
-            msg: payload.message,
-            paid: payload.data && payload.data.status,
-            currency: payload.data && payload.data.currency
-          },
-          timestamp: Date.now()
-        })}\n`
-      );
-    } catch (_) {}
-    // #endregion
     if (!response.ok || !payload.status) {
       return res.status(400).json({ error: payload.message || "Verification failed." });
     }
@@ -523,31 +466,6 @@ app.post("/api/paystack/probe", async (_req, res) => {
       })
     });
     const payload = await response.json();
-    // #region agent log
-    try {
-      const fs = await import("node:fs");
-      fs.appendFileSync(
-        "debug-8491be.log",
-        `${JSON.stringify({
-          sessionId: "8491be",
-          runId: "post-fix",
-          hypothesisId: "A",
-          location: "server.js:paystack/probe",
-          message: "Initialize probe",
-          data: {
-            currency,
-            rate,
-            amount,
-            httpStatus: response.status,
-            ok: payload.status,
-            message: payload.message,
-            code: payload.code || (payload.meta && payload.meta.nextStep)
-          },
-          timestamp: Date.now()
-        })}\n`
-      );
-    } catch (_) {}
-    // #endregion
     res.status(response.ok ? 200 : 400).json({
       ok: Boolean(payload.status),
       currency,
@@ -600,6 +518,36 @@ app.post("/api/telegram/message", async (req, res) => {
   }
 });
 
+app.post("/api/analytics", async (req, res) => {
+  try {
+    const body = req.body || {};
+    if (!Array.isArray(body.events) || !body.events.length) {
+      return res.json({ ok: true, skipped: true });
+    }
+    if (!supabaseAdmin) return res.json({ ok: true, stored: 0, reason: "no_store" });
+
+    const clamp = (value, max) => String(value == null ? "" : value).slice(0, max);
+    const now = Date.now();
+    const rows = body.events.slice(0, 50).map((event) => ({
+      client_id: clamp(body.clientId || "anon", 64),
+      session_id: clamp(body.sessionId, 64),
+      event_type: clamp(event.type || "event", 40),
+      path: clamp(event.path, 200),
+      referrer: clamp(body.referrer, 300),
+      country: "",
+      user_agent: clamp(body.userAgent || req.get("user-agent"), 300),
+      data: event.data && typeof event.data === "object" ? event.data : {},
+      created_at: new Date(Number(event.ts) || now).toISOString()
+    }));
+
+    const { error } = await supabaseAdmin.from("analytics_events").insert(rows);
+    if (error) return res.json({ ok: true, stored: 0, warn: error.message });
+    res.json({ ok: true, stored: rows.length });
+  } catch (error) {
+    res.json({ ok: true, error: String(error?.message || error) });
+  }
+});
+
 app.post("/api/telegram/webhook", async (req, res) => {
   try {
     const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
@@ -610,7 +558,7 @@ app.post("/api/telegram/webhook", async (req, res) => {
 
     await processTelegramUpdate(process.env, req.body, {
       getSupabase: () => supabaseAdmin,
-      sendTelegram: async (_env, chatId, message) => sendTelegram(chatId, message)
+      sendTelegram: async (_env, chatId, message, options) => sendTelegram(chatId, message, options)
     });
 
     res.json({ ok: true });

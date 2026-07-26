@@ -1,9 +1,20 @@
 # DTD Store + Payments Bot
 
-Crypto-first product storefront with Paystack (KES) + BTC checkout, Supabase products/orders,
+Crypto-first product storefront with USDT (TRC20), BTC, and Paystack (KES) checkout, Supabase products/orders,
 Cloudflare Pages API, and Telegram automation for `@Dtdpaymentbot`.
 
 Live store: https://dtdpaymentsbot.pages.dev
+
+## SMTP + SMS console
+
+Paid **SMTP** product unlocks `#smtp` (Tools → SMTP + SMS). Admins can unlock with Supabase login.
+
+- Email: VPS Postfix mailer (`contact@dvtechnologies.xyz`)
+- SMS: Android SMS Gateway (no Twilio) — see [docs/smtp-sms-setup.md](docs/smtp-sms-setup.md)
+- Apply DB: `node scripts/apply-smtp-sql.mjs` (or paste `supabase-smtp-console.sql` in SQL editor)
+- Install Postfix (guide-aligned): set `VPS_PASS` in `.env`, then `python scripts/deploy_mailer_vps.py`
+- DNS / warm-up / mail-tester checklist: [docs/smtp-sms-setup.md](docs/smtp-sms-setup.md)
+- After tunnel: set `VPS_MAILER_URL`, run `node scripts/push-secrets.mjs`
 
 ## Goal vs status
 
@@ -51,6 +62,7 @@ MIRROR_SOURCE_CHANNELS=@SomeChannel,-1001234567890
 MIRROR_DEST_CHANNEL=-1004433496789
 STORE_URL=https://dtdpaymentsbot.pages.dev
 TELEGRAM_OWNER_USERNAME=Davetheedev
+SUPPORT_EMAIL=contact@dvtechnologies.xyz
 ```
 
 5. Run:
@@ -69,3 +81,4 @@ Every new source post is rewritten (links → store, usernames → `@Davetheedev
 - Primary: `@Dtdpaymentbot` (store + webhook automation)
 - Secondary (optional): `@davistechbot`
 - Owner contact: `@Davetheedev`
+- Support email: `contact@dvtechnologies.xyz`

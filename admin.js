@@ -133,9 +133,74 @@ function setAdminEnabled(isEnabled) {
   productForm.querySelectorAll("input, textarea, select, button").forEach((field) => {
     field.disabled = !isEnabled;
   });
-  resetProducts.disabled = !isEnabled;
-  publishAllProducts.disabled = !isEnabled;
-  refreshOrders.disabled = !isEnabled;
+  if (resetProducts) resetProducts.disabled = !isEnabled;
+  if (publishAllProducts) publishAllProducts.disabled = !isEnabled;
+  if (refreshOrders) refreshOrders.disabled = !isEnabled;
+}
+
+const ADMIN_TITLES = {
+  overview: "Overview",
+  products: "Products",
+  orders: "Orders",
+  login: "Sign in"
+};
+
+function showAdminPage(pageId) {
+  const signedIn = !loginForm || loginForm.hidden;
+  let id = pageId;
+  if (!signedIn) id = "login";
+  if (signedIn && id === "login") id = "overview";
+
+  document.querySelectorAll(".admin-page").forEach((page) => {
+    const active = page.dataset.adminPage === id;
+    page.hidden = !active;
+    page.classList.toggle("is-active", active);
+  });
+
+  document.querySelectorAll("[data-admin-page]").forEach((el) => {
+    if (el.tagName === "SECTION") return;
+    el.classList.toggle("is-active", el.getAttribute("data-admin-page") === id);
+  });
+
+  const titleEl = document.querySelector("#adminShellTitle");
+  if (titleEl) titleEl.textContent = ADMIN_TITLES[id] || "Admin";
+
+  setAdminNavOpen(false);
+}
+
+function setAdminNavOpen(open) {
+  document.body.classList.toggle("nav-open", open);
+  const backdrop = document.querySelector("#navBackdrop");
+  const toggle = document.querySelector("#navToggle");
+  const label = toggle?.querySelector(".nav-toggle-text");
+  if (backdrop) backdrop.hidden = !open;
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  }
+  if (label) label.textContent = open ? "Close" : "Menu";
+}
+
+function bindAdminShell() {
+  document.querySelectorAll("[data-admin-page]").forEach((el) => {
+    if (el.tagName === "SECTION") return;
+    el.addEventListener("click", () => {
+      const page = el.getAttribute("data-admin-page");
+      if (page) showAdminPage(page);
+    });
+  });
+
+  const toggle = document.querySelector("#navToggle");
+  const backdrop = document.querySelector("#navBackdrop");
+  if (toggle) {
+    toggle.addEventListener("click", () => setAdminNavOpen(!document.body.classList.contains("nav-open")));
+  }
+  if (backdrop) {
+    backdrop.addEventListener("click", () => setAdminNavOpen(false));
+  }
+  document.querySelectorAll("[data-nav-close]").forEach((btn) => {
+    btn.addEventListener("click", () => setAdminNavOpen(false));
+  });
 }
 
 function clearForm() {
@@ -151,23 +216,27 @@ async function refreshAuth() {
   if (!user) {
     authStatus.textContent = "Not signed in. Use your Supabase admin email and password.";
     loginForm.hidden = false;
-    adminSessionBar.hidden = true;
+    if (adminSessionBar) adminSessionBar.hidden = true;
+    if (logoutButton) logoutButton.hidden = true;
     sessionEmail.textContent = "Signed in";
     setAdminEnabled(false);
     adminProductCount.textContent = "0 products";
     adminProducts.innerHTML = `<div class="empty-cart">Sign in to manage products.</div>`;
     adminOrders.innerHTML = `<div class="empty-cart">Sign in to check orders.</div>`;
     if (adminStats) adminStats.innerHTML = "";
+    showAdminPage("login");
     return;
   }
 
   authStatus.textContent = `Signed in as ${user.email}`;
   loginForm.hidden = true;
-  adminSessionBar.hidden = false;
+  if (adminSessionBar) adminSessionBar.hidden = false;
+  if (logoutButton) logoutButton.hidden = false;
   sessionEmail.textContent = user.email;
   setAdminEnabled(true);
   await renderAdminProducts();
   await renderAdminOrders();
+  showAdminPage("overview");
 }
 
 async function loadAdminOrders() {
@@ -327,7 +396,7 @@ loginForm.addEventListener("submit", async (event) => {
   await refreshAuth();
 });
 
-logoutButton.addEventListener("click", async () => {
+logoutButton?.addEventListener("click", async () => {
   await supabaseClient.auth.signOut();
   clearForm();
   showToast("Signed out");
@@ -408,6 +477,7 @@ adminProducts.addEventListener("click", async (event) => {
     productForm.elements.color.value = product.color || fallbackColor;
     productForm.elements.imageUrl.value = product.image_url || "";
     productForm.elements.active.value = String(product.active);
+    showAdminPage("products");
     productForm.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -508,4 +578,5 @@ copyLiveLink.addEventListener("click", () => {
 
 refreshOrders.addEventListener("click", renderAdminOrders);
 
+bindAdminShell();
 refreshAuth();

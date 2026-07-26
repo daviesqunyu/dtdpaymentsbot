@@ -1,11 +1,17 @@
 /**
- * Safely update @davistechbot profile, commands, channel description, and webhook.
+ * Safely update @Dtdpaymentbot profile, Mini App menu, commands, channel, webhook.
  * Does NOT delete channel history.
  *
  * Usage: node scripts/telegram-setup.mjs
  */
 import "dotenv/config";
 import { BOT_COMMANDS } from "../functions/lib/bot-commands.js";
+import {
+  miniAppChannelKeyboard,
+  miniAppMenuButton,
+  miniAppDeepLink,
+  miniAppUrl
+} from "../functions/lib/mini-app.js";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const storeUrl = (process.env.STORE_URL || "https://dtdpaymentsbot.pages.dev").replace(/\/$/, "");
@@ -16,8 +22,10 @@ const backupChannel = process.env.TELEGRAM_BACKUP_CHANNEL_ID || "";
 const groupId = process.env.TELEGRAM_GROUP_ID || "";
 const botUsername = String(process.env.TELEGRAM_BOT_USERNAME || "Dtdpaymentbot").replace(/^@/, "");
 const owner = String(process.env.TELEGRAM_OWNER_USERNAME || "Davetheedev").replace(/^@/, "");
+const supportEmail = String(process.env.SUPPORT_EMAIL || "contact@dvtechnologies.xyz").trim().toLowerCase();
 const channelUser = String(process.env.TELEGRAM_CHANNEL_USERNAME || "DTDMAINSTORE").replace(/^@/, "");
 const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET || "";
+const env = process.env;
 
 if (!token) {
   console.error("Missing TELEGRAM_BOT_TOKEN in .env");
@@ -37,13 +45,13 @@ async function api(method, body) {
   return payload.result;
 }
 
-function ensureStoreLink(description) {
+function ensureStoreLink() {
   const about = [
-    "DTD MAIN STORE — powered internationally by DV Technologies.",
+    "👑 DTD MAIN STORE — powered by DV Technologies.",
     `🛒 ${storeUrl}`,
-    `🌐 ${companyUrl}`,
+    `📧 ${supportEmail}`,
     `🤖 @${botUsername} · 👤 @${owner}`,
-    "Paystack (KES) + Bitcoin"
+    "💎 USDT (TRC20) · ₿ BTC · 💳 Paystack"
   ].join("\n");
   return about.slice(0, 255);
 }
@@ -52,7 +60,7 @@ async function updateChannelDescription(chatId, label) {
   if (!chatId) return;
   try {
     const chat = await api("getChat", { chat_id: chatId });
-    const next = ensureStoreLink(chat.description || "");
+    const next = ensureStoreLink();
     if (next === (chat.description || "").trim()) {
       console.log(`[skip] ${label} already up to date (${chat.title})`);
       return;
@@ -75,33 +83,53 @@ async function main() {
     console.warn(`[warn] setMyName skipped: ${error.message}`);
   }
   await api("setMyShortDescription", {
-    short_description: `DTD Store · Paystack + BTC · @${owner}`.slice(0, 120)
+    short_description: `✨ DTD Store · ₮ USDT · ₿ BTC · Paystack · @${owner}`.slice(0, 120)
   });
   await api("setMyDescription", {
     description: [
-      "Official DTD Store bot — shop digital products, pay with Paystack or Bitcoin, track orders.",
+      "👑 Official DTD Store bot — Premium Mini App shop, USDT (TRC20), Bitcoin, Paystack, order tracking.",
       "",
-      `🛒 Store: ${storeUrl}`,
-      `🌐 ${companyName}: ${companyUrl}`,
+      `✨ Mini App: ${miniAppDeepLink(env, "shop")}`,
+      `🌐 Store: ${storeUrl}`,
+      `🏢 ${companyName}: ${companyUrl}`,
       `📢 Channel: https://t.me/${channelUser}`,
       "",
-      "Commands: /start /products /pay /order /channel /support /help",
-      "Admin: /status /orders /post /config /mirror",
+      "Commands: /app /buy /products /pay /channel /order /support /help",
       "",
-      `Owner: @${owner}`
+      `🤖 Payments: @${botUsername}`,
+      `📧 Email: ${supportEmail}`,
+      `👤 Support: @${owner}`
     ].join("\n")
   });
   await api("setMyCommands", { commands: BOT_COMMANDS });
   console.log(`[ok] Updated @${botUsername} profile + ${BOT_COMMANDS.length} commands`);
 
+  try {
+    await api("setChatMenuButton", { menu_button: miniAppMenuButton(env) });
+    console.log(`[ok] Mini App menu button → ${miniAppUrl(env, "home")}`);
+  } catch (error) {
+    console.warn(`[warn] setChatMenuButton failed: ${error.message}`);
+    console.warn("       In @BotFather also run /setdomain for dtdpaymentsbot.pages.dev");
+  }
+
   const webhookUrl = `${storeUrl}/api/telegram/webhook`;
   const webhookBody = {
     url: webhookUrl,
-    allowed_updates: ["message", "channel_post", "edited_channel_post", "chat_join_request", "my_chat_member"]
+    allowed_updates: [
+      "message",
+      "edited_message",
+      "callback_query",
+      "channel_post",
+      "edited_channel_post",
+      "chat_join_request",
+      "my_chat_member",
+      "pre_checkout_query"
+    ],
+    drop_pending_updates: false
   };
   if (webhookSecret) webhookBody.secret_token = webhookSecret;
   await api("setWebhook", webhookBody);
-  console.log(`[ok] Webhook set → ${webhookUrl} (messages + channel posts + join requests)`);
+  console.log(`[ok] Webhook set → ${webhookUrl}`);
 
   await updateChannelDescription(mainChannel, "main channel");
   if (backupChannel && backupChannel !== mainChannel) {
@@ -109,39 +137,55 @@ async function main() {
   }
 
   const announce = [
-    "<b>DTD Payments bot is online</b>",
+    "👑 <b>DTD Store · Stars + Secretary live</b>",
+    "━━━━━━━━━━━━━━━━━━━━",
+    "Open the Mini App, or pay in-bot with /buy.",
+    "💎 USDT (TRC20) · ₿ BTC · ⭐ Stars · 💳 Paystack",
+    "⭐ Earn: /earn · referrals /refer · tips /tip",
     "",
-    `🛒 Shop: ${storeUrl}`,
-    "💳 Paystack + Bitcoin checkout",
-    `🤖 Commands: @${botUsername} → /help`,
+    `🤖 Payments: @${botUsername}`,
+    `📢 Channel: @${channelUser}`,
+    `📧 Email: ${supportEmail}`,
     `👤 Support: @${owner}`,
+    `🛒 ${storeUrl}`,
     "",
     "Existing channel posts were not deleted."
   ].join("\n");
 
+  const keyboard = miniAppChannelKeyboard(env);
   const targets = [mainChannel, backupChannel, groupId].filter((id, i, arr) => id && arr.indexOf(id) === i);
   for (const chatId of targets) {
     try {
-      await api("sendMessage", { chat_id: chatId, text: announce, parse_mode: "HTML" });
-      console.log(`[ok] Soft notice posted to ${chatId}`);
+      await api("sendMessage", {
+        chat_id: chatId,
+        text: announce,
+        parse_mode: "HTML",
+        reply_markup: keyboard,
+        disable_web_page_preview: true
+      });
+      console.log(`[ok] Mini App notice posted to ${chatId}`);
     } catch (error) {
       console.warn(`[warn] Could not post to ${chatId}: ${error.message}`);
       console.warn("       Add @Dtdpaymentbot as admin (post messages) on that chat, then re-run.");
     }
   }
 
-  // Confirm admin DM works
   await api("sendMessage", {
     chat_id: process.env.TELEGRAM_ADMIN_CHAT_ID,
     text: [
       "<b>DTD setup complete</b>",
       `Bot: @${botUsername}`,
+      `Mini App menu: ON`,
       `Store: ${storeUrl}`,
-      "Try /help in this chat.",
+      "Try /app or the Menu button in a private chat.",
       "",
-      "If channel posts failed: add this bot as channel/group admin, then re-run npm run telegram:setup"
+      "BotFather tip: /setdomain → dtdpaymentsbot.pages.dev",
+      "Optional: /newapp to register a Main Mini App short name."
     ].join("\n"),
-    parse_mode: "HTML"
+    parse_mode: "HTML",
+    reply_markup: {
+      inline_keyboard: [[{ text: "🛒 Open Mini App", web_app: { url: miniAppUrl(env, "products") } }]]
+    }
   });
   console.log("[ok] Admin DM sent");
 
@@ -153,9 +197,9 @@ main().catch((error) => {
   if (String(error.message).includes("Unauthorized")) {
     console.error(
       "\nTELEGRAM_BOT_TOKEN is invalid/revoked.\n" +
-        "1) @BotFather → /mybots → davistechbot → API Token → Revoke → copy new token\n" +
+        "1) @BotFather → API Token → Revoke → copy new token\n" +
         "2) Put it in .env as TELEGRAM_BOT_TOKEN=...\n" +
-        "3) Make @davistechbot admin on @DTDMAINSTORE\n" +
+        "3) Make @Dtdpaymentbot admin on your channel\n" +
         "4) Deploy site, then run: npm run telegram:setup"
     );
   }

@@ -14,10 +14,16 @@ const blockedProductTerms = [
   paystackPublicKey: "",
   paystackCurrency: "KES",
   paystackConversionRate: 129,
+  usdtTrc20Address: "",
+  usdtNetwork: "TRC20",
   btcAddress: "",
   btcNetwork: "BTC",
+  starsEnabled: true,
+  starsPerUsd: 75,
   paymentOptions: [
-    { id: "Crypto", label: "Bitcoin (BTC)", type: "crypto" },
+    { id: "USDT", label: "USDT (TRC20)", type: "crypto", asset: "USDT", network: "TRC20" },
+    { id: "Bitcoin", label: "Bitcoin (BTC)", type: "crypto", asset: "BTC", network: "BTC" },
+    { id: "Stars", label: "Telegram Stars ⭐", type: "stars", asset: "XTR" },
     { id: "Paystack", label: "Card / Bank / Mobile Money", type: "paystack" }
   ]
 };
@@ -83,6 +89,106 @@ const state = {
   btcUsdPrice: 65000
 };
 
+const CART_STORAGE_KEY = "dtd_cart_v1";
+
+function persistCart() {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify([...state.cart.entries()]));
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
+
+function restoreCart() {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return;
+    state.cart = new Map(
+      parsed
+        .filter((entry) => Array.isArray(entry) && entry[0] && Number(entry[1]) > 0)
+        .map(([id, qty]) => [String(id), Number(qty)])
+    );
+  } catch {
+    state.cart = new Map();
+  }
+}
+
+/* ---------- Lightweight usage analytics ---------- */
+const analytics = {
+  clientId: (() => {
+    try {
+      let id = localStorage.getItem("dtd_cid");
+      if (!id) {
+        id = (crypto.randomUUID && crypto.randomUUID()) || `c_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        localStorage.setItem("dtd_cid", id);
+      }
+      return id;
+    } catch {
+      return "anon";
+    }
+  })(),
+  sessionId: (crypto.randomUUID && crypto.randomUUID()) || `s_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+  queue: [],
+  timer: null
+};
+
+function trackEvent(type, data = {}) {
+  try {
+    analytics.queue.push({
+      type: String(type || "event"),
+      data: data && typeof data === "object" ? data : {},
+      path: `${location.pathname}${location.hash || ""}`,
+      ts: Date.now()
+    });
+    if (!analytics.timer) {
+      analytics.timer = setTimeout(() => flushAnalytics(false), 1500);
+    }
+    if (analytics.queue.length >= 12) flushAnalytics(false);
+  } catch {
+    /* analytics must never break the store */
+  }
+}
+
+function flushAnalytics(useBeacon) {
+  if (analytics.timer) {
+    clearTimeout(analytics.timer);
+    analytics.timer = null;
+  }
+  if (!analytics.queue.length) return;
+
+  const events = analytics.queue.splice(0, analytics.queue.length);
+  const body = JSON.stringify({
+    clientId: analytics.clientId,
+    sessionId: analytics.sessionId,
+    referrer: document.referrer || "",
+    userAgent: navigator.userAgent,
+    events
+  });
+
+  try {
+    if (useBeacon && navigator.sendBeacon) {
+      navigator.sendBeacon("/api/analytics", new Blob([body], { type: "application/json" }));
+      return;
+    }
+    fetch("/api/analytics", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive: true
+    }).catch(() => {});
+  } catch {
+    /* ignore */
+  }
+}
+
+window.dtdTrack = trackEvent;
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") flushAnalytics(true);
+});
+window.addEventListener("pagehide", () => flushAnalytics(true));
+
 const formatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -99,10 +205,19 @@ const checkoutForm = document.querySelector("#checkoutForm");
 const paymentHint = document.querySelector("#paymentHint");
 const cryptoAddress = document.querySelector("#cryptoAddress");
 const cryptoNetworkLabel = document.querySelector("#cryptoNetworkLabel");
+const cryptoAssetBadge = document.querySelector("#cryptoAssetBadge");
+const cryptoAssetTitle = document.querySelector("#cryptoAssetTitle");
+const cryptoNetworkHint = document.querySelector("#cryptoNetworkHint");
+const cryptoHowSteps = document.querySelector("#cryptoHowSteps");
+const cryptoWarning = document.querySelector("#cryptoWarning");
+const paymentReferenceInput = document.querySelector("#paymentReferenceInput");
 const copyCryptoAddressButton = document.querySelector("#copyCryptoAddress");
 const paymentMethodInput = document.querySelector("#paymentMethodInput");
 const paymentMethodsGrid = document.querySelector("#paymentMethodsGrid");
 const paystackButton = document.querySelector("#paystackButton");
+const starsPayButton = document.querySelector("#starsPayButton");
+const starsPanelPanel = document.querySelector("#starsPaymentPanel");
+const starsAmountHint = document.querySelector("#starsAmountHint");
 const refreshProductsButton = document.querySelector("#refreshProducts");
 const copyStoreLinkButton = document.querySelector("#copyStoreLink");
 const toast = document.querySelector("#toast");
@@ -123,6 +238,15 @@ function formatMoney(value) {
   return formatter.format(Number(value || 0));
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function productPrice(product) {
   return Number(product.price_usd ?? product.price ?? 0);
 }
@@ -140,7 +264,7 @@ function selectedPaymentOption() {
   return (
     storeConfig.paymentOptions.find((option) => option.id === paymentMethodInput.value) ||
     storeConfig.paymentOptions[0] ||
-    { id: "Crypto", type: "crypto", channels: [] }
+    { id: "USDT", type: "crypto", asset: "USDT", network: "TRC20", channels: [] }
   );
 }
 
@@ -148,16 +272,26 @@ function isCryptoPayment() {
   return selectedPaymentOption().type === "crypto";
 }
 
+function isUsdtPayment(option = selectedPaymentOption()) {
+  return option.type === "crypto" && (option.asset === "USDT" || option.id === "USDT");
+}
+
+function activeCryptoAddress(option = selectedPaymentOption()) {
+  if (isUsdtPayment(option)) return storeConfig.usdtTrc20Address || "";
+  return storeConfig.btcAddress || "";
+}
+
 function renderPaymentMethodsGrid() {
   if (!paymentMethodsGrid) return;
-  
+
   const options = storeConfig.paymentOptions || [];
   paymentMethodsGrid.innerHTML = options.map((opt) => {
     const isSelected = opt.id === paymentMethodInput.value;
-    
-    // Choose icon
+
     let icon = "💳";
-    if (opt.type === "crypto") icon = "₿";
+    if (opt.id === "USDT" || opt.asset === "USDT") icon = "₮";
+    else if (opt.type === "stars" || opt.id === "Stars") icon = "⭐";
+    else if (opt.type === "crypto") icon = "₿";
     else if (opt.id.includes("Card")) icon = "💳";
     else if (opt.id.includes("Bank")) icon = "🏛️";
     else if (opt.id.includes("USSD")) icon = "📱";
@@ -165,11 +299,13 @@ function renderPaymentMethodsGrid() {
     else if (opt.id.includes("QR")) icon = "🔍";
 
     let sub = "Instant";
-    if (opt.type === "crypto") sub = "Requires confirmation";
+    if (opt.id === "USDT" || opt.asset === "USDT") sub = "Primary · TRC20";
+    else if (opt.type === "stars") sub = "In-Telegram · earn ads";
+    else if (opt.type === "crypto") sub = "On-chain confirm";
     else if (opt.id.includes("Bank")) sub = "Manual verify option";
 
     return `
-      <button type="button" class="payment-method-btn ${isSelected ? 'selected' : ''}" data-id="${opt.id}">
+      <button type="button" class="payment-method-btn ${isSelected ? "selected" : ""}" data-id="${opt.id}">
         <span class="method-icon">${icon}</span>
         <span class="method-label">${opt.label}</span>
         <span class="method-sub">${sub}</span>
@@ -178,14 +314,128 @@ function renderPaymentMethodsGrid() {
     `;
   }).join("");
 
-  // Add click listeners
   paymentMethodsGrid.querySelectorAll(".payment-method-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       paymentMethodInput.value = btn.dataset.id;
       updatePaymentHint();
       renderPaymentMethodsGrid();
+      syncTelegramMainButton();
+      haptic("selection");
+      trackEvent("select_payment", { method: btn.dataset.id });
     });
   });
+}
+
+function usdToStarsClient(usd) {
+  const rate = Number(storeConfig.starsPerUsd || 75);
+  return Math.max(1, Math.ceil(Number(usd || 0) * (rate > 0 ? rate : 75)));
+}
+
+function haptic(type = "light") {
+  try {
+    const h = window.Telegram?.WebApp?.HapticFeedback;
+    if (!h) return;
+    if (type === "success") h.notificationOccurred?.("success");
+    else if (type === "error") h.notificationOccurred?.("error");
+    else if (type === "selection") h.selectionChanged?.();
+    else h.impactOccurred?.(type);
+  } catch {
+    /* older clients */
+  }
+}
+
+function syncTelegramMainButton() {
+  const tg = window.Telegram?.WebApp;
+  if (!isInsideTelegramMiniApp() || !tg?.MainButton) return;
+
+  const page = (location.hash || "#home").replace("#", "") || "home";
+  const total = currentTotal();
+  const items = state.cart.size;
+
+  try {
+    tg.MainButton.offClick?.(onTelegramMainButton);
+  } catch {
+    /* ignore */
+  }
+
+  if (page === "products" && !items) {
+    tg.MainButton.setText("Browse · tap a product");
+    tg.MainButton.hide();
+    return;
+  }
+
+  if (page === "products" && items) {
+    tg.MainButton.setText(`Checkout · ${formatMoney(total)}`);
+    tg.MainButton.show();
+    tg.MainButton.onClick(onTelegramMainButton);
+    return;
+  }
+
+  if (page === "checkout") {
+    if (!items) {
+      tg.MainButton.setText("Browse products");
+      tg.MainButton.show();
+      tg.MainButton.onClick(onTelegramMainButton);
+      return;
+    }
+    const option = selectedPaymentOption();
+    if (option.type === "stars") {
+      tg.MainButton.setText(`⭐ Pay ${usdToStarsClient(total)} Stars`);
+    } else if (option.type === "paystack") {
+      tg.MainButton.setText("Pay with Paystack");
+    } else if (isUsdtPayment(option)) {
+      tg.MainButton.setText("Confirm USDT payment");
+    } else if (option.type === "crypto") {
+      tg.MainButton.setText("Confirm BTC payment");
+    } else {
+      tg.MainButton.setText("Place order");
+    }
+    tg.MainButton.show();
+    tg.MainButton.onClick(onTelegramMainButton);
+    return;
+  }
+
+  tg.MainButton.hide();
+}
+
+function onTelegramMainButton() {
+  const page = (location.hash || "#home").replace("#", "") || "home";
+  haptic("medium");
+  if (page === "products") {
+    navigateToPage("checkout");
+    return;
+  }
+  if (page === "checkout") {
+    if (!state.cart.size) {
+      navigateToPage("products");
+      return;
+    }
+    const option = selectedPaymentOption();
+    if (option.type === "stars") {
+      startStarsPayment();
+      return;
+    }
+    if (option.type === "paystack") {
+      startPaystackPayment();
+      return;
+    }
+    checkoutForm?.requestSubmit?.();
+  }
+}
+
+function prefillCheckoutFromTelegram() {
+  if (!checkoutForm || !isInsideTelegramMiniApp()) return;
+  const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  if (!user) return;
+  const nameEl = checkoutForm.elements.name;
+  const tgEl = checkoutForm.elements.telegram;
+  if (nameEl && !nameEl.value) {
+    const full = [user.first_name, user.last_name].filter(Boolean).join(" ");
+    if (full) nameEl.value = full;
+  }
+  if (tgEl && !tgEl.value && user.username) {
+    tgEl.value = `@${user.username}`;
+  }
 }
 
 async function loadStoreConfig() {
@@ -193,14 +443,8 @@ async function loadStoreConfig() {
     const response = await fetch("/api/config");
     if (!response.ok) throw new Error("Config unavailable");
     storeConfig = await response.json();
-    // #region agent log
-    fetch('http://127.0.0.1:7413/ingest/3855ecfa-f160-49a6-b4f2-efca4f443e59',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8491be'},body:JSON.stringify({sessionId:'8491be',runId:'pre-fix',hypothesisId:'B',location:'app.js:loadStoreConfig',message:'Store config loaded',data:{hasPublicKey:Boolean(storeConfig.paystackPublicKey),publicKeyPrefix:String(storeConfig.paystackPublicKey||'').slice(0,8),currency:storeConfig.paystackCurrency,conversionRate:storeConfig.paystackConversionRate,optionCount:(storeConfig.paymentOptions||[]).length,telegramEnabled:storeConfig.telegramEnabled},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
   } catch (error) {
     console.warn("Using fallback store config", error);
-    // #region agent log
-    fetch('http://127.0.0.1:7413/ingest/3855ecfa-f160-49a6-b4f2-efca4f443e59',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8491be'},body:JSON.stringify({sessionId:'8491be',runId:'pre-fix',hypothesisId:'B',location:'app.js:loadStoreConfig',message:'Config load failed',data:{error:String(error&&error.message||error)},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
   }
 
   // Set default option value
@@ -223,22 +467,161 @@ function wireTelegramHubLinks() {
   const channelUrl = storeConfig.telegramChannelUrl || "https://t.me/DTDMAINSTORE";
   const ownerUrl = storeConfig.telegramOwnerUrl || "https://t.me/Davetheedev";
   const companyUrl = storeConfig.companyUrl || "https://dvtechnologies.xyz";
+  const supportEmail = storeConfig.supportEmail || "contact@dvtechnologies.xyz";
+  const mailUrl = `mailto:${supportEmail}`;
 
   [
     ["#hubBotLink", botUrl],
     ["#hubChannelLink", channelUrl],
     ["#hubOwnerLink", ownerUrl],
     ["#hubCompanyLink", companyUrl],
-    ["#heroOpenBot", botUrl],
-    ["#heroOpenChannel", channelUrl],
-    ["#heroOpenOwner", ownerUrl]
+    ["#hubEmailLink", mailUrl],
+    ["#faqSupportEmail", mailUrl],
+    ["#telegramFeedFallback", channelUrl]
   ].forEach(([sel, href]) => {
     const el = document.querySelector(sel);
-    if (el) el.href = href;
+    if (el) {
+      el.href = href;
+      if (sel === "#hubEmailLink" || sel === "#faqSupportEmail") {
+        el.textContent = supportEmail;
+      }
+    }
+  });
+}
+
+const PAGE_META = {
+  home: { title: "Home", eyebrow: "DTD Store" },
+  products: { title: "Products", eyebrow: "Shop" },
+  checkout: { title: "Checkout", eyebrow: "Shop" },
+  track: { title: "Track order", eyebrow: "Orders" },
+  trade: { title: "DTD Trade Platform", eyebrow: "Trading" },
+  smtp: { title: "SMTP + SMS", eyebrow: "Tools" },
+  chat: { title: "DTD Chat", eyebrow: "Connect" },
+  telegram: { title: "Telegram", eyebrow: "Connect" },
+  faq: { title: "Help / FAQ", eyebrow: "Connect" }
+};
+
+function navigateToPage(pageId, { push = true } = {}) {
+  const id = PAGE_META[pageId] ? pageId : "home";
+  document.querySelectorAll(".page[data-page]").forEach((page) => {
+    const active = page.dataset.page === id;
+    page.hidden = !active;
+    page.classList.toggle("is-active", active);
   });
 
-  const heroRow = document.querySelector("#heroTelegramLinks");
-  if (heroRow) heroRow.hidden = false;
+  document.querySelectorAll("[data-nav]").forEach((link) => {
+    link.classList.toggle("is-active", link.getAttribute("data-nav") === id);
+  });
+
+  const meta = PAGE_META[id];
+  const titleEl = document.querySelector("#shellPageTitle");
+  const eyebrowEl = document.querySelector("#pageEyebrow");
+  if (titleEl) titleEl.textContent = meta.title;
+  if (eyebrowEl) eyebrowEl.textContent = meta.eyebrow;
+
+  if (push) {
+    const nextHash = `#${id}`;
+    if (location.hash !== nextHash) {
+      history.pushState({ page: id }, "", nextHash);
+    }
+  }
+
+  setNavOpen(false);
+
+  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  trackEvent("page_view", { page: id, title: meta.title });
+
+  if (id === "chat" && typeof window.bootDtdChat === "function") {
+    window.bootDtdChat();
+  }
+  if (id === "checkout") prefillCheckoutFromTelegram();
+  syncTelegramMainButton();
+}
+
+function currentPageFromHash() {
+  const raw = String(location.hash || "#home").replace(/^#/, "").split("?")[0].trim();
+  if (raw === "trade-bots" || raw.startsWith("trade-")) return "trade";
+  return PAGE_META[raw] ? raw : "home";
+}
+
+function setNavOpen(open) {
+  document.body.classList.toggle("nav-open", open);
+  const backdrop = document.querySelector("#navBackdrop");
+  const toggle = document.querySelector("#navToggle");
+  const label = toggle?.querySelector(".nav-toggle-text");
+  if (backdrop) backdrop.hidden = !open;
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  }
+  if (label) label.textContent = open ? "Close" : "Menu";
+}
+
+function bindShellNavigation() {
+  document.querySelectorAll("[data-nav], a[href^='#']").forEach((el) => {
+    el.addEventListener("click", (event) => {
+      const href = el.getAttribute("href") || "";
+      const nav = el.getAttribute("data-nav");
+      const page = nav || href.replace(/^#/, "");
+      if (!PAGE_META[page]) return;
+      event.preventDefault();
+      navigateToPage(page);
+    });
+  });
+
+  window.addEventListener("hashchange", () => navigateToPage(currentPageFromHash(), { push: false }));
+  window.addEventListener("popstate", () => navigateToPage(currentPageFromHash(), { push: false }));
+
+  const toggle = document.querySelector("#navToggle");
+  const backdrop = document.querySelector("#navBackdrop");
+  if (toggle) {
+    toggle.addEventListener("click", () => setNavOpen(!document.body.classList.contains("nav-open")));
+  }
+  if (backdrop) {
+    backdrop.addEventListener("click", () => setNavOpen(false));
+  }
+  document.querySelectorAll("[data-nav-close]").forEach((btn) => {
+    btn.addEventListener("click", () => setNavOpen(false));
+  });
+
+  navigateToPage(currentPageFromHash(), { push: false });
+}
+
+function formatChannelDate(value) {
+  if (!value) return "Latest channel update";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? "Latest channel update"
+    : `Posted ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date)}`;
+}
+
+async function loadTelegramFeed() {
+  const feed = document.querySelector("#telegramFeed");
+  const status = document.querySelector("#telegramFeedStatus");
+  if (!feed || !status) return;
+
+  const fallbackUrl = storeConfig.telegramChannelUrl || "https://t.me/DTDMAINSTORE";
+  const fallback = () => {
+    status.textContent = "See store announcements, fresh drops, and delivery updates in the main channel.";
+    feed.innerHTML = `<a class="secondary-button" href="${fallbackUrl}" target="_blank" rel="noopener noreferrer">Open @DTDMAINSTORE</a>`;
+  };
+
+  try {
+    const response = await fetch("/api/telegram/feed", { headers: { Accept: "application/json" } });
+    if (!response.ok) throw new Error("Telegram feed unavailable");
+    const payload = await response.json();
+    if (!payload?.post?.url || !payload.post.text) throw new Error("No public post available");
+
+    status.textContent = formatChannelDate(payload.post.date);
+    feed.innerHTML = `
+      <p class="telegram-feed-text">${escapeHtml(payload.post.text)}</p>
+      <a class="text-link" href="${payload.post.url}" target="_blank" rel="noopener noreferrer">Read on Telegram <span aria-hidden="true">↗</span></a>
+    `;
+  } catch {
+    fallback();
+  } finally {
+    feed.setAttribute("aria-busy", "false");
+  }
 }
 
 async function fetchBtcUsdPrice() {
@@ -260,7 +643,7 @@ async function loadProducts() {
     .from("products")
     .select("id,name,description,price_usd,color,image_url,active")
     .eq("active", true)
-    .order("created_at", { ascending: false });
+    .order("price_usd", { ascending: true });
 
   if (error) {
     console.error(error);
@@ -268,12 +651,8 @@ async function loadProducts() {
     showToast("Using sample products. Check Supabase setup.");
   } else {
     state.products = data.filter(isAllowedProduct);
-    if (data.length !== state.products.length) {
-      showToast("Removed restricted products from this storefront view.");
-    }
     if (!state.products.length) {
       state.products = fallbackProducts;
-      showToast("Showing clean software products.");
     }
   }
 
@@ -285,41 +664,58 @@ async function loadProducts() {
 function updateLiveStats() {
   if (!liveStats) return;
   const totalProducts = state.products.length;
-  const totalValue = state.products.reduce((sum, product) => sum + productPrice(product), 0);
+  const prices = state.products.map(productPrice);
+  const fromPrice = prices.length ? Math.min(...prices) : 0;
   liveStats.innerHTML = `
-    <span class="live-pill"><span class="pulse-dot"></span>${totalProducts} live products</span>
-    <span class="live-pill">From ${formatMoney(Math.min(...state.products.map(productPrice), totalValue))}</span>
-    <span class="live-pill">BTC + Paystack checkout</span>
+    <span class="live-pill live-pill--hot">
+      <span class="pulse-dot pulse-dot--live" aria-hidden="true"></span>
+      ${totalProducts} live products
+    </span>
+    <span class="live-pill">From ${formatMoney(fromPrice)}</span>
+    <span class="live-pill">USDT · BTC · Paystack</span>
   `;
 }
 
-function renderProducts(items = state.products) {
+function renderProducts(items = state.products, { emptyMessage } = {}) {
   const count = items.length;
-  productCount.textContent = count === 1 ? "Showing 1 product" : `Showing ${count} products`;
-
-  if (!items.length) {
-    productsGrid.innerHTML = `<div class="empty-cart wide-empty">No products are available yet.</div>`;
+  if (productCount) {
+    productCount.textContent = count === 1 ? "Showing 1 product" : `Showing ${count} products`;
+  }
+  if (!productsGrid) return;
+  if (!count) {
+    productsGrid.innerHTML = `<div class="empty-cart wide-empty">${emptyMessage || "No products are available yet."}</div>`;
     return;
   }
 
   productsGrid.innerHTML = items
-    .map(
-      (product, index) => `
+    .map((product, index) => {
+      const name = escapeHtml(product.name || "Product");
+      const description = escapeHtml(product.description || "");
+      const color = escapeHtml(product.color || "#0f766e");
+      const image = product.image_url
+        ? `<img src="${escapeHtml(product.image_url)}" alt="${name}" loading="lazy" />`
+        : `<img src="assets/store-feature-shop.png" alt="${name}" loading="lazy" />`;
+      return `
         <article class="product-card reveal" style="--delay:${index * 70}ms">
-          <div class="product-image" style="background:${product.color || "#0f766e"}">
-            ${product.image_url ? `<img src="${product.image_url}" alt="${product.name}" loading="lazy" />` : product.name.charAt(0)}
+          <div class="product-image" style="background:${color}">
+            ${image}
           </div>
-          <h3>${product.name}</h3>
-          <p>${product.description}</p>
+          <h3>${name}</h3>
+          <p>${description}</p>
           <div class="product-meta">
             <span class="price">${formatMoney(productPrice(product))}</span>
-            <button class="primary-button" type="button" data-add="${product.id}">
-              Add to cart
-            </button>
+            <div class="product-actions">
+              <button class="secondary-button" type="button" data-add="${escapeHtml(product.id)}">
+                Add to cart
+              </button>
+              <button class="primary-button" type="button" data-buy="${escapeHtml(product.id)}">
+                Buy now
+              </button>
+            </div>
           </div>
         </article>
-      `
-    )
+      `;
+    })
     .join("");
 
   requestAnimationFrame(() => {
@@ -343,9 +739,20 @@ function renderCart() {
 
   cartCount.textContent = totalItems;
   cartTotal.textContent = formatMoney(totalPrice);
+  document.querySelector(".cart-toggle")?.classList.toggle("has-items", totalItems > 0);
+  persistCart();
 
   if (!entries.length) {
-    cartItems.innerHTML = `<div class="empty-cart">Your cart is empty. Add a product to continue.</div>`;
+    cartItems.innerHTML = `
+      <div class="empty-cart">
+        Your cart is empty.
+        <div class="checkout-empty-actions">
+          <button type="button" class="primary-button" data-go-products>Browse products</button>
+        </div>
+      </div>
+    `;
+    updatePaymentHint();
+    syncTelegramMainButton();
     return;
   }
 
@@ -354,24 +761,38 @@ function renderCart() {
       (product) => `
         <div class="cart-item">
           <div>
-            <strong>${product.name}</strong>
+            <strong>${escapeHtml(product.name)}</strong>
             <span>${formatMoney(productPrice(product))} each</span>
           </div>
-          <div class="quantity-controls" aria-label="${product.name} quantity controls">
-            <button type="button" data-decrease="${product.id}" aria-label="Decrease ${product.name}">-</button>
+          <div class="quantity-controls" aria-label="${escapeHtml(product.name)} quantity controls">
+            <button type="button" data-decrease="${escapeHtml(product.id)}" aria-label="Decrease ${escapeHtml(product.name)}">-</button>
             <span>${product.quantity}</span>
-            <button type="button" data-increase="${product.id}" aria-label="Increase ${product.name}">+</button>
+            <button type="button" data-increase="${escapeHtml(product.id)}" aria-label="Increase ${escapeHtml(product.name)}">+</button>
           </div>
         </div>
       `
     )
     .join("");
+
+  updatePaymentHint();
+  syncTelegramMainButton();
 }
 
-function addToCart(productId) {
+function addToCart(productId, { goCheckout = false } = {}) {
   state.cart.set(productId, (state.cart.get(productId) || 0) + 1);
   renderCart();
-  showToast("Added to cart");
+  const product = state.products.find((p) => p.id === productId);
+  trackEvent("add_to_cart", {
+    productId,
+    name: product?.name || productId,
+    price_usd: product ? productPrice(product) : 0
+  });
+  if (goCheckout) {
+    showToast("Added — opening checkout");
+    navigateToPage("checkout");
+    return;
+  }
+  showToast("Added to cart — tap Cart to checkout");
 }
 
 function changeQuantity(productId, amount) {
@@ -405,7 +826,7 @@ async function copyText(text, successMessage) {
 async function saveOrder(formData) {
   const entries = cartEntries();
   const total = currentTotal();
-  const paymentMethod = formData.get("payment") || "Crypto";
+  const paymentMethod = formData.get("payment") || "USDT";
   const meta = window.getVisitorMeta ? window.getVisitorMeta() : {};
 
   const response = await fetch("/api/orders", {
@@ -466,50 +887,240 @@ function updatePaymentHint() {
   const option = selectedPaymentOption();
   const isCrypto = option.type === "crypto";
   const isPaystack = option.type === "paystack";
+  const isStars = option.type === "stars" || option.id === "Stars";
   const isTelegram = option.type === "telegram" || option.id === "Telegram";
-
-  const address = storeConfig.btcAddress || "";
+  const usdt = isUsdtPayment(option);
+  const address = activeCryptoAddress(option);
   const total = currentTotal();
 
-  cryptoPanel.hidden = !isCrypto;
-  paystackPanel.hidden = !isPaystack;
-  telegramPaymentPanel.hidden = !isTelegram;
+  if (cryptoPanel) cryptoPanel.hidden = !isCrypto;
+  if (paystackPanel) paystackPanel.hidden = !isPaystack;
+  if (starsPaymentPanel) starsPaymentPanel.hidden = !isStars;
+  if (telegramPaymentPanel) telegramPaymentPanel.hidden = !isTelegram;
 
   const submitBtn = document.querySelector("#submitButton");
 
-  if (isPaystack) {
-    paystackButton.style.display = "flex";
-    paystackButton.innerHTML = `Pay with Card / Mobile Money`;
+  if (paystackButton) paystackButton.style.display = isPaystack ? "flex" : "none";
+  if (starsPayButton) starsPayButton.style.display = isStars ? "flex" : "none";
+
+  if (isStars) {
+    const stars = usdToStarsClient(total);
+    if (starsAmountHint) {
+      starsAmountHint.textContent =
+        total > 0
+          ? `Pay about ${stars} Stars for ${formatMoney(total)} (rate ~${storeConfig.starsPerUsd || 75} ★ / $1).`
+          : "Add items to see Stars amount.";
+    }
+    if (starsPayButton) {
+      starsPayButton.textContent = total > 0 ? `⭐ Pay ${stars} Stars` : "⭐ Pay with Telegram Stars";
+    }
+    if (submitBtn) submitBtn.style.display = "none";
+  } else if (isPaystack) {
+    if (paystackButton) paystackButton.innerHTML = `Pay with Card / Mobile Money`;
     if (submitBtn) submitBtn.style.display = "none";
   } else {
-    paystackButton.style.display = "none";
     if (submitBtn) {
       submitBtn.style.display = "block";
-      submitBtn.textContent = isCrypto ? "Confirm BTC Payment" : "Complete & Place Order";
+      if (usdt) submitBtn.textContent = "Confirm USDT Payment";
+      else if (isCrypto) submitBtn.textContent = "Confirm BTC Payment";
+      else submitBtn.textContent = "Complete & Place Order";
     }
   }
 
+  syncTelegramMainButton();
+
   if (isCrypto) {
-    cryptoAddress.textContent = address || "BTC address not configured";
+    if (cryptoPanel) {
+      cryptoPanel.classList.toggle("is-usdt", usdt);
+      cryptoPanel.classList.toggle("is-btc", !usdt);
+    }
+
+    if (cryptoAssetBadge) {
+      cryptoAssetBadge.textContent = usdt ? "USDT" : "BTC";
+      cryptoAssetBadge.classList.toggle("usdt", usdt);
+      cryptoAssetBadge.classList.toggle("btc", !usdt);
+    }
+    if (cryptoAssetTitle) {
+      cryptoAssetTitle.textContent = usdt ? "USDT · Tron (TRC20)" : "Bitcoin · BTC network";
+    }
+    if (cryptoNetworkHint) {
+      cryptoNetworkHint.textContent = usdt
+        ? "Send only USDT on the Tron TRC20 network to this address."
+        : "Send only Bitcoin (BTC) to this address — no other coins or networks.";
+    }
+    if (cryptoHowSteps) {
+      cryptoHowSteps.innerHTML = usdt
+        ? `
+          <li>Scan the QR or copy the wallet address</li>
+          <li>Send the exact amount on <strong>Tron (TRC20)</strong> only</li>
+          <li>Paste your transaction hash below to place the order</li>
+        `
+        : `
+          <li>Scan the QR or copy the BTC wallet address</li>
+          <li>Send the exact BTC amount shown above</li>
+          <li>Paste your Bitcoin txid below to place the order</li>
+        `;
+    }
+    if (cryptoNetworkLabel) {
+      cryptoNetworkLabel.textContent = usdt ? "Tron (TRC20)" : "Bitcoin (BTC)";
+    }
+    if (cryptoWarning) {
+      cryptoWarning.textContent = usdt
+        ? "Don’t send NFTs to this address. Only USDT on Tron (TRC20) — other networks will lose funds."
+        : "Send BTC only. Wrong asset or network cannot be recovered.";
+    }
+    if (paymentReferenceInput) {
+      paymentReferenceInput.placeholder = usdt
+        ? "Paste TRC20 transaction hash"
+        : "Paste BTC txid";
+    }
+
+    cryptoAddress.textContent =
+      address || (usdt ? "USDT TRC20 address not configured" : "BTC address not configured");
     if (copyCryptoAddressButton) {
       copyCryptoAddressButton.disabled = !address;
     }
 
-    const rate = state.btcUsdPrice > 0 ? state.btcUsdPrice : 65000;
-    const btcEstimate = total > 0 ? (total / rate).toFixed(6) : "0.000000";
-    if (btcAmountLabel) {
-      btcAmountLabel.textContent =
-        total > 0
-          ? `$${total.toFixed(2)} USD (~${btcEstimate} BTC @ $${Math.round(rate).toLocaleString()})`
-          : "Add items to see amount";
-    }
-
-    if (btcQrCode && address && total > 0) {
-      btcQrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=bitcoin:${address}?amount=${btcEstimate}`;
+    if (usdt) {
+      if (btcAmountLabel) {
+        btcAmountLabel.textContent =
+          total > 0 ? `${total.toFixed(2)} USDT (= $${total.toFixed(2)} USD)` : "Add items to see amount";
+      }
+      renderCryptoQr(address, { asset: "USDT" });
+    } else {
+      const rate = state.btcUsdPrice > 0 ? state.btcUsdPrice : 65000;
+      const btcEstimate = total > 0 ? (total / rate).toFixed(8) : "";
+      if (btcAmountLabel) {
+        btcAmountLabel.textContent =
+          total > 0
+            ? `$${total.toFixed(2)} USD (~${btcEstimate} BTC @ $${Math.round(rate).toLocaleString()})`
+            : "Add items to see amount";
+      }
+      renderCryptoQr(address, { asset: "BTC", btcAmount: btcEstimate });
     }
   }
 
   updateTelegramPaymentPanel();
+}
+
+async function startStarsPayment() {
+  if (!state.cart.size) {
+    showToast("Add at least one product before payment.");
+    return;
+  }
+  const name = checkoutForm.elements.name.value.trim();
+  const email = checkoutForm.elements.email.value.trim();
+  if (!name || !email) {
+    showToast("Enter your name and email before Stars checkout.");
+    haptic("error");
+    return;
+  }
+  if (!isInsideTelegramMiniApp() || !window.Telegram?.WebApp?.openInvoice) {
+    showToast("Open the Mini App from @Dtdpaymentbot to pay with Stars.");
+    const bot = storeConfig.telegramBotUrl || "https://t.me/Dtdpaymentbot";
+    window.open(`${bot}?start=buy`, "_blank", "noopener,noreferrer");
+    return;
+  }
+
+  const totalUsd = currentTotal();
+  paymentMethodInput.value = "Stars";
+  if (starsPayButton) {
+    starsPayButton.disabled = true;
+    starsPayButton.textContent = "Creating Stars invoice…";
+  }
+  try {
+    const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+    const response = await fetch("/api/stars/invoice", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        email,
+        telegram: checkoutForm.elements.telegram?.value || (tgUser?.username ? `@${tgUser.username}` : ""),
+        telegramUserId: tgUser?.id || null,
+        totalUsd,
+        items: cartEntries().map((product) => ({
+          product_id: product.id,
+          product_name: product.name,
+          quantity: product.quantity,
+          unit_price_usd: productPrice(product)
+        }))
+      })
+    });
+    const payload = await response.json();
+    if (!response.ok || !payload.ok || !payload.invoice_url) {
+      throw new Error(payload.error || "Could not create Stars invoice.");
+    }
+
+    window.Telegram.WebApp.openInvoice(payload.invoice_url, async (status) => {
+      if (status === "paid") {
+        haptic("success");
+        showToast("Stars paid — confirming with bot…");
+        // Webhook creates the order; poll so we don't double-insert.
+        let orderId = payload.id;
+        for (let i = 0; i < 8; i += 1) {
+          await new Promise((r) => setTimeout(r, 700));
+          try {
+            const check = await fetch(`/api/stars/invoice?id=${encodeURIComponent(payload.id)}`);
+            const row = await check.json();
+            if (row.ok && row.orderId) {
+              orderId = row.orderId;
+              break;
+            }
+          } catch {
+            /* retry */
+          }
+        }
+        showCheckoutSuccess(orderId, email);
+        showToast("Stars payment confirmed. Check @Dtdpaymentbot for delivery email prompt.");
+      } else if (status === "cancelled") {
+        showToast("Stars payment cancelled.");
+      } else if (status === "failed") {
+        haptic("error");
+        showToast("Stars payment failed. Try again or use USDT.");
+      }
+    });
+  } catch (error) {
+    haptic("error");
+    showToast(error.message || "Stars checkout failed.");
+  } finally {
+    if (starsPayButton) {
+      starsPayButton.disabled = false;
+      starsPayButton.textContent = `⭐ Pay ${usdToStarsClient(currentTotal())} Stars`;
+    }
+  }
+}
+
+function buildBip21Uri(address, btcAmount) {
+  if (!address) return "";
+  const base = `bitcoin:${address}`;
+  return btcAmount && Number(btcAmount) > 0 ? `${base}?amount=${btcAmount}` : base;
+}
+
+function renderCryptoQr(address, { asset = "USDT", btcAmount = "" } = {}) {
+  if (!btcQrCode) return;
+  if (!address) {
+    btcQrCode.removeAttribute("src");
+    btcQrCode.alt = asset === "USDT" ? "USDT address not configured" : "BTC address not configured";
+    return;
+  }
+
+  const payload = asset === "BTC" ? buildBip21Uri(address, btcAmount) : address;
+  const fallback = asset === "BTC" ? `bitcoin:${address}` : address;
+  const primary = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=1&ecc=M&data=${encodeURIComponent(
+    payload
+  )}`;
+  const addressOnly = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=1&data=${encodeURIComponent(
+    fallback
+  )}`;
+
+  btcQrCode.alt = asset === "USDT" ? `USDT TRC20 payment QR for ${address}` : `Bitcoin payment QR for ${address}`;
+  btcQrCode.dataset.payload = payload;
+  btcQrCode.onerror = () => {
+    btcQrCode.onerror = null;
+    btcQrCode.src = addressOnly;
+  };
+  btcQrCode.src = primary;
 }
 
 async function submitOrderDirectly(paymentReference) {
@@ -577,6 +1188,12 @@ function showCheckoutSuccess(orderId, email) {
 
   const entries = cartEntries();
   const total = currentTotal();
+  trackEvent("purchase", {
+    orderId: String(orderId || ""),
+    total_usd: total,
+    items: entries.reduce((sum, p) => sum + p.quantity, 0),
+    method: paymentMethodInput?.value || ""
+  });
   if (window.notifyBotOrderSuccess) {
     window.notifyBotOrderSuccess(
       orderId,
@@ -588,6 +1205,29 @@ function showCheckoutSuccess(orderId, email) {
     window.addBotMessage(
       `Your order #${orderId} has been placed! Our team has been notified and will verify the transaction.`
     );
+  }
+
+  const boughtSmtp = entries.some((p) => String(p.name || "").trim().toLowerCase() === "smtp");
+  if (boughtSmtp && checkoutSuccess) {
+    let link = checkoutSuccess.querySelector("#smtpUnlockDeepLink");
+    if (!link) {
+      link = document.createElement("a");
+      link.id = "smtpUnlockDeepLink";
+      link.className = "primary-button";
+      link.style.marginTop = "12px";
+      checkoutSuccess.appendChild(link);
+    }
+    link.href = `#smtp`;
+    link.textContent = "Open SMTP console";
+    link.onclick = (event) => {
+      event.preventDefault();
+      const unlock = document.querySelector("#smtpUnlockForm");
+      if (unlock) {
+        if (unlock.orderId) unlock.orderId.value = orderId;
+        if (unlock.email) unlock.email.value = email;
+      }
+      navigateToPage("smtp");
+    };
   }
 
   state.cart.clear();
@@ -624,6 +1264,7 @@ async function startPaystackPayment() {
 
   const totalUsd = currentTotal();
   paymentMethodInput.value = "Paystack";
+  trackEvent("begin_checkout", { method: "Paystack", total_usd: totalUsd });
 
   if (paystackButton) {
     paystackButton.disabled = true;
@@ -642,9 +1283,6 @@ async function startPaystackPayment() {
       })
     });
     const initPayload = await initResponse.json();
-    // #region agent log
-    fetch('http://127.0.0.1:7413/ingest/3855ecfa-f160-49a6-b4f2-efca4f443e59',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8491be'},body:JSON.stringify({sessionId:'8491be',runId:'post-fix',hypothesisId:'A',location:'app.js:startPaystackPayment',message:'Initialize result',data:{ok:initResponse.ok,error:initPayload.error,currency:initPayload.currency,amount:initPayload.amount,reference:initPayload.reference,hasUrl:Boolean(initPayload.authorization_url)},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
 
     if (!initResponse.ok || !initPayload.ok || !initPayload.authorization_url) {
       throw new Error(initPayload.error || "Could not start Paystack payment.");
@@ -671,9 +1309,6 @@ async function startPaystackPayment() {
     );
     window.location.href = initPayload.authorization_url;
   } catch (error) {
-    // #region agent log
-    fetch('http://127.0.0.1:7413/ingest/3855ecfa-f160-49a6-b4f2-efca4f443e59',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8491be'},body:JSON.stringify({sessionId:'8491be',runId:'post-fix',hypothesisId:'A',location:'app.js:startPaystackPayment:catch',message:'Paystack start failed',data:{error:String(error&&error.message||error)},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     showToast(error.message || "Paystack failed to open.");
     if (paystackButton) {
       paystackButton.disabled = false;
@@ -687,10 +1322,8 @@ async function resumePaystackReturn() {
   const reference = params.get("reference") || params.get("trxref");
   if (!reference) return;
 
+  navigateToPage("checkout", { push: false });
   const pendingRaw = sessionStorage.getItem("dtd_pending_paystack");
-  // #region agent log
-  fetch('http://127.0.0.1:7413/ingest/3855ecfa-f160-49a6-b4f2-efca4f443e59',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8491be'},body:JSON.stringify({sessionId:'8491be',runId:'post-fix',hypothesisId:'A',location:'app.js:resumePaystackReturn',message:'Paystack return',data:{reference,hasPending:Boolean(pendingRaw)},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
 
   try {
     await verifyPaystackReference(reference);
@@ -729,20 +1362,28 @@ async function resumePaystackReturn() {
   } catch (error) {
     showToast(error.message || "Payment not confirmed yet.");
   } finally {
-    const cleanUrl = window.location.pathname + (window.location.hash || "");
-    window.history.replaceState({}, "", cleanUrl || "/");
+    window.history.replaceState({}, "", `${window.location.pathname}#checkout`);
   }
 }
 
 // Paystack verification handled server side or directly via submitOrderDirectly callback.
 
 productsGrid.addEventListener("click", (event) => {
+  const buyButton = event.target.closest("[data-buy]");
+  if (buyButton) {
+    addToCart(buyButton.dataset.buy, { goCheckout: true });
+    return;
+  }
   const button = event.target.closest("[data-add]");
   if (!button) return;
   addToCart(button.dataset.add);
 });
 
 cartItems.addEventListener("click", (event) => {
+  if (event.target.closest("[data-go-products]")) {
+    navigateToPage("products");
+    return;
+  }
   const decreaseButton = event.target.closest("[data-decrease]");
   const increaseButton = event.target.closest("[data-increase]");
 
@@ -751,7 +1392,7 @@ cartItems.addEventListener("click", (event) => {
 });
 
 document.querySelector(".cart-toggle").addEventListener("click", () => {
-  document.querySelector("#checkout").scrollIntoView({ behavior: "smooth" });
+  navigateToPage("checkout");
 });
 
 productSearch.addEventListener("input", (event) => {
@@ -759,29 +1400,52 @@ productSearch.addEventListener("input", (event) => {
   const filteredProducts = state.products.filter((product) =>
     `${product.name} ${product.description}`.toLowerCase().includes(searchTerm)
   );
-  renderProducts(filteredProducts);
+  renderProducts(filteredProducts, {
+    emptyMessage: searchTerm
+      ? `No matches for “${event.target.value.trim()}”. Clear search to see all products.`
+      : undefined
+  });
 });
 
 refreshProductsButton.addEventListener("click", loadProducts);
 
-copyStoreLinkButton.addEventListener("click", () => {
-  copyText(storeConfig.storeUrl || window.location.origin || "https://dtdpaymentsbot.pages.dev", "Store link copied");
-});
+if (copyStoreLinkButton) {
+  copyStoreLinkButton.addEventListener("click", () => {
+    copyText(storeConfig.storeUrl || window.location.origin || "https://dtdpaymentsbot.pages.dev", "Store link copied");
+  });
+}
 
 copyCryptoAddressButton.addEventListener("click", () => {
-  if (!storeConfig.btcAddress) {
-    showToast("Add BTC_ADDRESS to your .env file.");
+  const option = selectedPaymentOption();
+  const address = activeCryptoAddress(option);
+  if (!address) {
+    showToast(
+      isUsdtPayment(option)
+        ? "Add USDT_TRC20_ADDRESS to your .env file."
+        : "Add BTC_ADDRESS to your .env file."
+    );
     return;
   }
-  copyText(storeConfig.btcAddress, "BTC address copied");
+  copyText(address, isUsdtPayment(option) ? "USDT TRC20 address copied" : "BTC address copied");
 });
 
-paystackButton.addEventListener("click", startPaystackPayment);
+paystackButton?.addEventListener("click", startPaystackPayment);
+starsPayButton?.addEventListener("click", () => {
+  haptic("medium");
+  startStarsPayment();
+});
 
-paymentMethodInput.addEventListener("change", updatePaymentHint);
+paymentMethodInput.addEventListener("change", () => {
+  updatePaymentHint();
+  trackEvent("select_payment", { method: paymentMethodInput.value });
+});
 
 checkoutForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  trackEvent("begin_checkout", {
+    method: paymentMethodInput?.value || "USDT",
+    total_usd: currentTotal()
+  });
   submitOrderDirectly();
 });
 
@@ -793,7 +1457,7 @@ if (successCloseButton) {
     if (cartSummary) cartSummary.style.display = "block";
     if (checkoutSuccess) checkoutSuccess.style.display = "none";
     updatePaymentHint();
-    document.querySelector("#products").scrollIntoView({ behavior: "smooth" });
+    navigateToPage("products");
   });
 }
 
@@ -805,11 +1469,143 @@ function initHeroMotion() {
 }
 
 async function boot() {
+  restoreCart();
+  bindShellNavigation();
+  initTelegramMiniApp();
   initHeroMotion();
+  trackEvent("page_view", { title: document.title });
   await Promise.all([loadStoreConfig(), fetchBtcUsdPrice()]);
-  await loadProducts();
+  const yearEl = document.querySelector("#footerYear");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+  await Promise.all([loadProducts(), loadTelegramFeed()]);
+  renderCart();
   await resumePaystackReturn();
   bindTrackOrderForm();
+}
+
+function isInsideTelegramMiniApp() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return false;
+
+  const params = new URLSearchParams(window.location.search);
+  // Mini App deep links always include one of these.
+  if (params.get("utm_source") === "telegram_miniapp") return true;
+  if (params.has("tgWebAppStartParam") || params.has("tgWebAppData") || params.has("tgWebAppVersion")) {
+    return true;
+  }
+
+  // Real Mini App sessions have initData; plain browsers loading telegram-web-app.js do not.
+  if (String(tg.initData || "").trim()) return true;
+  if (tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0) return true;
+
+  const platform = String(tg.platform || "").toLowerCase();
+  return Boolean(platform && platform !== "unknown");
+}
+
+function initTelegramMiniApp() {
+  const tg = window.Telegram?.WebApp;
+  if (!isInsideTelegramMiniApp()) {
+    document.documentElement.classList.remove("tg-mini-app");
+    document.body?.classList.remove("tg-mini-app");
+    return;
+  }
+
+  try {
+    tg.ready?.();
+    tg.expand?.();
+    document.documentElement.classList.add("tg-mini-app");
+    document.body?.classList.add("tg-mini-app");
+    document.documentElement.style.setProperty("--app-height", `${window.innerHeight}px`);
+
+    // Keep layout phone-first even if WebView reports a wide CSS viewport.
+    const vp = document.querySelector('meta[name="viewport"]');
+    if (vp) {
+      vp.setAttribute(
+        "content",
+        "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+      );
+    }
+
+    if (tg.colorScheme === "dark" || tg.colorScheme === "light") {
+      document.documentElement.setAttribute("data-theme", tg.colorScheme);
+    }
+    if (tg.themeParams?.bg_color) {
+      document.documentElement.style.setProperty("--tg-bg", tg.themeParams.bg_color);
+    }
+    if (tg.setHeaderColor && tg.themeParams?.bg_color) {
+      try {
+        tg.setHeaderColor(tg.themeParams.bg_color);
+      } catch {
+        /* older clients */
+      }
+    }
+
+    const startParam =
+      tg.initDataUnsafe?.start_param ||
+      new URLSearchParams(window.location.search).get("tgWebAppStartParam") ||
+      "";
+    const map = {
+      shop: "products",
+      products: "products",
+      buy: "products",
+      checkout: "checkout",
+      pay: "checkout",
+      track: "track",
+      order: "track",
+      smtp: "smtp",
+      mail: "smtp",
+      sms: "smtp",
+      trade: "trade",
+      trading: "trade",
+      bots: "trade",
+      chat: "chat",
+      community: "chat",
+      telegram: "telegram",
+      faq: "faq",
+      help: "faq",
+      home: "home"
+    };
+    const page = map[String(startParam).toLowerCase()];
+    if (page && typeof navigateToPage === "function") {
+      navigateToPage(page, { push: true });
+    }
+
+    if (tg.BackButton) {
+      const syncBack = () => {
+        const hash = (location.hash || "#home").replace("#", "");
+        if (hash && hash !== "home") tg.BackButton.show();
+        else tg.BackButton.hide();
+      };
+      tg.BackButton.onClick(() => navigateToPage("home"));
+      window.addEventListener("hashchange", syncBack);
+      syncBack();
+    }
+
+    try {
+      tg.disableVerticalSwipes?.();
+    } catch {
+      /* optional */
+    }
+    if (tg.themeParams?.secondary_bg_color) {
+      document.documentElement.style.setProperty("--tg-secondary", tg.themeParams.secondary_bg_color);
+    }
+    try {
+      tg.setBackgroundColor?.(tg.themeParams?.bg_color || "#0b1220");
+    } catch {
+      /* optional */
+    }
+
+    prefillCheckoutFromTelegram();
+    syncTelegramMainButton();
+    window.addEventListener("hashchange", () => {
+      prefillCheckoutFromTelegram();
+      syncTelegramMainButton();
+    });
+
+    trackEvent("mini_app_open", { start_param: startParam || "none" });
+  } catch (error) {
+    console.warn("Telegram Mini App init skipped", error);
+  }
 }
 
 function bindTrackOrderForm() {
@@ -832,9 +1628,9 @@ function bindTrackOrderForm() {
         return;
       }
       const order = payload.order;
-      result.innerHTML = `Order <strong>${order.id}</strong> — status <strong>${order.status}</strong> · $${Number(
+      result.innerHTML = `Order <strong>${order.id}</strong> — <strong>${escapeHtml(order.statusLabel || order.status)}</strong> · ${escapeHtml(order.paymentStatusLabel || "")} · $${Number(
         order.totalUsd || 0
-      ).toFixed(2)} · ${order.paymentMethod || "n/a"}`;
+      ).toFixed(2)} · ${escapeHtml(order.paymentMethod || "n/a")}`;
     } catch {
       result.textContent = "Could not reach order tracker. Try again or message support.";
     }

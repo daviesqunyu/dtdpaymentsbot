@@ -122,12 +122,55 @@ WantedBy=multi-user.target
         f.write(unit)
     sftp.close()
 
+    run(client, f"chown -R root:root {REMOTE}")
+
+    # Force sane mirror behaviour (avoid restart spam / old-post dumps)
+    overrides = {
+        "MIRROR_CATCH_UP": "0",
+        "MIRROR_PROMO_ON_START": "false",
+        "MIRROR_DELAY_MIN": "2",
+        "MIRROR_DELAY_MAX": "8",
+        "MIRROR_PROMO_INTERVAL_HOURS": "12",
+        "MIRROR_ENGLISH_ONLY": "false",
+    }
+    for key, value in overrides.items():
+        run(
+            client,
+            (
+                f"grep -q '^{key}=' {REMOTE}/.env "
+                f"&& sed -i 's|^{key}=.*|{key}={value}|' {REMOTE}/.env "
+                f"|| echo '{key}={value}' >> {REMOTE}/.env"
+            ),
+        )
+    # Destinations must stay on owned store channels only
+    run(
+        client,
+        (
+            f"grep -q '^MIRROR_DEST_CHANNEL=' {REMOTE}/.env "
+            f"&& sed -i 's|^MIRROR_DEST_CHANNEL=.*|MIRROR_DEST_CHANNEL=-1004433496789,-1004333170947|' {REMOTE}/.env "
+            f"|| echo 'MIRROR_DEST_CHANNEL=-1004433496789,-1004333170947' >> {REMOTE}/.env"
+        ),
+    )
+    # Keep only known-good job/news sources (never deploy carding/spam ID dumps)
+    run(
+        client,
+        (
+            f"grep -q '^MIRROR_SOURCE_CHANNELS=' {REMOTE}/.env "
+            f"&& sed -i 's|^MIRROR_SOURCE_CHANNELS=.*|MIRROR_SOURCE_CHANNELS=-1001641308540,-1001454374209|' {REMOTE}/.env "
+            f"|| echo 'MIRROR_SOURCE_CHANNELS=-1001641308540,-1001454374209' >> {REMOTE}/.env"
+        ),
+    )
+
     run(client, "systemctl daemon-reload")
     run(client, "systemctl enable dtd-mirror.service")
     run(client, "systemctl restart dtd-mirror.service")
     time.sleep(4)
     run(client, "systemctl --no-pager --full status dtd-mirror.service | head -n 30")
     run(client, "journalctl -u dtd-mirror.service -n 40 --no-pager")
+    run(
+        client,
+        f"grep -E '^(MIRROR_SOURCE_CHANNELS|MIRROR_DEST_CHANNEL|MIRROR_CATCH_UP|MIRROR_PROMO_ON_START|MIRROR_DELAY_)=' {REMOTE}/.env",
+    )
 
     client.close()
     print("[ok] VPS mirror deployed")

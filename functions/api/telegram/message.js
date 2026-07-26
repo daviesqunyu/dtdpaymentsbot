@@ -43,9 +43,10 @@ export async function onRequestPost(context) {
     // 2. Build system instructions
     const systemPrompt = `You are the official AI Assistant for DTD Store.
 DTD Store is a premium, crypto-first digital product storefront.
-We accept Bitcoin (BTC) and Card/Bank payments via Paystack.
+We accept USDT on Tron (TRC20) as the preferred crypto method, Bitcoin (BTC) as a second option, and Card/Bank via Paystack.
 Here is our store configuration:
-- Bitcoin (BTC) is accepted and processed via a QR code and manual verification.
+- USDT (TRC20) is the primary crypto deposit method — QR code + address at checkout, then paste the tx hash.
+- Bitcoin (BTC) is also accepted via QR code and manual verification.
 - Card/Bank/USSD/Mobile Money is processed instantly and securely via Paystack checkout.
 - Telegram username is used for delivery and order updates.
 - Orders are kept pending until payment is verified by our admins.
@@ -118,8 +119,8 @@ Guidelines:
       const msg = message.toLowerCase();
       if (msg.includes("price") || msg.includes("product") || msg.includes("cost") || msg.includes("buy")) {
         reply = "We offer premium automation bots:\n- **Automation Bot Builder** ($49 USD)\n- **Customer Support Bot** ($79 USD)\n- **Custom Enterprise AI Bot** ($129 USD)\nSelect your item and purchase instantly using our checkout form below!";
-      } else if (msg.includes("pay") || msg.includes("payment") || msg.includes("card") || msg.includes("btc") || msg.includes("crypto") || msg.includes("paystack")) {
-        reply = "We support card & bank payments via **Paystack** and **Bitcoin (BTC)**. Simply click on the Checkout section below to select your option and complete payment.";
+      } else if (msg.includes("pay") || msg.includes("payment") || msg.includes("card") || msg.includes("btc") || msg.includes("usdt") || msg.includes("crypto") || msg.includes("paystack")) {
+        reply = "Preferred crypto is **USDT on Tron (TRC20)** — scan the QR, send the exact amount, paste the tx hash. **Bitcoin** is also available, plus **Paystack** for card / M-Pesa. Open Checkout below to pay.";
       } else if (msg.includes("status") || msg.includes("order") || msg.includes("deliver")) {
         reply = "To check your order status, please enter your details at checkout. Our admin reviews all orders and will message you on Telegram/email with your digital delivery.";
       } else {

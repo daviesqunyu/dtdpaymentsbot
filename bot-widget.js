@@ -78,9 +78,9 @@ function initTelegramBot(config) {
 
   const username = botConfig.telegramBotUsername
     ? `@${String(botConfig.telegramBotUsername).replace(/^@/, "")}`
-    : "@davistechbot";
+    : "@Dtdpaymentbot";
 
-  const botUrl = botConfig.telegramBotUrl || `https://t.me/davistechbot`;
+  const botUrl = botConfig.telegramBotUrl || `https://t.me/Dtdpaymentbot`;
   if (botUrl) {
     openTelegramLink.href = botUrl;
     openTelegramLink.hidden = false;
@@ -196,7 +196,7 @@ window.notifyBotOrderSuccess = function(orderId, email, total, items) {
     `💵 Total: $${Number(total || 0).toFixed(2)} USD\n` +
     (itemList ? itemList + "\n" : "") +
     `📧 Confirmation sent to: ${email}\n` +
-    `🌐 Your IP: ${visitorMeta.ip || "captured"}\n` +
+    `🌐 Your IP: ${visitorMeta.ip || "unavailable"}\n` +
     `Our team has been notified and will reach out via Telegram or Email shortly.`,
     "bot"
   );

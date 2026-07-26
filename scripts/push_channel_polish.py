@@ -30,6 +30,7 @@ SESSION = ROOT / "telethon_sessions" / (os.getenv("TELETHON_SESSION") or "dtd_mi
 STORE = (os.getenv("STORE_URL") or "https://dtdpaymentsbot.pages.dev").rstrip("/")
 COMPANY = (os.getenv("COMPANY_URL") or "https://dvtechnologies.xyz").rstrip("/")
 OWNER = (os.getenv("TELEGRAM_OWNER_USERNAME") or "Davetheedev").lstrip("@")
+SUPPORT_EMAIL = (os.getenv("SUPPORT_EMAIL") or "contact@dvtechnologies.xyz").strip().lower()
 CHANNEL = (os.getenv("TELEGRAM_CHANNEL_USERNAME") or "DTDMAINSTORE").lstrip("@")
 BOT = (os.getenv("TELEGRAM_BOT_USERNAME") or "Dtdpaymentbot").lstrip("@")
 HOWTO = ROOT / "assets" / "dtd-howto-banner.png"
@@ -38,22 +39,27 @@ ABOUT = (
     f"DTD MAIN STORE — powered internationally by DV Technologies.\n"
     f"🛒 {STORE}\n"
     f"🌐 {COMPANY}\n"
+    f"📧 {SUPPORT_EMAIL}\n"
     f"🤖 @{BOT} · 👤 @{OWNER}"
 )[:255]
 
 HOWTO_CAPTION = (
-    "⚡ HOW TO ORDER — DTD MAIN STORE\n"
+    "👑 HOW TO ORDER — DTD MAIN STORE\n"
     "━━━━━━━━━━━━━━━━━━━━\n"
-    "1️⃣ Open the store\n"
-    f"{STORE}\n\n"
+    "1️⃣ Open the store / Mini App\n"
+    f"{STORE}\n"
+    f"or Telegram bot @{BOT} → /buy\n\n"
     "2️⃣ Add products → Checkout\n"
-    "Pay with Paystack (card / M-Pesa) or Bitcoin\n\n"
-    "3️⃣ Get delivery via Telegram\n"
+    "💎 Preferred: USDT on Tron (TRC20)\n"
+    "also ₿ Bitcoin · 💳 Paystack (card / M-Pesa)\n\n"
+    "3️⃣ Crypto: scan QR → paste tx hash\n"
+    "4️⃣ Send delivery email → get product\n"
     f"Bot @{BOT} · Support @{OWNER}\n"
+    f"📧 {SUPPORT_EMAIL}\n"
     "━━━━━━━━━━━━━━━━━━━━\n"
     f"🌐 Company (international): {COMPANY}\n"
     f"📢 Channel: https://t.me/{CHANNEL}\n"
-    "Join · Shop · Stay updated"
+    "✨ Join · Shop · Stay updated"
 )
 
 TARGETS = [
