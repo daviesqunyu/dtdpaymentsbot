@@ -1,0 +1,31 @@
+{
+  "name": "dtd-payments-bot-storefront",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "DTD Payments Bot storefront with Paystack, BTC, and Telegram support.",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "pages:secrets": "node scripts/push-secrets.mjs",
+    "sync:vps-env": "python scripts/sync_env_vps.py",
+    "deploy:vps-mail": "python scripts/deploy_smtp_sms_vps.py",
+    "deploy:env": "npm run pages:secrets && npm run sync:vps-env",
+    "telegram:setup": "node scripts/telegram-setup.mjs",
+    "mirror:telethon": "python scripts/telethon_mirror.py",
+    "mirror:list": "python scripts/telethon_list_chats.py",
+    "mirror:start": "powershell -ExecutionPolicy Bypass -File scripts/start-mirror.ps1",
+    "mirror:autostart": "powershell -ExecutionPolicy Bypass -File scripts/install-mirror-autostart.ps1",
+    "mirror:polish": "python scripts/push_channel_polish.py",
+    "deploy": "wrangler pages deploy . --project-name=dtdpaymentsbot --branch=main --commit-dirty=true",
+    "deploy:full": "npm run pages:secrets && npm run deploy"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "wrangler": "^4.22.0"
+  }
+}

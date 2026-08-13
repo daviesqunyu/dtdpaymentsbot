@@ -1,0 +1,114 @@
+ /P <</MCID 0>> BDC BT
+/F1 9.96 Tf
+1 0 0 1 348.43 246.05 Tm
+0 g
+0 G
+[( )] TJ
+ET
+ EMC  /P <</MCID 1>> BDC BT
+/F1 14.04 Tf
+1 0 0 1 72.024 232.73 Tm
+[( )] TJ
+ET
+ EMC  /P <</MCID 2>> BDC BT
+1 0 0 1 72.024 215.57 Tm
+[( )] TJ
+ET
+ EMC  /P <</MCID 3>> BDC BT
+1 0 0 1 72.024 189.17 Tm
+[( )] TJ
+ET
+ EMC  /P <</MCID 4>> BDC BT
+1 0 0 1 79.224 172.1 Tm
+[(Th)3(is )-178(m)4(et)4(h)4(od )-174(c)4(ould)4( )-175(b)4(e )-172(d)4(one )-172(on )] TJ
+ET
+BT
+1 0 0 1 270.17 172.1 Tm
+[(an)4(y )-175(d)4(evic)5(e )-172(at )-173(all, )-174(an)4(d)4( )-175(if)5( )-175(d)4(o)6(n)4(e )-172(c)4(or)-3(rec)5(tly )-174(you)9(r)7( )] TJ
+ET
+BT
+1 0 0 1 79.224 154.82 Tm
+[(d)4(evic)5(e )-78(c)4(an)4(n)4(ot )-82(b)-4(e )-78(fl)-2(agge)4(d)4(, )-79(if)-2( )-81(you )-80(n)4(ee)5(d)4( )-81(a )-89(wal)-2(kt)4(h)4(ro)-3(u)4(gh)5( )-81(on )-80(h)4(ow )-78(to )-82(d)4(o )-84(eve)4(ryth)4(ing)] TJ
+ET
+BT
+1 0 0 1 534.34 154.82 Tm
+[( )] TJ
+ET
+BT
+1 0 0 1 79.224 137.54 Tm
+[(or)-3( )4(an)4(y )4(infor)-3(m)4(ati)10(on )4(on )4(it)] TJ
+ET
+BT
+1 0 0 1 214.85 137.54 Tm
+[( )] TJ
+ET
+BT
+1 0 0 1 220.01 137.54 Tm
+[(m)4(essage )] TJ
+ET
+ EMC  /Span <</MCID 5>> BDC BT
+1 0 0 1 272.57 137.54 Tm
+0 0 1 rg
+0 0 1 RG
+[(https://dtdpaymentsbot.pages.dev)] TJ
+ET
+BT
+1 0 0 1 302.09 137.54 Tm
+[( )] TJ
+ET
+ EMC  /P <</MCID 6>> BDC BT
+1 0 0 1 448.87 137.54 Tm
+0 g
+0 G
+[( )] TJ
+ET
+BT
+1 0 0 1 452.11 137.54 Tm
+[( )] TJ
+ET
+0 0 1 rg
+272.57 135.02 176.3 0.96002 re
+f*
+ EMC  /P <</MCID 7>> BDC BT
+/F6 14.04 Tf
+1 0 0 1 74.184 105.74 Tm
+0 g
+[(V)25(o)36(u)25(c)31(h)25(e)38(d)] TJ
+ET
+BT
+1 0 0 1 132.02 105.74 Tm
+[( )] TJ
+ET
+BT
+1 0 0 1 135.62 105.74 Tm
+[(c)23(h)33(a)26(n)33(n)25(e)30(l)37(:)] TJ
+ET
+BT
+1 0 0 1 192.86 105.74 Tm
+[( )] TJ
+ET
+ EMC  /Span <</MCID 8>> BDC BT
+1 0 0 1 196.97 105.74 Tm
+0 0 1 rg
+0 0 1 RG
+[(https://t.me/DTDMAINSTORE)] TJ
+ET
+ EMC  /P <</MCID 9>> BDC BT
+1 0 0 1 433.63 105.74 Tm
+0 g
+0 G
+[( )] TJ
+ET
+BT
+1 0 0 1 437.95 105.74 Tm
+[( )] TJ
+ET
+0 0 1 rg
+196.97 103.46 236.66 1.32 re
+f*
+ EMC  /P <</MCID 10>> BDC q
+-0.000000567 246.12 612 477.84 re
+W* n
+268.3 0 0 477.89 80.15 246.11 cm
+/Image51 Do Q
+ EMC 

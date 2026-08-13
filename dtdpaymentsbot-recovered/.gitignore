@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env*
+*.log
+.wrangler/
+telethon_sessions/
+*.session
+*.session-journal
+dist/
+scripts/__pycache__/
+__pycache__/

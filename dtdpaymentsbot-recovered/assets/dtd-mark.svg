@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="DTD Store">
+  <defs>
+    <linearGradient id="dtdBg" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#134e4a"/>
+      <stop offset="55%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#07111f"/>
+    </linearGradient>
+    <linearGradient id="dtdEdge" x1="12" y1="12" x2="52" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#2dd4bf"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#dtdBg)"/>
+  <rect x="5" y="5" width="54" height="54" rx="11" fill="none" stroke="url(#dtdEdge)" stroke-width="2.2" opacity="0.9"/>
+  <path fill="#ffffff" d="M18.2 16.5h11.6c7.4 0 12.2 4.4 12.2 11.5S37.2 39.5 29.8 39.5H24.6V47.2H18.2V16.5zm6.4 6.1v10.8h5c3.3 0 5.3-1.9 5.3-5.4s-2-5.4-5.3-5.4h-5z"/>
+  <circle cx="46.5" cy="45.5" r="3.2" fill="#fbbf24"/>
+</svg>

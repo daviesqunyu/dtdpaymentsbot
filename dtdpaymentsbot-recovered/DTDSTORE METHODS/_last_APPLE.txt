@@ -1,0 +1,176 @@
+ /P <</MCID 0>> BDC BT
+/F4 9.96 Tf
+1 0 0 1 226.49 363.55 Tm
+0 g
+0 G
+[( )] TJ
+ET
+ EMC  /P <</MCID 1>> BDC BT
+/F4 20.04 Tf
+1 0 0 1 54 344.93 Tm
+[( )] TJ
+ET
+ EMC  /P <</MCID 2>> BDC BT
+1 0 0 1 54 318.41 Tm
+[( )] TJ
+ET
+ EMC  /P <</MCID 3>> BDC BT
+1 0 0 1 70.824 294.53 Tm
+0 0 0.0275 rg
+0 0 0.0275 RG
+[(Messag)4(e )] TJ
+ET
+ EMC  /Span <</MCID 4>> BDC BT
+1 0 0 1 160.1 294.53 Tm
+0 0 1 rg
+0 0 1 RG
+[(https://dtdpaymentsbot.pages.dev)] TJ
+ET
+ EMC  /P <</MCID 5>> BDC BT
+1 0 0 1 424.63 294.53 Tm
+0 0 0.0275 rg
+0 0 0.0275 RG
+[( )] TJ
+ET
+BT
+1 0 0 1 432.67 295.49 Tm
+[(on )-124(tel)8(eg)4(ram)9( )] TJ
+ET
+0 0 1 rg
+160.1 290.93 264.53 1.44 re
+f*
+BT
+1 0 0 1 72.024 271.49 Tm
+0 0 0.0275 rg
+[(to )] TJ
+ET
+BT
+1 0 0 1 101.66 270.53 Tm
+[(get )-367(your)] TJ
+ET
+BT
+1 0 0 1 181.34 270.53 Tm
+[( )] TJ
+ET
+BT
+1 0 0 1 194.06 270.53 Tm
+[(logs)-3(,)] TJ
+ET
+BT
+1 0 0 1 236.45 270.53 Tm
+[( )] TJ
+ET
+BT
+1 0 0 1 249.05 270.53 Tm
+[(n)5(on)] TJ
+ET
+BT
+1 0 0 1 282.41 270.53 Tm
+[( )] TJ
+ET
+BT
+1 0 0 1 295.13 270.53 Tm
+[(vb)8(vs )-368(and)] TJ
+ET
+BT
+1 0 0 1 382.63 270.53 Tm
+[( )] TJ
+ET
+BT
+1 0 0 1 395.35 270.53 Tm
+[(sp)-3(a)5(mming )-362(wa)-2(l)6(k )] TJ
+ET
+BT
+1 0 0 1 72.024 247.49 Tm
+[(through,)4( )] TJ
+ET
+BT
+1 0 0 1 150.98 247.49 Tm
+[(m)7(e)5(t)9(h)5(o)5(d)5(s,)] TJ
+ET
+BT
+1 0 0 1 232.49 247.49 Tm
+0 g
+0 G
+[( )] TJ
+ET
+BT
+1 0 0 1 238.01 247.49 Tm
+0 0 0.0314 rg
+0 0 0.0314 RG
+[(ch)-3(e)5(cks,)6( and so o)6(n.)] TJ
+ET
+BT
+1 0 0 1 404.83 247.49 Tm
+0 g
+0 G
+[( )] TJ
+ET
+ EMC  /Span <</MCID 6>> BDC BT
+1 0 0 1 70.824 224.45 Tm
+0 0 1 rg
+0 0 1 RG
+[(https://dtdpaymentsbot.pages.dev)] TJ
+ET
+ EMC  /P <</MCID 7>> BDC BT
+1 0 0 1 335.59 224.45 Tm
+0 0 0.0275 rg
+0 0 0.0275 RG
+[( )] TJ
+ET
+BT
+1 0 0 1 340.99 224.45 Tm
+0 g
+0 G
+[( )] TJ
+ET
+0 0 1 rg
+70.824 220.85 264.77 1.44 re
+f*
+ EMC  /P <</MCID 8>> BDC BT
+/F1 24 Tf
+1 0 0 1 72.024 202.37 Tm
+0 g
+[( )] TJ
+ET
+ EMC  /P <</MCID 9>> BDC BT
+1 0 0 1 72.024 180.5 Tm
+[(Vou)4(ched)] TJ
+ET
+BT
+1 0 0 1 173.3 180.5 Tm
+[( )] TJ
+ET
+BT
+1 0 0 1 180.02 180.5 Tm
+[(C)7(h)6(an)7(n)6(e)6(l:)] TJ
+ET
+BT
+1 0 0 1 281.93 180.5 Tm
+[( )] TJ
+ET
+ EMC  /Span <</MCID 10>> BDC BT
+1 0 0 1 72.024 158.66 Tm
+0 0 1 rg
+0 0 1 RG
+[(https://t.me/DTDMAINSTORE)] TJ
+ET
+ EMC  /P <</MCID 11>> BDC BT
+1 0 0 1 419.95 158.66 Tm
+0 g
+0 G
+[( )] TJ
+ET
+BT
+1 0 0 1 426.55 158.66 Tm
+[( )] TJ
+ET
+0 g
+72.024 153.62 347.93 2.52 re
+f*
+ EMC  /P <</MCID 12>> BDC q
+-0.000001238 363.48 612 337.56 re
+W* n
+154.55 0 0 337.52 72 363.48 cm
+/Image62 Do Q
+ EMC 

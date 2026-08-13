@@ -1,0 +1,233 @@
+/**
+ * Telegram Premium–inspired UI skin for the DTD storefront.
+ * Applied site-wide via html.tg-premium-skin; enhanced when user.is_premium.
+ */
+
+html.tg-premium-skin {
+  --tg-blue: #2aabee;
+  --tg-blue-deep: #229ed9;
+  --tg-star: #e8a317;
+  --tg-premium-grad: linear-gradient(135deg, #8b5cf6 0%, #ec4899 55%, #f59e0b 100%);
+  --tg-bubble: rgba(42, 171, 238, 0.12);
+}
+
+html.tg-premium-skin[data-theme="dark"] {
+  --bg: #0e1621;
+  --bg-soft: #17212b;
+  --surface: rgba(23, 33, 43, 0.94);
+  --surface-strong: #1c2733;
+  --panel: #17212b;
+  --glass: rgba(255, 255, 255, 0.05);
+  --text: #f5f7fa;
+  --muted: #8b9bb4;
+  --line: rgba(139, 155, 180, 0.22);
+  --primary: #2aabee;
+  --primary-dark: #229ed9;
+  --accent: #e8a317;
+  --accent-glow: rgba(232, 163, 23, 0.28);
+  --primary-glow: rgba(42, 171, 238, 0.28);
+  --soft: rgba(42, 171, 238, 0.14);
+  --header-bg: rgba(14, 22, 33, 0.9);
+  --input-bg: rgba(255, 255, 255, 0.06);
+  --body-gradient:
+    radial-gradient(ellipse 70% 45% at 15% -5%, rgba(139, 92, 246, 0.18), transparent 55%),
+    radial-gradient(ellipse 55% 40% at 90% 0%, rgba(42, 171, 238, 0.16), transparent 50%),
+    linear-gradient(180deg, #0e1621 0%, #0b121a 100%);
+  --panel-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+html.tg-premium-skin[data-theme="light"] {
+  --bg: #f0f2f5;
+  --bg-soft: #e7ebf0;
+  --surface: #ffffff;
+  --surface-strong: #1c2733;
+  --panel: #ffffff;
+  --primary: #2aabee;
+  --primary-dark: #1e96d5;
+  --accent: #d97706;
+  --soft: #e8f6fd;
+  --body-gradient: linear-gradient(180deg, #f4f7fb 0%, #eef2f6 100%);
+}
+
+html.tg-premium-skin .side-nav {
+  background:
+    linear-gradient(180deg, rgba(42, 171, 238, 0.1), transparent 30%),
+    color-mix(in srgb, var(--panel) 96%, var(--bg));
+  border-right-color: var(--line);
+}
+
+html.tg-premium-skin .side-link.is-active,
+html.tg-premium-skin .nav-group-links a.is-active {
+  background: var(--tg-bubble);
+  color: var(--primary);
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+
+html.tg-premium-skin .primary-button,
+html.tg-premium-skin .trade-submit-btn {
+  background: linear-gradient(135deg, var(--tg-blue), var(--tg-blue-deep));
+  border: none;
+  box-shadow: 0 8px 22px rgba(42, 171, 238, 0.35);
+}
+
+/* SMTP Vault keeps its own premium violet system — do not flatten to TG blue */
+html.tg-premium-skin .smtp-premium .smtp-primary-btn {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9 55%, #4c1d95);
+  box-shadow: 0 8px 24px rgba(109, 40, 217, 0.45);
+}
+
+html.tg-premium-skin .brand-hero-label,
+html.tg-premium-skin .eyebrow,
+html.tg-premium-skin .trade-eyebrow,
+html.tg-premium-skin .bots-kicker {
+  letter-spacing: 0.1em;
+}
+
+html.tg-premium-skin .hero-section,
+html.tg-premium-skin .chat-hero,
+html.tg-premium-skin .trade-hero {
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(145deg, rgba(139, 92, 246, 0.12), transparent 40%),
+    linear-gradient(225deg, rgba(42, 171, 238, 0.1), transparent 45%),
+    var(--panel);
+}
+
+html.tg-premium-skin .product-card,
+html.tg-premium-skin .hub-card,
+html.tg-premium-skin .chat-post,
+html.tg-premium-skin .trade-panel,
+html.tg-premium-skin .bots-detail {
+  border-radius: 18px;
+}
+
+html.tg-premium-skin .chat-post {
+  background: color-mix(in srgb, var(--panel) 88%, var(--tg-blue) 12%);
+  border: 1px solid var(--line);
+  padding: 0.95rem 0.85rem;
+  margin-bottom: 0.55rem;
+}
+
+html.tg-premium-skin .chat-avatar {
+  background: var(--tg-premium-grad);
+  border: none;
+  color: #fff;
+}
+
+/* Premium user badge / chrome */
+html.tg-premium .premium-badge,
+.premium-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--tg-premium-grad, linear-gradient(135deg, #8b5cf6, #ec4899, #f59e0b));
+  box-shadow: 0 4px 14px rgba(236, 72, 153, 0.35);
+}
+
+html.tg-premium .shell-topbar-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+html.tg-premium .shell-page-title::after {
+  content: "Premium";
+  margin-left: 0.45rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  vertical-align: middle;
+  background: var(--tg-premium-grad, linear-gradient(135deg, #8b5cf6, #ec4899));
+  color: #fff;
+}
+
+html.tg-premium .shell-topbar::after {
+  content: none;
+}
+
+html.tg-premium-skin .telegram-bot-toggle {
+  background: linear-gradient(135deg, #2aabee, #229ed9);
+  box-shadow: 0 10px 28px rgba(42, 171, 238, 0.45);
+}
+
+html.tg-premium-skin .trade-tab.is-active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* Wallet / deposit cards */
+.trade-wallet-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--input-bg);
+}
+
+.trade-wallet-card h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.trade-wallet-address {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.82rem;
+  word-break: break-all;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(42, 171, 238, 0.4);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.trade-wallet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.trade-wallet-steps {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--muted);
+  font-size: 0.84rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.admin-image-upload {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+}
+
+.admin-image-upload input[type="file"] {
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.admin-image-preview {
+  max-width: 160px;
+  max-height: 120px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  object-fit: cover;
+  display: none;
+}
+
+.admin-image-preview.is-on {
+  display: block;
+}
