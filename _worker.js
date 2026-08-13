@@ -1,6 +1,7 @@
 /**
  * DTD Store — Pages Advanced Mode Worker
  * Handles all /api/* routes, serves static assets for everything else
+ * Multi-provider email/SMS fallback system — VPS mailer primary, free providers as backup
  */
 
 // ─── Helpers ───────────────────────────────────────────
@@ -163,9 +164,278 @@ async function callVpsMailer(env, endpoint, body) {
   return data;
 }
 
+// ─── Multi-Provider Email Fallback System ────────────────
+// Priority: AWS SES via VPS (primary) → Resend (free fallback) → Brevo (free fallback) → Mailgun
+
+async function sendEmailFallback(env, { from, to, subject, text, hostname }) {
+  const providers = [];
+  const errors = [];
+
+  // Provider 1: VPS Mailer (AWS SES) — PRIMARY
+  if (env.VPS_MAILER_URL) {
+    providers.push({
+      name: "vps_mailer",
+      label: "AWS SES via VPS",
+      send: async () => {
+        const result = await callVpsMailer(env, "/send-email", { from, to, subject, text, hostname });
+        if (!result.delivered && result.error) throw new Error(result.error);
+        return { provider: "vps_mailer", delivered: result.delivered || true, message: result.message || `Sent via AWS SES (VPS)` };
+      }
+    });
+  }
+
+  // Provider 2: Resend API — FREE fallback (3,000 emails/month free)
+  if (env.RESEND_API_KEY) {
+    providers.push({
+      name: "resend",
+      label: "Resend (Free)",
+      send: async () => {
+        const resp = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${env.RESEND_API_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            from,
+            to: Array.isArray(to) ? to : [to],
+            subject,
+            text,
+            html: text.replace(/\n/g, "<br>")
+          })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data.message || `Resend error (${resp.status})`);
+        return { provider: "resend", delivered: true, message: `Sent via Resend (free fallback)` };
+      }
+    });
+  }
+
+  // Provider 3: Brevo/Sendinblue — FREE fallback (300 emails/day free)
+  if (env.BREVO_API_KEY) {
+    providers.push({
+      name: "brevo",
+      label: "Brevo (Free)",
+      send: async () => {
+        const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            "api-key": env.BREVO_API_KEY,
+            "Content-Type": "application/json",
+            "accept": "application/json"
+          },
+          body: JSON.stringify({
+            sender: { email: from },
+            to: (Array.isArray(to) ? to : [to]).map(email => ({ email })),
+            subject,
+            htmlContent: text.replace(/\n/g, "<br>"),
+            textContent: text
+          })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data.message || `Brevo error (${resp.status})`);
+        return { provider: "brevo", delivered: true, message: `Sent via Brevo (free fallback)` };
+      }
+    });
+  }
+
+  // Provider 4: Mailgun — paid fallback
+  if (env.MAILGUN_API_KEY && env.MAILGUN_DOMAIN) {
+    providers.push({
+      name: "mailgun",
+      label: "Mailgun",
+      send: async () => {
+        const recipients = Array.isArray(to) ? to : [to];
+        const resp = await fetch(`https://api.mailgun.net/v3/${env.MAILGUN_DOMAIN}/messages`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Basic ${btoa(`api:${env.MAILGUN_API_KEY}`)}`,
+          },
+          body: new URLSearchParams({
+            from,
+            to: recipients.join(","),
+            subject,
+            text
+          })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data.message || `Mailgun error (${resp.status})`);
+        return { provider: "mailgun", delivered: true, message: `Sent via Mailgun` };
+      }
+    });
+  }
+
+  // Provider 5: Cloudflare Email API — if configured
+  if (env.CF_EMAIL_API_TOKEN) {
+    providers.push({
+      name: "cloudflare_email",
+      label: "Cloudflare Email",
+      send: async () => {
+        const accountId = env.CF_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID;
+        const recipients = Array.isArray(to) ? to : [to];
+        for (const recipient of recipients) {
+          const resp = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/email/routing/addresses`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${env.CF_EMAIL_API_TOKEN}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ from, to: recipient, subject, text })
+          });
+          if (!resp.ok) {
+            const data = await resp.json().catch(() => ({}));
+            throw new Error(data.message || `Cloudflare Email error (${resp.status})`);
+          }
+        }
+        return { provider: "cloudflare_email", delivered: true, message: `Sent via Cloudflare Email` };
+      }
+    });
+  }
+
+  if (!providers.length) {
+    throw new Error("No email providers configured. Set VPS_MAILER_URL or get a free Resend API key at resend.com.");
+  }
+
+  for (const provider of providers) {
+    try {
+      const result = await provider.send();
+      return { ...result, attempted: providers.map(p => p.name), errors };
+    } catch (err) {
+      errors.push({ provider: provider.name, error: err.message });
+      console.error(`Email provider ${provider.name} failed:`, err.message);
+    }
+  }
+
+  throw new Error(`All email providers failed: ${errors.map(e => `${e.provider}: ${e.error}`).join("; ")}`);
+}
+
+// ─── Multi-Provider SMS Fallback System ──────────────────
+// Priority: VPS Mailer / SMSGate (primary) → Telegram Bot (free fallback) → Twilio (trial) → Vonage
+
+async function sendSmsFallback(env, { phones, text, gwUser, gwPass, gwUrl }) {
+  const providers = [];
+  const errors = [];
+
+  // Provider 1: VPS Mailer (SMSGate) — PRIMARY
+  if (env.VPS_MAILER_URL) {
+    providers.push({
+      name: "vps_mailer",
+      label: "SMSGate via VPS",
+      send: async () => {
+        const result = await callVpsMailer(env, "/send-sms", { phones, text, gwUser, gwPass, gwUrl });
+        if (!result.delivered && result.error) throw new Error(result.error);
+        return { provider: "vps_mailer", delivered: result.delivered || true, message: result.message || `Sent via SMSGate (VPS)`, jobId: result.jobId };
+      }
+    });
+  }
+
+  // Provider 2: Telegram Bot — FREE fallback (sends as Telegram message)
+  if (env.TELEGRAM_BOT_TOKEN) {
+    providers.push({
+      name: "telegram",
+      label: "Telegram Bot (Free)",
+      send: async () => {
+        let sent = 0;
+        for (const phone of phones) {
+          const resp = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: phone,
+              text: `📱 SMS Message:\n\n${text}`,
+              parse_mode: "HTML"
+            })
+          });
+          if (resp.ok) sent++;
+        }
+        if (sent === 0) throw new Error("Telegram: no recipients reachable (users must start the bot first)");
+        return { provider: "telegram", delivered: true, message: `Sent ${sent}/${phones.length} via Telegram (free fallback)` };
+      }
+    });
+  }
+
+  // Provider 3: Twilio — free trial ($15 credit)
+  if (env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_FROM_NUMBER) {
+    providers.push({
+      name: "twilio",
+      label: "Twilio (Trial)",
+      send: async () => {
+        let sent = 0;
+        for (const phone of phones) {
+          const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages.json`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Basic ${btoa(`${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`)}`,
+            },
+            body: new URLSearchParams({
+              From: env.TWILIO_FROM_NUMBER,
+              To: phone,
+              Body: text
+            })
+          });
+          if (resp.ok) sent++;
+        }
+        if (sent === 0) throw new Error("Twilio: all SMS failed");
+        return { provider: "twilio", delivered: true, message: `Sent ${sent}/${phones.length} via Twilio` };
+      }
+    });
+  }
+
+  // Provider 4: Vonage/Nexmo — paid fallback
+  if (env.VONAGE_API_KEY && env.VONAGE_API_SECRET && env.VONAGE_FROM) {
+    providers.push({
+      name: "vonage",
+      label: "Vonage",
+      send: async () => {
+        let sent = 0;
+        for (const phone of phones) {
+          const resp = await fetch(`https://rest.nexmo.com/sms/json?api_key=${env.VONAGE_API_KEY}&api_secret=${env.VONAGE_API_SECRET}&from=${encodeURIComponent(env.VONAGE_FROM)}&to=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}`, {
+            method: "POST"
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (data.messages?.[0]?.status === "0") sent++;
+        }
+        if (sent === 0) throw new Error("Vonage: all SMS failed");
+        return { provider: "vonage", delivered: true, message: `Sent ${sent}/${phones.length} via Vonage` };
+      }
+    });
+  }
+
+  if (!providers.length) {
+    throw new Error("No SMS providers configured. Set VPS_MAILER_URL or TWILIO_ACCOUNT_SID or VONAGE_API_KEY.");
+  }
+
+  for (const provider of providers) {
+    try {
+      const result = await provider.send();
+      return { ...result, attempted: providers.map(p => p.name), errors };
+    } catch (err) {
+      errors.push({ provider: provider.name, error: err.message });
+      console.error(`SMS provider ${provider.name} failed:`, err.message);
+    }
+  }
+
+  throw new Error(`All SMS providers failed: ${errors.map(e => `${e.provider}: ${e.error}`).join("; ")}`);
+}
+
 // ─── API Handlers ───────────────────────────────────────
 
 async function handleHealth(env) {
+  const emailProviders = [
+    env.VPS_MAILER_URL ? "vps_mailer (aws ses)" : null,
+    env.RESEND_API_KEY ? "resend (free)" : null,
+    env.BREVO_API_KEY ? "brevo (free)" : null,
+    env.MAILGUN_API_KEY ? "mailgun" : null,
+    env.CF_EMAIL_API_TOKEN ? "cloudflare_email" : null
+  ].filter(Boolean);
+
+  const smsProviders = [
+    env.VPS_MAILER_URL ? "vps_mailer (smsgate)" : null,
+    env.TELEGRAM_BOT_TOKEN ? "telegram (free)" : null,
+    env.TWILIO_ACCOUNT_SID ? "twilio (trial)" : null,
+    env.VONAGE_API_KEY ? "vonage" : null
+  ].filter(Boolean);
+
   return json({
     ok: true,
     supabase: Boolean(env.SUPABASE_URL),
@@ -177,7 +447,19 @@ async function handleHealth(env) {
     telegramAdmin: Boolean(env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_ADMIN_CHAT_ID),
     telegramChannel: Boolean(env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHANNEL_ID),
     usdt: Boolean(env.USDT_TRC20_ADDRESS),
-    btc: Boolean(env.BTC_ADDRESS)
+    btc: Boolean(env.BTC_ADDRESS),
+    email: {
+      configured: emailProviders.length > 0,
+      primary: emailProviders[0] || "none",
+      fallbacks: emailProviders.slice(1),
+      allProviders: emailProviders
+    },
+    sms: {
+      configured: smsProviders.length > 0,
+      primary: smsProviders[0] || "none",
+      fallbacks: smsProviders.slice(1),
+      allProviders: smsProviders
+    }
   });
 }
 
@@ -513,8 +795,22 @@ async function handleSmtpUnlock(request, env) {
         email: user.email,
         dnsHint: "SPF ✓ + DKIM ✓ + DMARC ✓ on dvtechnologies.xyz",
         mailerConfigured: Boolean(env.VPS_MAILER_URL),
-        queueConfigured: true, smsGatewayConfigured: false,
-        smsConfigured: false, awsSesPrimary: true,
+        emailProviders: [
+          env.VPS_MAILER_URL ? "vps_mailer (aws ses)" : null,
+          env.RESEND_API_KEY ? "resend (free)" : null,
+          env.BREVO_API_KEY ? "brevo (free)" : null,
+          env.MAILGUN_API_KEY ? "mailgun" : null,
+          env.CF_EMAIL_API_TOKEN ? "cloudflare_email" : null
+        ].filter(Boolean),
+        smsProviders: [
+          env.VPS_MAILER_URL ? "vps_mailer (smsgate)" : null,
+          env.TELEGRAM_BOT_TOKEN ? "telegram (free)" : null,
+          env.TWILIO_ACCOUNT_SID ? "twilio (trial)" : null,
+          env.VONAGE_API_KEY ? "vonage" : null
+        ].filter(Boolean),
+        queueConfigured: true, smsGatewayConfigured: Boolean(env.SMS_GATEWAY_USER || env.TWILIO_ACCOUNT_SID),
+        smsConfigured: Boolean(env.VPS_MAILER_URL || env.TELEGRAM_BOT_TOKEN || env.TWILIO_ACCOUNT_SID || env.VONAGE_API_KEY),
+        awsSesPrimary: true,
         queue: { queued: 0, sending: 0 }
       });
     }
@@ -562,49 +858,38 @@ async function handleSmtpSendEmail(request, env) {
   if (!recipients.length) return json({ error: "No valid email recipients." }, 400);
 
   try {
-    const result = await callVpsMailer(env, "/send-email", { from, to: recipients, subject, text, hostname });
+    const result = await sendEmailFallback(env, { from, to: recipients, subject, text, hostname });
+
     if (sb) {
       await sb.from("smtp_jobs").insert({
         channel: "email", recipients: recipients.join(", "),
         recipient_count: recipients.length, subject,
         body_preview: text.substring(0, 200),
-        status: result.delivered ? "sent" : "queued",
-        error: result.error || null
+        status: "sent", error: null
       });
     }
+
     return json({
-      delivered: result.delivered || false, sent: recipients.length,
-      jobId: result.jobId || null, invalid,
-      message: result.message || `Queued ${recipients.length} email(s) for VPS delivery.`
+      delivered: true, sent: recipients.length,
+      provider: result.provider,
+      attempted: result.attempted,
+      invalid,
+      message: result.message
     });
   } catch (err) {
-    if (env.CF_EMAIL_API_TOKEN) {
-      try {
-        for (const recipient of recipients) {
-          await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID}/email/routing/addresses`, {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${env.CF_EMAIL_API_TOKEN}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ from, to: recipient, subject, text })
-          });
-        }
-        if (sb) {
-          await sb.from("smtp_jobs").insert({
-            channel: "email", recipients: recipients.join(", "),
-            recipient_count: recipients.length, subject,
-            body_preview: text.substring(0, 200), status: "sent"
-          });
-        }
-        return json({ delivered: true, sent: recipients.length, invalid, message: "Sent via Cloudflare Email." });
-      } catch {}
-    }
     if (sb) {
       await sb.from("smtp_jobs").insert({
         channel: "email", recipients: recipients.join(", "),
         recipient_count: recipients.length, subject,
-        body_preview: text.substring(0, 200), status: "failed", error: err.message
+        body_preview: text.substring(0, 200),
+        status: "failed", error: err.message
       });
     }
-    return json({ delivered: false, sent: 0, invalid, message: `Email send failed: ${err.message}` });
+
+    return json({
+      delivered: false, sent: 0, invalid,
+      message: `Email send failed: ${err.message}`
+    });
   }
 }
 
@@ -615,39 +900,48 @@ async function handleSmtpSendSms(request, env) {
   const body = await request.json();
   const to = String(body.to || "").trim();
   const text = String(body.text || "").trim();
-  const gwUser = body.gwUser || "";
-  const gwPass = body.gwPass || "";
-  const gwUrl = body.gwUrl || "";
+  const gwUser = body.gwUser || env.SMS_GATEWAY_USER || "";
+  const gwPass = body.gwPass || env.SMS_GATEWAY_PASS || "";
+  const gwUrl = body.gwUrl || env.SMS_GATEWAY_URL || "";
 
   if (!to || !text) return json({ error: "Phone numbers and text are required." }, 400);
-  if (!gwUser || !gwPass) return json({ error: "SMSGate username + password required." }, 400);
 
   const phones = to.split(/[\n\r,;|]+/).map(p => p.trim()).filter(Boolean);
   const sb = getSupabase(env);
 
   try {
-    const result = await callVpsMailer(env, "/send-sms", { phones, text, gwUser, gwPass, gwUrl });
+    const result = await sendSmsFallback(env, { phones, text, gwUser, gwPass, gwUrl });
+
     if (sb) {
       await sb.from("smtp_jobs").insert({
         channel: "sms", recipients: phones.join(", "),
         recipient_count: phones.length, subject: text.substring(0, 80),
         body_preview: text.substring(0, 200),
-        status: result.delivered ? "sent" : "queued", error: result.error || null
+        status: "sent", error: null
       });
     }
+
     return json({
-      sent: phones.length, jobId: result.jobId || null, invalid: [],
-      message: result.message || `Queued ${phones.length} SMS for VPS delivery.`
+      sent: phones.length,
+      provider: result.provider,
+      attempted: result.attempted,
+      jobId: result.jobId || null, invalid: [],
+      message: result.message
     });
   } catch (err) {
     if (sb) {
       await sb.from("smtp_jobs").insert({
         channel: "sms", recipients: phones.join(", "),
         recipient_count: phones.length, subject: text.substring(0, 80),
-        body_preview: text.substring(0, 200), status: "failed", error: err.message
+        body_preview: text.substring(0, 200),
+        status: "failed", error: err.message
       });
     }
-    return json({ sent: 0, invalid: [], message: `SMS send failed: ${err.message}` });
+
+    return json({
+      sent: 0, invalid: [],
+      message: `SMS send failed: ${err.message}`
+    });
   }
 }
 
@@ -735,7 +1029,6 @@ export default {
     const method = request.method;
 
     if (!path.startsWith("/api/")) {
-      // Let Pages serve static assets
       return env.ASSETS.fetch(request);
     }
 
