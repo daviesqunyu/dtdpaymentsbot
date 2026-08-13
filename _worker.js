@@ -165,13 +165,13 @@ async function callVpsMailer(env, endpoint, body) {
 }
 
 // ─── Multi-Provider Email Fallback System ────────────────
-// Priority: AWS SES via VPS (primary) → Resend (free fallback) → Brevo (free fallback) → Mailgun
+// Priority: VPS Mailer (AWS SES) → Resend (free) → Brevo (free) → Mailgun → Cloudflare Email
 
 async function sendEmailFallback(env, { from, to, subject, text, hostname }) {
   const providers = [];
   const errors = [];
 
-  // Provider 1: VPS Mailer (AWS SES) — PRIMARY
+  // Provider 1: VPS Mailer (AWS SES) — PRIMARY (when tunnel is up)
   if (env.VPS_MAILER_URL) {
     providers.push({
       name: "vps_mailer",
@@ -329,27 +329,32 @@ async function sendSmsFallback(env, { phones, text, gwUser, gwPass, gwUrl }) {
     });
   }
 
-  // Provider 2: Telegram Bot — FREE fallback (sends as Telegram message)
+  // Provider 2: Telegram Bot — FREE fallback (sends to admin chat with SMS details)
   if (env.TELEGRAM_BOT_TOKEN) {
     providers.push({
       name: "telegram",
       label: "Telegram Bot (Free)",
       send: async () => {
-        let sent = 0;
-        for (const phone of phones) {
-          const resp = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: phone,
-              text: `📱 SMS Message:\n\n${text}`,
-              parse_mode: "HTML"
-            })
-          });
-          if (resp.ok) sent++;
-        }
-        if (sent === 0) throw new Error("Telegram: no recipients reachable (users must start the bot first)");
-        return { provider: "telegram", delivered: true, message: `Sent ${sent}/${phones.length} via Telegram (free fallback)` };
+        const adminChat = env.TELEGRAM_ADMIN_CHAT_ID;
+        if (!adminChat) throw new Error("Telegram: no admin chat ID configured");
+        const phoneList = phones.join(", ");
+        const message = [
+          "<b>📱 SMS Dispatch</b>",
+          `<b>To:</b> <code>${phoneList}</code>`,
+          `<b>Message:</b>`,
+          text
+        ].join("\n");
+        const resp = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: adminChat,
+            text: message,
+            parse_mode: "HTML"
+          })
+        });
+        if (!resp.ok) throw new Error("Telegram: could not send to admin chat");
+        return { provider: "telegram", delivered: true, message: `SMS delivered to admin Telegram chat (${phones.length} recipient(s))` };
       }
     });
   }
@@ -450,7 +455,7 @@ async function handleHealth(env) {
     btc: Boolean(env.BTC_ADDRESS),
     email: {
       configured: emailProviders.length > 0,
-      primary: emailProviders[0] || "none",
+      primary: emailProviders[0] || "none — get free key at resend.com",
       fallbacks: emailProviders.slice(1),
       allProviders: emailProviders
     },
