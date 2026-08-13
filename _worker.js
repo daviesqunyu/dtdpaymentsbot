@@ -1,27 +1,7 @@
 /**
- * DTD Store — Pages Functions catch-all API handler
- * Recreated from server.js + smtp-console.js contracts
- *
- * Endpoints:
- *   GET  /api/health
- *   GET  /api/visitor
- *   GET  /api/config
- *   POST /api/orders
- *   POST /api/paystack/initialize
- *   POST /api/paystack/verify
- *   POST /api/paystack/probe
- *   POST /api/telegram/message
- *   POST /api/telegram/webhook
- *   POST /api/analytics
- *   POST /api/smtp/unlock
- *   POST /api/smtp/send-email
- *   POST /api/smtp/send-sms
- *   GET  /api/smtp/jobs
- *   GET  /api/smtp/otp
- *   POST /api/smtp/otp
+ * DTD Store — Pages Advanced Mode Worker
+ * Handles all /api/* routes, serves static assets for everything else
  */
-
-import { processTelegramUpdate } from "./lib/bot-commands.js";
 
 // ─── Helpers ───────────────────────────────────────────
 
@@ -32,15 +12,10 @@ function json(data, status = 200) {
   });
 }
 
-function getEnv(request) {
-  return request.env || {};
-}
-
 function getClientIp(request) {
-  const headers = request.headers || new Headers();
   return (
-    headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    headers.get("cf-connecting-ip") ||
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    request.headers.get("cf-connecting-ip") ||
     "unknown"
   );
 }
@@ -85,32 +60,11 @@ function getSupabase(env) {
         },
         async select(columns = "*", filter = {}) {
           let query = `${url}/rest/v1/${table}?select=${columns}`;
-          for (const [key, value] of Object.entries(filter)) {
-            query += `&${key}=eq.${encodeURIComponent(value)}`;
+          for (const [k, v] of Object.entries(filter)) {
+            query += `&${k}=eq.${encodeURIComponent(v)}`;
           }
           const resp = await fetch(query, {
-            headers: {
-              apikey: key,
-              Authorization: `Bearer ${key}`
-            }
-          });
-          const data = await resp.json();
-          return { data, error: resp.ok ? null : data };
-        },
-        async update(patch, filter) {
-          let query = `${url}/rest/v1/${table}?`;
-          for (const [key, value] of Object.entries(filter)) {
-            query += `&${key}=eq.${encodeURIComponent(value)}`;
-          }
-          const resp = await fetch(query, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: key,
-              Authorization: `Bearer ${key}`,
-              Prefer: "return=representation"
-            },
-            body: JSON.stringify(patch)
+            headers: { apikey: key, Authorization: `Bearer ${key}` }
           });
           const data = await resp.json();
           return { data, error: resp.ok ? null : data };
@@ -184,7 +138,7 @@ function generateToken() {
 function verifyToken(env, token) {
   if (!token) return false;
   const secret = env.SMTP_CONSOLE_SECRET;
-  if (!secret) return true; // no secret set = allow
+  if (!secret) return true;
   return token.length > 10;
 }
 
@@ -287,7 +241,6 @@ async function handleOrders(request, env) {
     deliveryDetails || null
   ].filter(Boolean).join("\n");
 
-  // Try RPC first, then direct insert
   const rpcItems = items.map(item => ({
     product_id: item.product_id || "",
     product_name: item.product_name,
@@ -307,7 +260,7 @@ async function handleOrders(request, env) {
       p_items: rpcItems
     });
     if (rpcResult && !rpcResult.error) orderId = rpcResult;
-  } catch { /* fall through to direct insert */ }
+  } catch {}
 
   if (!orderId) {
     const { data, error } = await sb.from("orders").insert({
@@ -336,7 +289,6 @@ async function handleOrders(request, env) {
     }
   }
 
-  // Telegram notification
   const itemLines = items.map(item => `• ${item.product_name} x${item.quantity}`).join("\n");
   const telegramMessage = [
     "<b>🛒 New DTD Store Order</b>",
@@ -479,11 +431,31 @@ async function handleTelegramWebhook(request, env) {
   }
 
   const body = await request.json();
-  const sb = getSupabase(env);
-  await processTelegramUpdate(env, body, {
-    getSupabase: () => sb,
-    sendTelegram: async (_env, chatId, message, options) => sendTelegram(env, chatId, message, options)
-  });
+  if (!body.message || !body.message.text) return json({ ok: true });
+
+  const chatId = body.message.chat?.id;
+  const text = body.message.text || "";
+
+  if (text.startsWith("/start")) {
+    await sendTelegram(env, chatId, [
+      "<b>Welcome to DTD Store Bot</b>", "", "Commands:",
+      "/start — Show this message", "/help — Get help",
+      "/order — Check order status", "/support — Contact support"
+    ].join("\n"));
+  } else if (text.startsWith("/help")) {
+    await sendTelegram(env, chatId, [
+      "<b>DTD Store Help</b>", "",
+      "• Use the store at https://dtdpaymentsbot.pages.dev",
+      "• For support, use /support", "• For order status, use /order ORDER_ID"
+    ].join("\n"));
+  } else if (text.startsWith("/support")) {
+    const supportEmail = env.SUPPORT_EMAIL || "contact@dvtechnologies.xyz";
+    await sendTelegram(env, chatId, [
+      "<b>DTD Store Support</b>", "", `Email: ${supportEmail}`, "We'll respond within 24 hours."
+    ].join("\n"));
+  } else {
+    await sendTelegram(env, chatId, "Use /help to see available commands.");
+  }
 
   return json({ ok: true });
 }
@@ -524,73 +496,46 @@ async function handleSmtpUnlock(request, env) {
   const ownerTelegram = String(env.TELEGRAM_OWNER_USERNAME || "Glock7money").replace(/^@/, "");
 
   if (body.mode === "admin") {
-    // Verify Supabase JWT
     const authHeader = request.headers.get("Authorization") || "";
     const jwt = authHeader.replace(/^Bearer\s+/i, "");
     if (!jwt) return json({ error: "Admin sign-in required." }, 401);
 
-    // Verify JWT with Supabase
     if (sb) {
       const verifyResp = await fetch(`${sb.url}/auth/v1/user`, {
-        headers: {
-          apikey: sb.key,
-          Authorization: `Bearer ${jwt}`
-        }
+        headers: { apikey: sb.key, Authorization: `Bearer ${jwt}` }
       });
       if (!verifyResp.ok) return json({ error: "Invalid admin session." }, 401);
       const user = await verifyResp.json();
 
-      // Check if user is admin (by email match or role)
-      const adminEmail = env.TELEGRAM_OWNER_USERNAME ? "daviesqunyu@gmail.com" : user.email;
-      const isAdmin = user.email === adminEmail || user.email?.endsWith("@dvtechnologies.xyz");
-
       const token = generateToken();
       return json({
-        token,
-        from,
-        fromPhone,
-        role: "admin",
-        ownerTelegram,
+        token, from, fromPhone, role: "admin", ownerTelegram,
         email: user.email,
         dnsHint: "SPF ✓ + DKIM ✓ + DMARC ✓ on dvtechnologies.xyz",
         mailerConfigured: Boolean(env.VPS_MAILER_URL),
-        queueConfigured: true,
-        smsGatewayConfigured: false,
-        smsConfigured: false,
-        awsSesPrimary: true,
+        queueConfigured: true, smsGatewayConfigured: false,
+        smsConfigured: false, awsSesPrimary: true,
         queue: { queued: 0, sending: 0 }
       });
     }
     return json({ error: "Supabase not configured." }, 500);
   }
 
-  // Order-based unlock
   if (body.mode === "order") {
     if (!sb) return json({ error: "Supabase not configured." }, 500);
-
-    // Look up order by ID and email
-    const { data, error } = await sb.from("orders").select("id,customer_email,payment_method,total_usd").filter({
-      id: body.orderId,
-      customer_email: body.email
+    const { data, error } = await sb.from("orders").select("id,customer_email,payment_method,total_usd", {
+      id: body.orderId, customer_email: body.email
     });
-
     if (error || !data || !data.length) {
       return json({ error: "Order not found. Check your Order ID and email." }, 404);
     }
-
     const token = generateToken();
     return json({
-      token,
-      from,
-      fromPhone,
-      role: "buyer",
-      email: body.email,
+      token, from, fromPhone, role: "buyer", email: body.email,
       dnsHint: "SPF ✓ + DKIM ✓ + DMARC ✓ on dvtechnologies.xyz",
       mailerConfigured: Boolean(env.VPS_MAILER_URL),
-      queueConfigured: true,
-      smsGatewayConfigured: false,
-      smsConfigured: false,
-      queue: { queued: 0, sending: 0 }
+      queueConfigured: true, smsGatewayConfigured: false,
+      smsConfigured: false, queue: { queued: 0, sending: 0 }
     });
   }
 
@@ -608,114 +553,59 @@ async function handleSmtpSendEmail(request, env) {
   const from = env.MAIL_FROM || `contact@${env.MAIL_DOMAIN || "dvtechnologies.xyz"}`;
   const hostname = env.MAIL_HOSTNAME || env.SMTP_HOST || "";
 
-  if (!to || !subject || !text) {
-    return json({ error: "To, subject, and text are required." }, 400);
-  }
+  if (!to || !subject || !text) return json({ error: "To, subject, and text are required." }, 400);
 
   const sb = getSupabase(env);
-
-  // Parse recipients
   const recipients = to.split(/[\n\r,;\s]+/).map(e => e.trim()).filter(e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
   const invalid = to.split(/[\n\r,;\s]+/).map(e => e.trim()).filter(e => e && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
 
-  if (!recipients.length) {
-    return json({ error: "No valid email recipients." }, 400);
-  }
+  if (!recipients.length) return json({ error: "No valid email recipients." }, 400);
 
-  // Try VPS mailer first
   try {
-    const result = await callVpsMailer(env, "/send-email", {
-      from,
-      to: recipients,
-      subject,
-      text,
-      hostname
-    });
-
-    // Log job to Supabase
+    const result = await callVpsMailer(env, "/send-email", { from, to: recipients, subject, text, hostname });
     if (sb) {
       await sb.from("smtp_jobs").insert({
-        channel: "email",
-        recipients: recipients.join(", "),
-        recipient_count: recipients.length,
-        subject,
+        channel: "email", recipients: recipients.join(", "),
+        recipient_count: recipients.length, subject,
         body_preview: text.substring(0, 200),
         status: result.delivered ? "sent" : "queued",
         error: result.error || null
       });
     }
-
     return json({
-      delivered: result.delivered || false,
-      sent: recipients.length,
-      jobId: result.jobId || null,
-      invalid,
+      delivered: result.delivered || false, sent: recipients.length,
+      jobId: result.jobId || null, invalid,
       message: result.message || `Queued ${recipients.length} email(s) for VPS delivery.`
     });
   } catch (err) {
-    // Fallback: try Cloudflare Email API
     if (env.CF_EMAIL_API_TOKEN) {
       try {
-        const cfResult = await sendViaCloudflareEmail(env, from, recipients, subject, text);
-        if (sb) {
-          await sb.from("smtp_jobs").insert({
-            channel: "email",
-            recipients: recipients.join(", "),
-            recipient_count: recipients.length,
-            subject,
-            body_preview: text.substring(0, 200),
-            status: cfResult.delivered ? "sent" : "failed",
-            error: cfResult.error || null
+        for (const recipient of recipients) {
+          await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID}/email/routing/addresses`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${env.CF_EMAIL_API_TOKEN}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ from, to: recipient, subject, text })
           });
         }
-        return json({
-          delivered: cfResult.delivered,
-          sent: cfResult.delivered ? recipients.length : 0,
-          invalid,
-          message: cfResult.message || "Sent via Cloudflare Email."
-        });
-      } catch (cfErr) {
-        // Both failed
-      }
+        if (sb) {
+          await sb.from("smtp_jobs").insert({
+            channel: "email", recipients: recipients.join(", "),
+            recipient_count: recipients.length, subject,
+            body_preview: text.substring(0, 200), status: "sent"
+          });
+        }
+        return json({ delivered: true, sent: recipients.length, invalid, message: "Sent via Cloudflare Email." });
+      } catch {}
     }
-
     if (sb) {
       await sb.from("smtp_jobs").insert({
-        channel: "email",
-        recipients: recipients.join(", "),
-        recipient_count: recipients.length,
-        subject,
-        body_preview: text.substring(0, 200),
-        status: "failed",
-        error: err.message
+        channel: "email", recipients: recipients.join(", "),
+        recipient_count: recipients.length, subject,
+        body_preview: text.substring(0, 200), status: "failed", error: err.message
       });
     }
-
-    return json({
-      delivered: false,
-      sent: 0,
-      invalid,
-      message: `Email send failed: ${err.message}`
-    });
+    return json({ delivered: false, sent: 0, invalid, message: `Email send failed: ${err.message}` });
   }
-}
-
-async function sendViaCloudflareEmail(env, from, recipients, subject, text) {
-  // Use Cloudflare Email Routing API
-  const token = env.CF_EMAIL_API_TOKEN;
-  const accountId = env.CF_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID;
-
-  for (const recipient of recipients) {
-    await fetch("https://api.cloudflare.com/client/v4/accounts/" + accountId + "/email/routing/addresses", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ from, to: recipient, subject, text })
-    });
-  }
-  return { delivered: true, message: "Sent via Cloudflare Email." };
 }
 
 async function handleSmtpSendSms(request, env) {
@@ -732,57 +622,32 @@ async function handleSmtpSendSms(request, env) {
   if (!to || !text) return json({ error: "Phone numbers and text are required." }, 400);
   if (!gwUser || !gwPass) return json({ error: "SMSGate username + password required." }, 400);
 
-  // Parse phone numbers
   const phones = to.split(/[\n\r,;|]+/).map(p => p.trim()).filter(Boolean);
-  const invalid = [];
-
   const sb = getSupabase(env);
 
   try {
-    const result = await callVpsMailer(env, "/send-sms", {
-      phones,
-      text,
-      gwUser,
-      gwPass,
-      gwUrl
-    });
-
+    const result = await callVpsMailer(env, "/send-sms", { phones, text, gwUser, gwPass, gwUrl });
     if (sb) {
       await sb.from("smtp_jobs").insert({
-        channel: "sms",
-        recipients: phones.join(", "),
-        recipient_count: phones.length,
-        subject: text.substring(0, 80),
+        channel: "sms", recipients: phones.join(", "),
+        recipient_count: phones.length, subject: text.substring(0, 80),
         body_preview: text.substring(0, 200),
-        status: result.delivered ? "sent" : "queued",
-        error: result.error || null
+        status: result.delivered ? "sent" : "queued", error: result.error || null
       });
     }
-
     return json({
-      sent: phones.length,
-      jobId: result.jobId || null,
-      invalid,
+      sent: phones.length, jobId: result.jobId || null, invalid: [],
       message: result.message || `Queued ${phones.length} SMS for VPS delivery.`
     });
   } catch (err) {
     if (sb) {
       await sb.from("smtp_jobs").insert({
-        channel: "sms",
-        recipients: phones.join(", "),
-        recipient_count: phones.length,
-        subject: text.substring(0, 80),
-        body_preview: text.substring(0, 200),
-        status: "failed",
-        error: err.message
+        channel: "sms", recipients: phones.join(", "),
+        recipient_count: phones.length, subject: text.substring(0, 80),
+        body_preview: text.substring(0, 200), status: "failed", error: err.message
       });
     }
-
-    return json({
-      sent: 0,
-      invalid,
-      message: `SMS send failed: ${err.message}`
-    });
+    return json({ sent: 0, invalid: [], message: `SMS send failed: ${err.message}` });
   }
 }
 
@@ -801,33 +666,20 @@ async function handleSmtpJobs(request, env) {
   if (sb) {
     const { data } = await sb.from("smtp_jobs").select("*");
     jobs = (data || []).slice(0, 50).map(j => ({
-      id: j.id,
-      channel: j.channel,
-      status: j.status,
-      subject: j.subject,
-      body_preview: j.body_preview,
-      recipient_count: j.recipient_count,
-      created_at: j.created_at,
-      error: j.error
+      id: j.id, channel: j.channel, status: j.status,
+      subject: j.subject, body_preview: j.body_preview,
+      recipient_count: j.recipient_count, created_at: j.created_at, error: j.error
     }));
-
     queue.queued = jobs.filter(j => j.status === "queued").length;
     queue.sending = jobs.filter(j => j.status === "sending").length;
   }
 
   return json({
-    jobs,
-    from,
-    fromPhone,
-    queue,
-    role: "admin",
-    ownerTelegram,
+    jobs, from, fromPhone, queue, role: "admin", ownerTelegram,
     dnsHint: "SPF ✓ + DKIM ✓ + DMARC ✓ on dvtechnologies.xyz",
     mailerConfigured: Boolean(env.VPS_MAILER_URL),
-    queueConfigured: true,
-    smsGatewayConfigured: false,
-    smsConfigured: false,
-    awsSesPrimary: true,
+    queueConfigured: true, smsGatewayConfigured: false,
+    smsConfigured: false, awsSesPrimary: true,
     limits: { emailsPerDay: 200, smsPerDay: 100 }
   });
 }
@@ -840,19 +692,14 @@ async function handleSmtpOtp(request, env) {
   const method = request.method;
 
   if (method === "GET") {
-    const watch = url.searchParams.get("watch") || "";
     const limit = Number(url.searchParams.get("limit") || 40);
-
     const sb = getSupabase(env);
     let items = [];
     if (sb) {
       const { data } = await sb.from("otp_messages").select("*");
       items = (data || []).slice(0, limit).map(m => ({
-        id: m.id,
-        sender: m.sender,
-        recipient: m.recipient,
-        message: m.message,
-        otp: m.otp,
+        id: m.id, sender: m.sender, recipient: m.recipient,
+        message: m.message, otp: m.otp,
         receivedAt: m.received_at || m.created_at
       }));
     }
@@ -862,19 +709,11 @@ async function handleSmtpOtp(request, env) {
   if (method === "POST") {
     const body = await request.json();
     const action = body.action || "listen";
-
     try {
       const result = await callVpsMailer(env, "/otp", {
-        action,
-        gwUser: body.gwUser,
-        gwPass: body.gwPass,
-        gwUrl: body.gwUrl,
-        phones: body.phones,
-        label: body.label,
-        pull: body.pull,
-        hours: body.hours || 6
+        action, gwUser: body.gwUser, gwPass: body.gwPass, gwUrl: body.gwUrl,
+        phones: body.phones, label: body.label, pull: body.pull, hours: body.hours || 6
       });
-
       return json({
         items: result.items || [],
         message: result.message || (action === "listen" ? "Listener started." : "OTP pulled.")
@@ -889,40 +728,38 @@ async function handleSmtpOtp(request, env) {
 
 // ─── Router ─────────────────────────────────────────────
 
-export async function onRequest(context) {
-  const { request, env, next } = context;
-  const url = new URL(request.url);
-  const path = url.pathname;
-  const method = request.method;
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const method = request.method;
 
-  // Only handle /api/ routes
-  if (!path.startsWith("/api/")) {
-    return next();
+    if (!path.startsWith("/api/")) {
+      // Let Pages serve static assets
+      return env.ASSETS.fetch(request);
+    }
+
+    try {
+      if (path === "/api/health" && method === "GET") return await handleHealth(env);
+      if (path === "/api/visitor" && method === "GET") return await handleVisitor(request);
+      if (path === "/api/config" && method === "GET") return await handleConfig(env);
+      if (path === "/api/orders" && method === "POST") return await handleOrders(request, env);
+      if (path === "/api/paystack/initialize" && method === "POST") return await handlePaystackInit(request, env);
+      if (path === "/api/paystack/verify" && method === "POST") return await handlePaystackVerify(request, env);
+      if (path === "/api/paystack/probe" && method === "POST") return await handlePaystackInit(request, env);
+      if (path === "/api/telegram/message" && method === "POST") return await handleTelegramMessage(request, env);
+      if (path === "/api/telegram/webhook" && method === "POST") return await handleTelegramWebhook(request, env);
+      if (path === "/api/analytics" && method === "POST") return await handleAnalytics(request, env);
+
+      if (path === "/api/smtp/unlock" && method === "POST") return await handleSmtpUnlock(request, env);
+      if (path === "/api/smtp/send-email" && method === "POST") return await handleSmtpSendEmail(request, env);
+      if (path === "/api/smtp/send-sms" && method === "POST") return await handleSmtpSendSms(request, env);
+      if (path === "/api/smtp/jobs" && method === "GET") return await handleSmtpJobs(request, env);
+      if (path === "/api/smtp/otp" && (method === "GET" || method === "POST")) return await handleSmtpOtp(request, env);
+
+      return json({ error: "Not found." }, 404);
+    } catch (error) {
+      return json({ error: error.message || "Internal server error." }, 500);
+    }
   }
-
-  try {
-    // Store API
-    if (path === "/api/health" && method === "GET") return await handleHealth(env);
-    if (path === "/api/visitor" && method === "GET") return await handleVisitor(request);
-    if (path === "/api/config" && method === "GET") return await handleConfig(env);
-    if (path === "/api/orders" && method === "POST") return await handleOrders(request, env);
-    if (path === "/api/paystack/initialize" && method === "POST") return await handlePaystackInit(request, env);
-    if (path === "/api/paystack/verify" && method === "POST") return await handlePaystackVerify(request, env);
-    if (path === "/api/paystack/probe" && method === "POST") return await handlePaystackInit(request, env);
-    if (path === "/api/telegram/message" && method === "POST") return await handleTelegramMessage(request, env);
-    if (path === "/api/telegram/webhook" && method === "POST") return await handleTelegramWebhook(request, env);
-    if (path === "/api/analytics" && method === "POST") return await handleAnalytics(request, env);
-
-    // SMTP Console API
-    if (path === "/api/smtp/unlock" && method === "POST") return await handleSmtpUnlock(request, env);
-    if (path === "/api/smtp/send-email" && method === "POST") return await handleSmtpSendEmail(request, env);
-    if (path === "/api/smtp/send-sms" && method === "POST") return await handleSmtpSendSms(request, env);
-    if (path === "/api/smtp/jobs" && method === "GET") return await handleSmtpJobs(request, env);
-    if (path === "/api/smtp/otp" && (method === "GET" || method === "POST")) return await handleSmtpOtp(request, env);
-
-    return json({ error: "Not found." }, 404);
-  } catch (error) {
-    console.error("API error:", error);
-    return json({ error: error.message || "Internal server error." }, 500);
-  }
-}
+};
