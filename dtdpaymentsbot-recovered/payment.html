@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DTD Payment · Secure checkout</title>
+    <meta name="description" content="Official DTD Payment page — Card / Paystack first, USDT optional. Tracked delivery." />
+    <meta http-equiv="refresh" content="0;url=./#payment" />
+    <link rel="canonical" href="./#payment" />
+    <script>
+      (function () {
+        var q = window.location.search || "";
+        var hash = window.location.hash && window.location.hash !== "#" ? window.location.hash : "#payment";
+        if (hash === "#checkout") hash = "#payment";
+        window.location.replace("./" + q + hash);
+      })();
+    </script>
+  </head>
+  <body style="margin:0;font-family:Sora,system-ui,sans-serif;background:#0b1220;color:#e2e8f0;display:grid;place-items:center;min-height:100vh;">
+    <p>Opening <strong>DTD Payment</strong>… <a href="./#payment" style="color:#2dd4bf;">Continue</a></p>
+  </body>
+</html>

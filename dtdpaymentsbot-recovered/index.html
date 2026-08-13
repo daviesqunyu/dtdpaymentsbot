@@ -1,0 +1,1394 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#07111f" media="(prefers-color-scheme: dark)" />
+    <title>DTD STORE</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
+    <link rel="shortcut icon" type="image/png" href="assets/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+    <meta property="og:image" content="https://dtdpaymentsbot.pages.dev/assets/dtd-logo.png" />
+    <meta name="twitter:image" content="https://dtdpaymentsbot.pages.dev/assets/dtd-logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="shell.css" />
+    <link rel="stylesheet" href="trading.css" />
+    <link rel="stylesheet" href="chat.css" />
+    <link rel="stylesheet" href="tg-premium-ui.css" />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="theme.js"></script>
+    <script>
+      document.documentElement.classList.add("tg-premium-skin");
+    </script>
+  </head>
+  <body class="has-shell">
+    <div class="ambient-layer" aria-hidden="true">
+      <div class="ambient ambient-a"></div>
+      <div class="ambient ambient-b"></div>
+    </div>
+
+    <aside id="sideNav" class="side-nav" aria-label="Store navigation">
+      <div class="side-nav-head">
+        <a class="brand side-brand" href="#home" data-nav="home" aria-label="DTD Store home">
+          <span class="brand-mark" aria-hidden="true">
+            <img src="assets/dtd-logo.png" alt="" width="42" height="42" />
+          </span>
+          <span class="brand-name">DTD STORE</span>
+        </a>
+        <button type="button" class="nav-close" data-nav-close aria-label="Close menu">×</button>
+      </div>
+
+      <nav class="side-menu">
+        <a class="side-link is-active" href="#home" data-nav="home">
+          <span class="side-link-icon" aria-hidden="true">⌂</span>
+          Home
+        </a>
+
+        <details class="nav-group" open>
+          <summary>
+            <span class="nav-group-label">
+              <span class="side-link-icon" aria-hidden="true">▣</span>
+              Shop
+            </span>
+            <span class="nav-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="nav-group-links">
+            <a href="#products" data-nav="products">Products</a>
+            <a href="#dtdshopcc" data-nav="dtdshopcc">DTDSHOP.CC</a>
+            <a href="#payment" data-nav="payment">Payment</a>
+          </div>
+        </details>
+
+        <details class="nav-group">
+          <summary>
+            <span class="nav-group-label">
+              <span class="side-link-icon" aria-hidden="true">◎</span>
+              Orders
+            </span>
+            <span class="nav-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="nav-group-links">
+            <a href="#track" data-nav="track">Track order</a>
+          </div>
+        </details>
+
+        <details class="nav-group" open>
+          <summary>
+            <span class="nav-group-label">
+              <span class="side-link-icon" aria-hidden="true">◈</span>
+              Trading
+            </span>
+            <span class="nav-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="nav-group-links">
+            <a href="#trade" data-nav="trade">DTD Trade Platform</a>
+            <a href="#trade-bots" data-nav="trade" data-trade-open="bots">Trading Bots</a>
+          </div>
+        </details>
+
+        <details class="nav-group">
+          <summary>
+            <span class="nav-group-label">
+              <span class="side-link-icon" aria-hidden="true">✉</span>
+              Tools
+            </span>
+            <span class="nav-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="nav-group-links">
+            <a href="#smtp" data-nav="smtp" class="nav-link-premium">SMTP Console <span class="nav-premium-pill">Premium</span></a>
+          </div>
+        </details>
+
+        <details class="nav-group">
+          <summary>
+            <span class="nav-group-label">
+              <span class="side-link-icon" aria-hidden="true">✦</span>
+              Connect
+            </span>
+            <span class="nav-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="nav-group-links">
+            <a href="#chat" data-nav="chat">Chat</a>
+            <a href="#profile" data-nav="profile">Profiles</a>
+            <a href="#telegram" data-nav="telegram">Telegram</a>
+            <a href="#faq" data-nav="faq">Help / FAQ</a>
+          </div>
+        </details>
+      </nav>
+
+      <div class="side-footer">
+        <a class="side-link muted" href="admin.html">Admin</a>
+        <a class="side-link muted" href="https://dvtechnologies.xyz" target="_blank" rel="noopener noreferrer">DV Technologies</a>
+      </div>
+    </aside>
+
+    <div class="shell-main">
+      <header class="shell-topbar">
+        <div class="shell-topbar-left">
+          <button id="navToggle" class="nav-toggle" type="button" aria-expanded="false" aria-controls="sideNav" aria-label="Open menu">
+            <span class="nav-toggle-bars" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </span>
+            <span class="nav-toggle-text">Menu</span>
+          </button>
+          <div class="shell-topbar-copy">
+            <p id="pageEyebrow" class="eyebrow">Store</p>
+            <h1 id="shellPageTitle" class="shell-page-title">DTD Store</h1>
+          </div>
+        </div>
+        <div class="shell-topbar-actions">
+          <button id="themeToggle" class="icon-button theme-toggle" type="button" aria-label="Toggle color theme">
+            <span class="theme-icon" aria-hidden="true">◐</span>
+          </button>
+          <button class="icon-button cart-toggle" type="button" aria-label="Open cart">
+            <span class="cart-icon" aria-hidden="true">Cart</span>
+            <span id="cartCount" class="cart-count">0</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="shell-pages">
+        <!-- HOME -->
+        <section id="home" class="page is-active" data-page="home" aria-labelledby="pageTitle">
+          <div class="hero-section hero-page">
+            <div class="hero-visual" aria-hidden="true">
+              <div class="hero-orbit hero-orbit-a"></div>
+              <div class="hero-orbit hero-orbit-b"></div>
+              <div class="hero-shine"></div>
+            </div>
+            <div class="hero-copy">
+              <div class="brand-hero-lockup">
+                <img class="brand-hero-logo" src="assets/dtd-logo.png" alt="DTD Store" width="72" height="72" />
+                <p class="brand-hero-label">DTD STORE</p>
+              </div>
+              <h2 id="pageTitle">Digital products. Secure global checkout. Email delivery.</h2>
+              <p>
+                Pay globally by Card / Bank through Paystack, or choose crypto if you prefer — then track every order by ID and delivery email.
+                Supported by
+                <a href="https://dvtechnologies.xyz" target="_blank" rel="noopener noreferrer">DV Technologies</a>.
+              </p>
+              <div class="hero-actions">
+                <a class="primary-button glow" href="#products" data-nav="products">Shop products</a>
+                <a class="secondary-button" href="#trade" data-nav="trade">Open Trade Platform</a>
+              </div>
+              <div id="liveStats" class="trust-row home-stats" aria-label="Store highlights"></div>
+            </div>
+            <div class="hero-panel" aria-hidden="true">
+              <img class="hero-side-image" src="assets/store-feature-crypto.png" alt="" width="640" height="640" loading="eager" />
+              <div class="phone-frame float">
+                <div class="phone-top"></div>
+                <div class="phone-live-badge">
+                  <span class="pulse-dot pulse-dot--live"></span>
+                  LIVE
+                </div>
+                <div class="phone-title">DTD STORE LIVE</div>
+                <div class="phone-status-stack">
+                  <div class="chat-row incoming">Order placed</div>
+                  <div class="chat-row outgoing">USDT / BTC confirmed</div>
+                  <div class="chat-row incoming compact">Product delivered</div>
+                </div>
+                <div class="phone-pay-row">
+                  <span>USDT</span>
+                  <span>BTC</span>
+                  <span>Paystack</span>
+                </div>
+                <div class="phone-glow" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+
+          <section class="home-visual-strip" aria-hidden="true">
+            <figure class="home-visual-card">
+              <img src="assets/store-feature-shop.png" alt="" width="640" height="640" loading="lazy" />
+            </figure>
+            <figure class="home-visual-card">
+              <img src="assets/store-feature-crypto.png" alt="" width="640" height="640" loading="lazy" />
+            </figure>
+            <figure class="home-visual-card">
+              <img src="assets/store-feature-trade.png" alt="" width="640" height="640" loading="lazy" />
+            </figure>
+            <figure class="home-visual-card">
+              <img src="assets/store-feature-telegram.png" alt="" width="640" height="640" loading="lazy" />
+            </figure>
+          </section>
+
+          <section class="home-features" aria-label="Store highlights">
+            <article class="feature-tile">
+              <img src="assets/store-feature-shop.png" alt="Digital tech products" width="640" height="640" loading="lazy" />
+              <div>
+                <h3>Shop digital products</h3>
+                <p>Browse the catalog, add to cart, enter your delivery email, and pay securely by global Card / Bank.</p>
+                <a class="primary-button" href="#products" data-nav="products">Browse products</a>
+              </div>
+            </article>
+            <article class="feature-tile">
+              <img src="assets/store-feature-crypto.png" alt="USDT and Bitcoin crypto payments" width="640" height="640" loading="lazy" />
+              <div>
+                <h3>Crypto checkout</h3>
+                <p>Pay with USDT on Tron (TRC20) or Bitcoin — scan QR, send, paste the tx hash.</p>
+                <a class="secondary-button" href="#payment" data-nav="payment">Go to Payment</a>
+              </div>
+            </article>
+            <article class="feature-tile">
+              <img src="assets/store-feature-telegram.png" alt="Telegram bot shopping" width="640" height="640" loading="lazy" />
+              <div>
+                <h3>Buy in Telegram</h3>
+                <p>Use @DTDSTOREBOT for in-chat checkout, tracking, and support.</p>
+                <a class="secondary-button" href="#telegram" data-nav="telegram">Open Telegram hub</a>
+              </div>
+            </article>
+            <article class="feature-tile">
+              <img src="assets/store-feature-trade.png" alt="Crypto trading desk" width="640" height="640" loading="lazy" />
+              <div>
+                <h3>Trade Platform</h3>
+                <p>Live charts, spot desk, and trading bots — open the DTD Trade Platform.</p>
+                <a class="secondary-button" href="#trade" data-nav="trade">Open Trade</a>
+              </div>
+            </article>
+          </section>
+        </section>
+
+        <!-- PRODUCTS -->
+        <section id="products" class="page section-shell page-with-visual" data-page="products" aria-labelledby="productsTitle" hidden>
+          <div class="page-visual-bg" style="--page-visual: url('assets/store-section-products.png')" aria-hidden="true"></div>
+          <div class="page-intro">
+            <div class="page-intro-copy">
+              <p class="eyebrow">Catalog</p>
+              <h2 id="productsTitle">Products</h2>
+              <p id="productCount" class="section-subtext">Loading products...</p>
+              <div class="page-intro-pills" aria-hidden="true">
+                <span>Digital delivery</span>
+                <span>USDT TRC20</span>
+                <span>BTC</span>
+                <span>Paystack</span>
+              </div>
+            </div>
+            <div class="page-intro-media" aria-hidden="true">
+              <img src="assets/store-feature-shop.png" alt="" width="640" height="640" loading="lazy" />
+              <img src="assets/store-feature-crypto.png" alt="" width="640" height="640" loading="lazy" />
+            </div>
+          </div>
+          <div class="section-heading section-heading--compact">
+            <label class="search-box">
+              <span>Search</span>
+              <input id="productSearch" type="search" placeholder="Find a product" />
+            </label>
+            <button id="refreshProducts" class="icon-button" type="button">Refresh</button>
+          </div>
+          <div id="productsGrid" class="products-grid"></div>
+        </section>
+
+        <!-- DTDSHOP.CC -->
+        <section id="dtdshopcc" class="page section-shell page-with-visual" data-page="dtdshopcc" aria-labelledby="dtdshopccTitle" hidden>
+          <div class="page-visual-bg" style="--page-visual: url('assets/store-feature-crypto.png')" aria-hidden="true"></div>
+          <div class="page-intro">
+            <div class="page-intro-copy">
+              <p class="eyebrow">Deposit first</p>
+              <h2 id="dtdshopccTitle">DTDSHOP.CC</h2>
+              <p class="section-subtext">Deposit a minimum of 5 USDT before viewing the DTDSHOP.CC product list. Complete the deposit below and unlock the catalog.</p>
+            </div>
+            <div class="page-intro-media" aria-hidden="true">
+              <img src="assets/store-feature-shop.png" alt="" width="640" height="640" loading="lazy" />
+            </div>
+          </div>
+
+          <div id="mmshopGate" class="glass page-form">
+            <div class="payment-methods-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+              <article class="method-card" style="padding: 20px; border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 18px; background: rgba(15, 23, 42, 0.32);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                  <span class="method-icon" style="display: inline-flex; width: 42px; height: 42px; align-items: center; justify-content: center; border-radius: 12px; background: rgba(16, 185, 129, 0.14); color: #34d399; font-size: 1.3rem;">₮</span>
+                  <div>
+                    <strong>USDT (TRC20)</strong>
+                    <div class="form-note">Primary deposit option</div>
+                  </div>
+                </div>
+                <code id="mmshopUsdtAddress" style="display:block; word-break:break-all; font-size: 0.92rem; background: rgba(15, 23, 42, 0.6); border-radius: 10px; padding: 12px; margin-bottom: 8px;">Loading address…</code>
+                <button class="secondary-button" type="button" data-copy-mmshop-usdt>Copy USDT address</button>
+              </article>
+
+              <article class="method-card" style="padding: 20px; border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 18px; background: rgba(15, 23, 42, 0.32);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                  <span class="method-icon" style="display: inline-flex; width: 42px; height: 42px; align-items: center; justify-content: center; border-radius: 12px; background: rgba(245, 158, 11, 0.14); color: #fbbf24; font-size: 1.3rem;">₿</span>
+                  <div>
+                    <strong>BTC</strong>
+                    <div class="form-note">Alternative deposit</div>
+                  </div>
+                </div>
+                <code id="mmshopBtcAddress" style="display:block; word-break:break-all; font-size: 0.92rem; background: rgba(15, 23, 42, 0.6); border-radius: 10px; padding: 12px; margin-bottom: 8px;">Loading address…</code>
+                <button class="secondary-button" type="button" data-copy-mmshop-btc>Copy BTC address</button>
+              </article>
+            </div>
+
+            <div style="margin-top: 22px; display: flex; flex-direction: column; gap: 14px;">
+              <p class="form-note">Send your deposit to the wallet above, then confirm below. The product list will unlock once you confirm.</p>
+              <button id="mmshopVerifyDeposit" class="primary-button" type="button">I have deposited</button>
+              <a class="secondary-button" href="https://t.me/DTDSTOREBOT?start=mmshop" target="_blank" rel="noopener noreferrer">Open in @DTDSTOREBOT</a>
+            </div>
+          </div>
+
+          <div id="mmshopProductsList" class="mmshop-products-shell">
+            <div class="section-heading section-heading--compact">
+              <h3>Product list</h3>
+              <span class="live-pill">DTDSHOP.CC</span>
+            </div>
+            <div id="mmshopProductsGrid" class="products-grid"></div>
+          </div>
+        </section>
+
+        <!-- TELEGRAM -->
+        <section id="telegram" class="page section-shell telegram-hub page-with-visual" data-page="telegram" aria-labelledby="telegramTitle" hidden>
+          <div class="page-visual-bg" style="--page-visual: url('assets/store-feature-telegram.png')" aria-hidden="true"></div>
+          <div class="page-intro">
+            <div class="page-intro-copy">
+              <p class="eyebrow">Connect</p>
+              <h2 id="telegramTitle">Telegram</h2>
+              <p class="section-subtext">Premium-style bot + Mini App — shop, pay with ₮ USDT / ₿ BTC QR, track orders, and get support inside Telegram.</p>
+              <ol class="page-steps">
+                <li>Open @DTDSTOREBOT · Menu → Mini App or /buy</li>
+                <li>Choose 💳 global Card / Bank (recommended), ₮ USDT, or ₿ BTC</li>
+                <li>Enter delivery email first → verify payment → track by Order ID</li>
+              </ol>
+            </div>
+            <div class="page-intro-media" aria-hidden="true">
+              <img src="assets/store-feature-telegram.png" alt="" width="640" height="640" loading="lazy" />
+              <img src="assets/store-feature-crypto.png" alt="" width="640" height="640" loading="lazy" />
+            </div>
+          </div>
+          <div class="telegram-hub-grid">
+            <article class="hub-card hub-card--featured">
+              <img class="hub-card-thumb" src="assets/store-feature-telegram.png" alt="" width="320" height="320" loading="lazy" />
+              <h3>Store bot</h3>
+              <p>Buy in chat with /buy — ₮ USDT (TRC20), ₿ Bitcoin, or 💳 Paystack. Track with /order.</p>
+              <ul class="hub-list">
+                <li><code>/app</code> Mini App shop</li>
+                <li><code>/buy</code> shop &amp; pay (QR for crypto)</li>
+                <li><code>/pay</code> ₮ USDT · ₿ BTC · Paystack</li>
+                <li><code>/order id email</code> track</li>
+              </ul>
+              <a id="hubBotLink" class="primary-button" href="https://t.me/DTDSTOREBOT" target="_blank" rel="noopener noreferrer">Open @DTDSTOREBOT</a>
+            </article>
+            <article class="hub-card">
+              <img class="hub-card-thumb" src="assets/store-feature-shop.png" alt="" width="320" height="320" loading="lazy" />
+              <h3>Main channel</h3>
+              <p>Drops, promos, and store announcements from DTD MAIN STORE.</p>
+              <a id="hubChannelLink" class="secondary-button" href="https://t.me/DTDSTOREBOT" target="_blank" rel="noopener noreferrer">Open @DTDSTOREBOT</a>
+            </article>
+            <article class="hub-card">
+              <h3>Owner</h3>
+              <p>Owner contact for account and escalation.</p>
+              <a id="hubOwnerLink" class="secondary-button" href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">Message @Glock7money</a>
+            </article>
+            <article class="hub-card">
+              <h3>Vendor &amp; support</h3>
+              <p>Store vendor for orders, delivery, and day-to-day support.</p>
+              <a id="hubVendorLink" class="secondary-button" href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">Message @Glock7money</a>
+            </article>
+            <article class="hub-card">
+              <h3>Email support</h3>
+              <p>Track orders, payments, and channel questions by email.</p>
+              <a id="hubEmailLink" class="secondary-button" href="mailto:contact@dvtechnologies.xyz">contact@dvtechnologies.xyz</a>
+            </article>
+            <article class="hub-card">
+              <h3>DV Technologies</h3>
+              <p>International company supporting DTD Store.</p>
+              <a id="hubCompanyLink" class="secondary-button" href="https://dvtechnologies.xyz" target="_blank" rel="noopener noreferrer">Visit site</a>
+            </article>
+          </div>
+          <article class="telegram-live-card glass" aria-live="polite">
+            <div class="telegram-live-copy">
+              <p class="eyebrow"><span class="pulse-dot pulse-dot--live"></span> Live channel</p>
+              <h3>Latest from DTD MAIN STORE</h3>
+              <p id="telegramFeedStatus">Loading the latest public channel update…</p>
+            </div>
+            <div id="telegramFeed" class="telegram-feed" aria-busy="true">
+              <a id="telegramFeedFallback" class="secondary-button" href="https://t.me/DTDSTOREBOT" target="_blank" rel="noopener noreferrer">Open @DTDSTOREBOT</a>
+            </div>
+          </article>
+        </section>
+
+        <!-- COMMUNITY CHAT -->
+        <section id="chat" class="page section-shell chat-section dtd-feed" data-page="chat" aria-labelledby="chatTitle" hidden>
+          <header class="dtd-feed-hero">
+            <div class="dtd-feed-hero-mark">
+              <img src="assets/dtd-logo.png" alt="DTD Store" width="56" height="56" />
+            </div>
+            <div class="dtd-feed-hero-copy">
+              <p class="eyebrow">Live store feed</p>
+              <h2 id="chatTitle">DTD Store Chat</h2>
+              <p class="section-subtext">
+                Open feed for everyone: sign in with Telegram, then post text, any link, photos, or video —
+                just like a captioned social post. Channel membership not required.
+              </p>
+            </div>
+          </header>
+
+          <div class="chat-layout">
+            <div class="chat-main dtd-feed-main">
+              <div class="chat-toolbar dtd-feed-toolbar">
+                <span class="chat-who" id="chatWho">Guest</span>
+                <div class="chat-auth-actions">
+                  <button type="button" class="ghost-btn" id="chatRefresh">Refresh</button>
+                  <button type="button" class="ghost-btn" id="chatSignOut" hidden>Sign out</button>
+                </div>
+              </div>
+
+              <div id="chatAuthGate" class="chat-auth-gate">
+                <p>Sign in with Telegram to post as your <strong>@username</strong> — Mini App or one-time link code.</p>
+                <p class="form-note" data-premium-tip hidden></p>
+                <div class="chat-auth-actions">
+                  <button type="button" class="primary-button" id="chatSignMini">Sign in via Mini App</button>
+                  <button type="button" class="secondary-button" id="chatLinkTg">Link Telegram</button>
+                </div>
+                <div id="chatClaimBox" class="chat-claim-box" hidden></div>
+              </div>
+
+              <form id="chatComposer" class="chat-composer dtd-compose" hidden>
+                <div class="dtd-compose-row">
+                  <span class="chat-avatar dtd-compose-avatar" id="chatComposeAvatar" aria-hidden="true">?</span>
+                  <div class="dtd-compose-stack">
+                    <label class="sr-only" for="chatInput">Compose a post</label>
+                    <textarea id="chatInput" maxlength="12000" placeholder="What’s happening? Text, link, or add a photo…" rows="2"></textarea>
+                    <div id="chatMediaPreview" class="chat-media-preview" hidden></div>
+                  </div>
+                </div>
+                <div class="chat-composer-bar">
+                  <div class="chat-composer-tools">
+                    <input id="chatMediaInput" class="chat-file-input" type="file" accept="image/*,video/*" />
+                    <button type="button" class="chat-attach-btn" id="chatAttachBtn" title="Add photo or video">
+                      Photo / Video
+                    </button>
+                    <span class="chat-char-count" id="chatCharCount">0/12000</span>
+                  </div>
+                  <button type="submit" class="primary-button" id="chatPostBtn">Post</button>
+                </div>
+              </form>
+
+              <p id="chatStatus" class="form-note" role="status"></p>
+              <div id="chatFeed" class="chat-feed dtd-feed-list" aria-live="polite"></div>
+            </div>
+
+            <aside class="chat-side dtd-feed-side" aria-label="Channels and tips">
+              <div id="chatRails" class="chat-rails" aria-label="Chat channels"></div>
+              <div class="chat-side-card">
+                <h3>How it works</h3>
+                <ol>
+                  <li>Sign in with Telegram (Mini App or link code) — any @username works.</li>
+                  <li>Post text, links, photos, or video. Caption sits with the media like a social post.</li>
+                  <li>It mirrors to @DTDSTOREBOT with your Telegram photo + @handle. No channel membership needed.</li>
+                </ol>
+              </div>
+              <div class="chat-side-card">
+                <h3>Channels</h3>
+                <p>Telegram bot for commands · Telegram channel for drops · WhatsApp for broadcasts.</p>
+                <p>Bot tip: <code>/chat</code> opens this page · <code>/chatsign CODE</code> links your account.</p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- PROFILE -->
+        <section id="profile" class="page section-shell chat-section dtd-feed profile-section" data-page="profile" aria-labelledby="profileTitle" hidden>
+          <header class="dtd-profile-hero" id="profileHero">
+            <div class="dtd-profile-avatar" id="profileAvatar" aria-hidden="true">?</div>
+            <div class="dtd-profile-copy">
+              <p class="eyebrow">Telegram profile</p>
+              <h2 id="profileTitle">Profile</h2>
+              <p class="section-subtext" id="profileSub">Simple activity from DTD Store Chat — posts, likes, and comments.</p>
+              <div class="dtd-profile-actions">
+                <a class="secondary-button" id="profileTgLink" href="https://t.me/" target="_blank" rel="noopener noreferrer">Open on Telegram</a>
+                <a class="ghost-btn" href="#chat" data-nav="chat">Back to Chat</a>
+              </div>
+            </div>
+          </header>
+
+          <div class="dtd-profile-stats" id="profileStats" aria-label="Activity stats"></div>
+
+          <div class="chat-layout profile-layout">
+            <div class="chat-main dtd-feed-main">
+              <div class="chat-toolbar dtd-feed-toolbar">
+                <span class="chat-who">Posts</span>
+                <button type="button" class="ghost-btn" id="profileRefresh">Refresh</button>
+              </div>
+              <p id="profileStatus" class="form-note" role="status"></p>
+              <div id="profileFeed" class="chat-feed dtd-feed-list" aria-live="polite"></div>
+            </div>
+            <aside class="chat-side dtd-feed-side" aria-label="Recent comments">
+              <div class="chat-side-card">
+                <h3>Recent comments</h3>
+                <div id="profileComments" class="profile-comments-list"></div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- TRACK -->
+        <section id="track" class="page section-shell track-section page-with-visual" data-page="track" aria-labelledby="trackTitle" hidden>
+          <div class="page-visual-bg" style="--page-visual: url('assets/store-hero-bg.png')" aria-hidden="true"></div>
+          <div class="page-intro">
+            <div class="page-intro-copy">
+              <p class="eyebrow">Orders</p>
+              <h2 id="trackTitle">Track order</h2>
+              <p class="section-subtext">
+                Use your Order ID and the email from checkout. Need help?
+                Write <a href="mailto:contact@dvtechnologies.xyz">contact@dvtechnologies.xyz</a>
+                or message vendor
+                <a id="trackVendorLink" href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">@Glock7money</a>
+                · owner
+                <a id="trackOwnerLink" href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">@Glock7money</a>.
+              </p>
+            </div>
+            <div class="page-intro-media page-intro-media--single" aria-hidden="true">
+              <img src="assets/store-feature-crypto.png" alt="" width="640" height="640" loading="lazy" />
+            </div>
+          </div>
+          <div class="track-layout">
+            <form id="trackOrderForm" class="track-form glass page-form">
+              <label>
+                Order ID
+                <input name="orderId" type="text" placeholder="Paste order UUID" required />
+              </label>
+              <label>
+                Email
+                <input name="email" type="email" placeholder="you@example.com" required />
+              </label>
+              <button class="primary-button" type="submit">Check status</button>
+              <p id="trackOrderResult" class="track-result" role="status"></p>
+            </form>
+            <aside class="track-tips glass" aria-label="Tracking tips">
+              <img src="assets/store-feature-shop.png" alt="" width="640" height="640" loading="lazy" />
+              <h3>Quick tips</h3>
+              <ul>
+                <li>Order ID is on your confirmation email / Telegram receipt.</li>
+                <li>Use the same email you entered at checkout.</li>
+                <li>Crypto orders show paid after on-chain / admin confirm.</li>
+                <li>In Telegram: <code>/order ORDER_ID email@example.com</code></li>
+              </ul>
+            </aside>
+          </div>
+        </section>
+
+        <!-- SMTP + SMS CONSOLE -->
+        <section id="smtp" class="page section-shell smtp-section smtp-premium" data-page="smtp" aria-labelledby="smtpTitle" hidden>
+          <div class="smtp-hero">
+            <div class="smtp-hero-top">
+              <img class="smtp-hero-mark" src="assets/dtd-logo.png" alt="" width="56" height="56" />
+              <div>
+                <p class="smtp-eyebrow">Members only · Paid exclusive</p>
+                <h2 id="smtpTitle">SMTP Vault</h2>
+              </div>
+              <span class="smtp-exclusive-pill">Premium</span>
+            </div>
+            <p class="smtp-hero-lead">
+              The store’s only premium ops desk — VPS Postfix bulk email, carrier SMS, and live OTP inbox.
+              Buyers unlock after a paid <strong>SMTP</strong> order. Staff unlock with admin login.
+            </p>
+            <ul class="smtp-perk-row" aria-label="Exclusive features">
+              <li>Bulk email</li>
+              <li>Carrier SMS</li>
+              <li>OTP inbox</li>
+              <li>Send history</li>
+            </ul>
+            <div class="smtp-hero-actions">
+              <a class="smtp-primary-btn" href="#products" data-nav="products">Get SMTP access</a>
+              <a class="smtp-ghost-btn" href="#payment" data-nav="payment">I already paid</a>
+            </div>
+            <div class="smtp-hero-glow" aria-hidden="true"></div>
+          </div>
+
+          <div id="smtpLockPanel" class="smtp-lock-shell">
+            <div class="smtp-preview-card" aria-hidden="true">
+              <div class="smtp-preview-blur">
+                <div class="smtp-preview-tabs">
+                  <span class="is-on">Email</span><span>SMS</span><span>OTP</span><span>History</span>
+                </div>
+                <div class="smtp-preview-lines">
+                  <i></i><i></i><i></i>
+                </div>
+              </div>
+              <p class="smtp-preview-caption">Vault locked — unlock to open the console</p>
+            </div>
+
+            <div class="smtp-panel smtp-glass smtp-lock-panel">
+              <div class="smtp-lock-grid">
+                <div class="smtp-lock-card smtp-lock-order">
+                  <p class="smtp-lock-kicker">Paid members</p>
+                  <h3>Unlock with order</h3>
+                  <p class="form-note">Use your paid <strong>SMTP</strong> Order ID + checkout email or phone.</p>
+                  <form id="smtpUnlockForm" class="smtp-form">
+                    <label>
+                      Order ID
+                      <input name="orderId" type="text" placeholder="Paid SMTP order UUID" autocomplete="off" />
+                    </label>
+                    <label>
+                      Checkout email or phone
+                      <input name="email" type="text" autocomplete="username" placeholder="you@example.com or +2547…" />
+                    </label>
+                    <div class="smtp-unlock-actions">
+                      <button class="smtp-primary-btn smtp-cta-sticky" type="submit">Unlock vault</button>
+                      <button id="smtpAdminUnlock" class="smtp-ghost-btn" type="button" hidden>Admin unlock</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="smtp-lock-card smtp-lock-staff">
+                  <details class="smtp-staff-details">
+                    <summary>Staff access</summary>
+                    <p class="form-note">Same login as <a href="admin.html">Admin</a>.</p>
+                    <div id="smtpAdminLogin" class="smtp-admin-login">
+                      <label>
+                        Admin email
+                        <input id="smtpAdminEmail" type="email" placeholder="admin@email.com" autocomplete="username" />
+                      </label>
+                      <label>
+                        Password
+                        <input id="smtpAdminPassword" type="password" placeholder="Password" autocomplete="current-password" />
+                      </label>
+                      <button id="smtpAdminSignIn" class="smtp-primary-btn" type="button">Sign in &amp; unlock</button>
+                    </div>
+                  </details>
+                </div>
+              </div>
+              <p id="smtpUnlockStatus" class="form-note smtp-status-line" role="status"></p>
+            </div>
+          </div>
+
+          <div id="smtpConsole" class="smtp-console" hidden>
+            <div class="smtp-member-strip">
+              <span class="smtp-member-badge">Exclusive access</span>
+              <span id="smtpSessionLabel">Unlocked</span>
+              <button id="smtpLockBtn" class="smtp-ghost-btn" type="button">Lock</button>
+            </div>
+            <div class="smtp-status-bar">
+              <span id="smtpConfigBadges" class="smtp-badges"></span>
+            </div>
+            <p id="smtpDnsHint" class="form-note smtp-dns-hint" hidden></p>
+
+            <div class="smtp-tabs" role="tablist" aria-label="SMTP vault tools">
+              <button type="button" class="smtp-tab is-active" data-smtp-tab="email"><span>Email</span></button>
+              <button type="button" class="smtp-tab" data-smtp-tab="sms"><span>SMS</span></button>
+              <button type="button" class="smtp-tab" data-smtp-tab="otp"><span>OTP</span></button>
+              <button type="button" class="smtp-tab" data-smtp-tab="history"><span>History</span></button>
+            </div>
+
+            <div class="smtp-tab-panel is-active" data-smtp-panel="email">
+              <form id="smtpEmailForm" class="smtp-panel smtp-glass smtp-form">
+                <label>
+                  From
+                  <input id="smtpFrom" type="email" readonly />
+                </label>
+                <label>
+                  To (bulk — paste emails, one per line)
+                  <textarea name="to" rows="6" placeholder="a@x.com&#10;b@y.com&#10;c@z.com" required></textarea>
+                </label>
+                <label>
+                  Subject
+                  <input name="subject" type="text" placeholder="Subject" required />
+                </label>
+                <label>
+                  Body
+                  <textarea name="text" rows="8" placeholder="Message body" required></textarea>
+                </label>
+                <p id="smtpEmailCount" class="form-note">0 recipients</p>
+                <button class="smtp-primary-btn" type="submit">Send email</button>
+                <p id="smtpEmailStatus" class="form-note" role="status"></p>
+              </form>
+            </div>
+
+            <div class="smtp-tab-panel" data-smtp-panel="sms" hidden>
+              <form id="smtpSmsForm" class="smtp-panel smtp-glass smtp-form">
+                <p id="smtpSmsSetup" class="form-note smtp-setup-callout">
+                  <strong>Real SMS</strong> needs a phone SIM gateway (free app).
+                  Install
+                  <a href="https://github.com/capcom6/android-sms-gateway/releases" target="_blank" rel="noopener noreferrer">SMSGate</a>
+                  → enable <strong>Cloud</strong> → paste username &amp; password below.
+                  Your SIM sends the texts. (Telethon cannot send carrier SMS.)
+                </p>
+                <div class="form-row two-columns">
+                  <label>
+                    SMSGate username
+                    <input id="smtpSmsGwUser" name="gwUser" type="text" autocomplete="username" placeholder="from SMSGate app" required />
+                  </label>
+                  <label>
+                    SMSGate password
+                    <input id="smtpSmsGwPass" name="gwPass" type="password" autocomplete="current-password" placeholder="from SMSGate app" required />
+                  </label>
+                </div>
+                <label>
+                  Gateway URL
+                  <input id="smtpSmsGwUrl" name="gwUrl" type="url" value="https://api.sms-gate.app/3rdparty/v1/messages" />
+                </label>
+                <label>
+                  From (SIM on that phone)
+                  <input id="smtpFromPhone" type="tel" readonly />
+                </label>
+                <label>
+                  To (bulk phones — one per line)
+                  <textarea name="to" rows="6" placeholder="0712345678&#10;+254712345678&#10;254712345678" required></textarea>
+                </label>
+                <label>
+                  Message
+                  <textarea name="text" rows="5" maxlength="1000" placeholder="SMS text" required></textarea>
+                </label>
+                <p id="smtpSmsCount" class="form-note">0 phones · 0/1000 chars</p>
+                <button id="smtpSmsSendBtn" class="smtp-primary-btn" type="submit">Send SMS</button>
+                <p id="smtpSmsStatus" class="form-note" role="status"></p>
+              </form>
+            </div>
+
+            <div class="smtp-tab-panel" data-smtp-panel="otp" hidden>
+              <div class="smtp-panel smtp-glass smtp-form" id="smtpOtpPanel">
+                <p class="form-note smtp-setup-callout">
+                  <strong>Receive OTP</strong> uses the same SMSGate Android phone (SIM inbox).
+                  Add the number(s) you want to watch, start listening, then OTPs from any service
+                  (banks, WhatsApp, Google, etc.) show here with a one-tap copy.
+                </p>
+                <div class="form-row two-columns">
+                  <label>
+                    SMSGate username
+                    <input id="smtpOtpGwUser" name="otpGwUser" type="text" autocomplete="username" placeholder="from SMSGate app" />
+                  </label>
+                  <label>
+                    SMSGate password
+                    <input id="smtpOtpGwPass" name="otpGwPass" type="password" autocomplete="current-password" placeholder="from SMSGate app" />
+                  </label>
+                </div>
+                <label>
+                  Gateway URL
+                  <input id="smtpOtpGwUrl" type="url" value="https://api.sms-gate.app/3rdparty/v1/messages" />
+                </label>
+                <label>
+                  Watch numbers (your SIM / inbox lines — one per line)
+                  <textarea id="smtpOtpWatch" rows="3" placeholder="+2547…&#10;0712…"></textarea>
+                </label>
+                <label>
+                  Purpose / label (optional)
+                  <input id="smtpOtpLabel" type="text" maxlength="80" placeholder="e.g. Bank login, WhatsApp, any service" />
+                </label>
+                <div class="smtp-unlock-actions">
+                  <button id="smtpOtpListenBtn" class="smtp-primary-btn" type="button">Start receiving</button>
+                  <button id="smtpOtpPullBtn" class="smtp-ghost-btn" type="button">Pull last 6h</button>
+                  <button id="smtpOtpRefreshBtn" class="smtp-ghost-btn" type="button">Refresh inbox</button>
+                </div>
+                <p id="smtpOtpStatus" class="form-note smtp-status-line" role="status"></p>
+                <div class="panel-title-row" style="margin-top:0.75rem">
+                  <h3>OTP inbox</h3>
+                  <span id="smtpOtpLive" class="form-note">Idle</span>
+                </div>
+                <div id="smtpOtpList" class="smtp-otp-list" aria-live="polite"></div>
+              </div>
+            </div>
+
+            <div class="smtp-tab-panel" data-smtp-panel="history" hidden>
+              <div class="smtp-panel smtp-glass">
+                <div class="panel-title-row">
+                  <h3>Send history</h3>
+                  <button id="smtpRefreshJobs" class="smtp-ghost-btn" type="button">Refresh</button>
+                </div>
+                <p id="smtpHistoryStatus" class="form-note smtp-status-line" role="status"></p>
+                <p class="form-note">Statuses: <strong>queued</strong> → <strong>sending</strong> → <strong>sent</strong> (or failed). Delivery runs on the VPS within a few seconds.</p>
+                <div id="smtpJobsList" class="smtp-jobs"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- DTD TRADE PLATFORM -->
+        <section id="trade" class="page section-shell trade-section trade-platform page-with-visual" data-page="trade" aria-labelledby="tradeTitle" hidden>
+          <div class="page-visual-bg" style="--page-visual: url('assets/store-feature-trade.png')" aria-hidden="true"></div>
+          <div class="trade-platform-hero">
+            <div class="trade-platform-hero-copy">
+              <p class="trade-eyebrow">Paid desk · Profile after purchase</p>
+              <h2 id="tradeTitle">Spot desk · AI · Trading bots</h2>
+              <p class="section-subtext">
+                A trading profile is created only after a paid <strong>Trade</strong> order (or admin unlock).
+                Then connect Binance keys locally — keys stay in your browser — with AI guide and
+                <strong>@DTDSTOREBOT</strong> alerts.
+              </p>
+              <div class="trade-platform-pills" aria-hidden="true">
+                <span>Live charts</span>
+                <span>Spot buy / sell</span>
+                <span>AI guide</span>
+                <span>Telegram bot</span>
+              </div>
+            </div>
+            <div class="trade-platform-hero-card trade-platform-hero-card--visual" aria-hidden="true">
+              <img class="trade-hero-image" src="assets/store-feature-trade.png" alt="" width="640" height="640" loading="lazy" />
+              <div class="trade-hero-orb"></div>
+              <div class="trade-hero-stat">
+                <span>Desk</span>
+                <strong id="tradeHeroPair">BTC / USDT</strong>
+              </div>
+              <div class="trade-hero-stat">
+                <span>Last</span>
+                <strong class="mono" id="tradeHeroLast">—</strong>
+              </div>
+            </div>
+          </div>
+
+          <div id="tradeLockPanel" class="trade-lock-panel">
+            <div class="trade-lock-card">
+              <p class="trade-lock-kicker">Members only</p>
+              <h3>Unlock Trade profile</h3>
+              <p class="form-note">
+                Buy a <strong>Trade</strong> product, then unlock with Order ID + checkout email/phone.
+                This creates your trading profile before keys or wallet.
+              </p>
+              <form id="tradeUnlockForm" class="trade-unlock-form">
+                <label>
+                  Order ID
+                  <input name="orderId" type="text" placeholder="Paid Trade order UUID" autocomplete="off" />
+                </label>
+                <label>
+                  Checkout email or phone
+                  <input name="email" type="text" placeholder="you@example.com or +2547…" autocomplete="username" />
+                </label>
+                <div class="trade-unlock-actions">
+                  <button class="primary-button" type="submit">Create profile &amp; unlock</button>
+                  <a class="secondary-button" href="#products" data-nav="products">Shop Trade access</a>
+                </div>
+              </form>
+              <details class="trade-staff-details">
+                <summary>Staff unlock</summary>
+                <p class="form-note">Same admin session as SMTP / Admin.</p>
+                <button id="tradeAdminUnlock" class="secondary-button" type="button">Unlock as admin</button>
+              </details>
+              <p id="tradeUnlockStatus" class="form-note" role="status"></p>
+            </div>
+          </div>
+
+          <div id="tradeDesk" class="trade-desk" hidden>
+          <div class="trade-pair-bar">
+            <label class="trade-pair-label">
+              Pair
+              <select id="tradePairSelect" aria-label="Trading pair">
+                <option value="BTCUSDT">BTC / USDT</option>
+                <option value="ETHUSDT">ETH / USDT</option>
+                <option value="BNBUSDT">BNB / USDT</option>
+                <option value="SOLUSDT">SOL / USDT</option>
+                <option value="XRPUSDT">XRP / USDT</option>
+                <option value="DOGEUSDT">DOGE / USDT</option>
+              </select>
+            </label>
+            <label class="trade-pair-label">
+              Interval
+              <select id="tradeIntervalSelect" aria-label="Candle interval">
+                <option value="1m">1m</option>
+                <option value="5m" selected>5m</option>
+                <option value="15m">15m</option>
+                <option value="1h">1h</option>
+                <option value="4h">4h</option>
+                <option value="1d">1d</option>
+              </select>
+            </label>
+            <div class="trade-ticker" id="tradeTicker" aria-live="polite">
+              <span class="trade-ticker-price" id="tradeLastPrice">—</span>
+              <span class="trade-ticker-chg" id="tradePriceChange">—</span>
+            </div>
+            <div class="trade-conn" id="tradeConnBadge" data-state="off">Keys off</div>
+          </div>
+
+          <div class="trade-tabs" role="tablist" aria-label="Trading platform widgets">
+            <button type="button" class="trade-tab is-active" data-trade-tab="chart">Chart</button>
+            <button type="button" class="trade-tab" data-trade-tab="trade">Trade</button>
+            <button type="button" class="trade-tab" data-trade-tab="wallet">Wallet</button>
+            <button type="button" class="trade-tab" data-trade-tab="book">Book</button>
+            <button type="button" class="trade-tab" data-trade-tab="orders">Orders</button>
+            <button type="button" class="trade-tab" data-trade-tab="bots">Bots</button>
+            <button type="button" class="trade-tab" data-trade-tab="ai">AI Guide</button>
+            <button type="button" class="trade-tab" data-trade-tab="keys">Keys</button>
+          </div>
+
+          <div class="trade-grid">
+            <div class="trade-panel trade-panel-chart trade-widget is-active" data-trade-panel="chart">
+              <div class="trade-panel-head">
+                <h3>Price graph</h3>
+                <div class="trade-chart-tools">
+                  <div class="trade-chart-mode" role="group" aria-label="Chart type">
+                    <button type="button" class="trade-chart-mode-btn is-active" data-chart-mode="candles">Candles</button>
+                    <button type="button" class="trade-chart-mode-btn" data-chart-mode="line">Line</button>
+                    <button type="button" class="trade-chart-mode-btn" data-chart-mode="area">Area</button>
+                  </div>
+                  <span class="trade-live-dot" id="tradeLiveDot" title="Live feed"></span>
+                </div>
+              </div>
+              <div id="tradeChart" class="trade-chart" role="img" aria-label="Price chart"></div>
+              <p id="tradeChartStatus" class="form-note trade-chart-status" role="status" hidden></p>
+            </div>
+
+            <div class="trade-panel trade-panel-side trade-widget" data-trade-panel="trade" hidden>
+              <div class="trade-panel-head">
+                <h3>Spot order</h3>
+                <div class="trade-side-toggle" role="group" aria-label="Buy or sell">
+                  <button type="button" class="trade-side-btn is-buy is-active" data-trade-side="BUY">Buy</button>
+                  <button type="button" class="trade-side-btn is-sell" data-trade-side="SELL">Sell</button>
+                </div>
+              </div>
+              <form id="tradeOrderForm" class="trade-order-form">
+                <label>
+                  Type
+                  <select name="orderType" id="tradeOrderType">
+                    <option value="MARKET">Market</option>
+                    <option value="LIMIT">Limit</option>
+                  </select>
+                </label>
+                <label id="tradeLimitPriceWrap" hidden>
+                  Limit price (USDT)
+                  <input name="price" id="tradeLimitPrice" type="number" step="any" min="0" placeholder="0.00" />
+                </label>
+                <label>
+                  Quantity
+                  <input name="quantity" id="tradeQty" type="number" step="any" min="0" placeholder="0.00" required />
+                </label>
+                <div class="trade-qty-presets" role="group" aria-label="Quantity percent">
+                  <button type="button" data-qty-pct="25">25%</button>
+                  <button type="button" data-qty-pct="50">50%</button>
+                  <button type="button" data-qty-pct="75">75%</button>
+                  <button type="button" data-qty-pct="100">100%</button>
+                </div>
+                <p class="form-note" id="tradeOrderEst">Est. total: —</p>
+                <button class="trade-submit-btn" id="tradeSubmitBtn" type="submit">Buy</button>
+                <p id="tradeOrderStatus" class="form-note" role="status"></p>
+              </form>
+            </div>
+
+            <div class="trade-panel trade-widget" data-trade-panel="wallet" hidden>
+              <div class="trade-panel-head">
+                <h3>USDT wallet</h3>
+                <span class="premium-badge" title="Telegram Premium desk">Premium desk</span>
+              </div>
+              <p class="form-note">
+                Your <strong>USDT TRC20</strong> address is the deposit address that funds this desk.
+                Withdrawals are requested in @DTDSTOREBOT and confirmed by you after sending.
+              </p>
+              <div id="tradeWalletRoot" class="trade-wallet-root"></div>
+            </div>
+
+            <div class="trade-panel trade-widget" data-trade-panel="book" hidden>
+              <div class="trade-panel-head"><h3>Order book</h3></div>
+              <div class="trade-book" id="tradeOrderBook">
+                <div class="trade-book-col">
+                  <div class="trade-book-head">Asks</div>
+                  <div id="tradeAsks" class="trade-book-rows"></div>
+                </div>
+                <div class="trade-book-mid" id="tradeBookMid">—</div>
+                <div class="trade-book-col">
+                  <div class="trade-book-head">Bids</div>
+                  <div id="tradeBids" class="trade-book-rows"></div>
+                </div>
+              </div>
+              <div class="trade-panel-head trade-subhead"><h3>Recent trades</h3></div>
+              <div id="tradeRecent" class="trade-recent"></div>
+            </div>
+
+            <div class="trade-panel trade-widget" data-trade-panel="orders" hidden>
+              <div class="trade-panel-head">
+                <h3>Account</h3>
+                <button type="button" class="ghost-btn" id="tradeRefreshAccount">Refresh</button>
+              </div>
+              <div id="tradeBalances" class="trade-balances"></div>
+              <div class="trade-panel-head trade-subhead"><h3>Open orders</h3></div>
+              <div id="tradeOpenOrders" class="trade-table-wrap"></div>
+              <div class="trade-panel-head trade-subhead"><h3>Recent fills</h3></div>
+              <div id="tradeFills" class="trade-table-wrap"></div>
+            </div>
+
+            <div class="trade-panel trade-widget trade-bots-panel" data-trade-panel="bots" hidden>
+              <div class="trade-panel-head">
+                <h3>Bot control center</h3>
+                <span class="trade-bots-count" id="tradeBotsCount">—</span>
+              </div>
+              <div id="tradeBotsRoot" class="trade-bots-root"></div>
+            </div>
+
+            <div class="trade-panel trade-widget" data-trade-panel="ai" hidden>
+              <div class="trade-panel-head"><h3>AI trading guide</h3></div>
+              <p class="form-note">Educational analysis only — not financial advice. Uses live candle context for the selected pair.</p>
+              <div id="tradeAiChat" class="trade-ai-chat" aria-live="polite"></div>
+              <form id="tradeAiForm" class="trade-ai-form">
+                <input id="tradeAiInput" type="text" maxlength="500" placeholder="Ask about trend, risk, or levels…" required />
+                <button type="submit" class="smtp-primary-btn">Ask</button>
+              </form>
+              <p id="tradeAiStatus" class="form-note" role="status"></p>
+            </div>
+
+            <div class="trade-panel trade-widget" data-trade-panel="keys" hidden>
+              <div class="trade-panel-head"><h3>Binance API keys</h3></div>
+              <div class="trade-keys-callout">
+                <p><strong>On Binance → API Management:</strong> enable <em>Spot &amp; Margin Trading</em> only. <strong>Disable Withdrawals</strong>.</p>
+                <p>Keys are saved in this browser’s localStorage only. Disconnect clears them. Link your Telegram chat ID so <strong>@DTDSTOREBOT</strong> can send fill alerts.</p>
+              </div>
+              <form id="tradeKeysForm" class="trade-keys-form">
+                <label>
+                  API Key
+                  <input id="tradeApiKey" name="apiKey" type="password" autocomplete="off" placeholder="Binance API key" />
+                </label>
+                <label>
+                  API Secret
+                  <input id="tradeApiSecret" name="apiSecret" type="password" autocomplete="off" placeholder="Binance API secret" />
+                </label>
+                <label>
+                  Telegram chat ID <span class="muted">(Trading bot alerts)</span>
+                  <input id="tradeTgChatId" name="tgChatId" type="text" placeholder="e.g. 1802948414" />
+                </label>
+                <div class="trade-keys-actions">
+                  <button type="submit" class="smtp-primary-btn">Save &amp; test</button>
+                  <button type="button" class="ghost-btn" id="tradeDisconnect">Disconnect</button>
+                </div>
+                <p id="tradeKeysStatus" class="form-note" role="status"></p>
+              </form>
+            </div>
+          </div>
+          </div>
+        </section>
+
+        <!-- FAQ -->
+        <section id="faq" class="page section-shell faq-section page-with-visual" data-page="faq" aria-labelledby="faqTitle" hidden>
+          <div class="page-visual-bg" style="--page-visual: url('assets/store-hero-bg.png')" aria-hidden="true"></div>
+          <div class="page-intro">
+            <div class="page-intro-copy">
+              <p class="eyebrow">Help</p>
+              <h2 id="faqTitle">FAQ</h2>
+              <p class="section-subtext">Payments, delivery, Telegram bot, and support — short answers only.</p>
+              <div class="page-intro-pills" aria-hidden="true">
+                <span>USDT TRC20</span>
+                <span>Bitcoin</span>
+                <span>Paystack</span>
+                <span>@DTDSTOREBOT</span>
+              </div>
+            </div>
+            <div class="page-intro-media" aria-hidden="true">
+              <img src="assets/store-feature-crypto.png" alt="" width="640" height="640" loading="lazy" />
+              <img src="assets/store-feature-telegram.png" alt="" width="640" height="640" loading="lazy" />
+            </div>
+          </div>
+          <div class="faq-grid">
+            <details class="faq-item" open>
+              <summary>How do I pay?</summary>
+              <p>
+                Recommended: <strong>global Card / Bank through Paystack</strong>. Card details stay on Paystack’s secure hosted checkout.
+                Also: <strong>Bitcoin</strong>, <strong>Telegram Stars ⭐</strong>, or global Card / Bank checkout through Paystack. Prices are in <strong>USD</strong>.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>How do you earn with the bot (Stars / ads)?</summary>
+              <p>
+                Customers can pay with Telegram Stars. Stars land on your bot balance — open the bot’s
+                <strong>Balance / Monetization</strong> in Telegram to <strong>Buy Ads</strong> or withdraw via Fragment (TON).
+                Share your referral link from <code>/refer</code> in @DTDSTOREBOT. Full playbook: <code>/earn</code>.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>How does crypto checkout work with the bot?</summary>
+              <p>
+                In @DTDSTOREBOT: tap a product → open the official DTD Payment page → confirm your delivery email →
+                choose Card / Bank (recommended) or optional crypto. The same Order ID tracks either flow.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>How fast is delivery?</summary>
+              <p>Digital delivery starts after payment confirmation. Updates go to Telegram and email.</p>
+            </details>
+            <details class="faq-item">
+              <summary>Can I order from Telegram?</summary>
+              <p>Yes — open @DTDSTOREBOT and use /buy. Track with /order.</p>
+            </details>
+            <details class="faq-item">
+              <summary>Who supports DTD Store?</summary>
+              <p>
+                Supported internationally by
+                <a href="https://dvtechnologies.xyz" target="_blank" rel="noopener noreferrer">DV Technologies</a>.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>What is the SMTP product?</summary>
+              <p>
+                SMTP unlocks the store console at <a href="#smtp" data-nav="smtp">#smtp</a> for sending email
+                from contact@dvtechnologies.xyz (VPS Postfix) and SMS to phone numbers (VPS worker; Telegram notifies admin).
+                Unlock with your paid Order ID + checkout email. Admin accounts always have access.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Who do I contact for support?</summary>
+              <p>
+                Email <a id="faqSupportEmail" href="mailto:contact@dvtechnologies.xyz">contact@dvtechnologies.xyz</a>
+                for tracking, payments, and channel questions — or message vendor
+                <a id="faqVendorLink" href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">@Glock7money</a>
+                · owner
+                <a id="faqOwnerLink" href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">@Glock7money</a>
+                on Telegram.
+              </p>
+            </details>
+          </div>
+        </section>
+
+        <!-- PAYMENT (DTD secure pay hub) -->
+        <section id="payment" class="page checkout-section payment-hub page-with-visual" data-page="payment" aria-labelledby="checkoutTitle" hidden>
+          <div class="page-visual-bg" style="--page-visual: url('assets/store-feature-crypto.png')" aria-hidden="true"></div>
+          <div class="payment-trust-hero">
+            <div class="payment-brand-row">
+              <span class="payment-brand-mark">DTD</span>
+              <div>
+                <p class="eyebrow">DTD Payment</p>
+                <h2 class="payment-hero-title">Pay safely. Get delivery.</h2>
+              </div>
+            </div>
+            <p class="payment-hero-copy">This is the official DTD store payment page. Card details are handled on Paystack’s secure hosted checkout; DTD never sees or stores your card number. Crypto remains optional.</p>
+            <ul class="payment-trust-badges" aria-label="Trust signals">
+              <li><strong>Paystack</strong> secured global card · bank</li>
+              <li><strong>Email delivery</strong> captured before payment</li>
+              <li><strong>@DTDSTOREBOT</strong> support</li>
+              <li><strong>Order ID</strong> and payment verification</li>
+            </ul>
+            <ol class="payment-flow-steps">
+              <li><span>1</span> Enter delivery email</li>
+              <li><span>2</span> Pay by Card (recommended) or crypto</li>
+              <li><span>3</span> Track delivery with Order ID</li>
+            </ol>
+          </div>
+          <div class="checkout-summary glass">
+            <p class="eyebrow">Your order</p>
+            <h2 id="checkoutTitle">Summary</h2>
+            <div id="cartItems" class="cart-items"></div>
+            <div class="receipt-divider"></div>
+            <div class="total-row">
+              <span>Total <span class="currency-badge">USD</span></span>
+              <strong id="cartTotal">$0.00</strong>
+            </div>
+          </div>
+
+          <form id="checkoutForm" class="checkout-form glass">
+            <div class="sheet-header">
+              <h3>DTD Payment</h3>
+              <span class="secure-badge">Secure</span>
+            </div>
+
+            <div class="sheet-section">
+              <div class="sheet-section-title">1. Contact</div>
+              <div class="form-row two-columns">
+                <label>
+                  Full name
+                  <input name="name" type="text" placeholder="John Doe" required />
+                </label>
+                <label>
+                  Delivery email <span class="required-note">Required</span>
+                  <input name="email" type="email" placeholder="john@example.com" autocomplete="email" required />
+                </label>
+              </div>
+              <p class="delivery-email-assurance">
+                Your product and order updates use this email as the primary delivery destination. Check it carefully before paying.
+              </p>
+              <div class="form-row two-columns">
+                <label>
+                  Telegram username
+                  <input name="telegram" type="text" placeholder="@username" />
+                </label>
+                <label>
+                  Product account (optional)
+                  <input name="productAccount" type="text" placeholder="Username or login" />
+                </label>
+              </div>
+            </div>
+
+            <div class="sheet-section">
+              <div class="sheet-section-title">2. Delivery notes</div>
+              <label>
+                Details for delivery
+                <textarea name="orderNote" rows="2" placeholder="Where should this be delivered?"></textarea>
+              </label>
+            </div>
+
+            <div class="sheet-section">
+              <div class="sheet-section-title">3. How you pay <span class="sheet-hint">Card recommended</span></div>
+              <input type="hidden" id="paymentMethodInput" name="payment" value="" />
+              <div id="paymentMethodsGrid" class="payment-methods-grid"></div>
+
+              <div id="cryptoPaymentPanel" class="crypto-payment-card" hidden>
+                <div class="crypto-trust-note">
+                  <strong>Optional crypto path</strong>
+                  <p>Use this only if you already understand crypto wallets. DTD verifies the transaction on-chain and ties it to your Order ID and delivery email.</p>
+                  <button id="switchToCardPayment" class="secondary-button crypto-switch-card" type="button">Prefer Card? Switch to secure Paystack</button>
+                </div>
+                <div class="crypto-asset-header">
+                  <span id="cryptoAssetBadge" class="crypto-asset-badge usdt">USDT</span>
+                  <div class="crypto-asset-copy">
+                    <strong id="cryptoAssetTitle">USDT · Tron (TRC20)</strong>
+                    <p id="cryptoNetworkHint" class="form-note">Send only USDT on the Tron TRC20 network to this address.</p>
+                  </div>
+                </div>
+
+                <ol id="cryptoHowSteps" class="crypto-steps">
+                  <li>Scan the QR or copy the wallet address</li>
+                  <li>Send the exact amount on <strong>Tron (TRC20)</strong> only</li>
+                  <li>Paste your transaction hash below to place the order</li>
+                </ol>
+
+                <div class="btc-payment-flow">
+                  <div class="btc-qr-container">
+                    <img id="btcQrCode" src="" alt="Crypto payment QR" width="220" height="220" />
+                    <span class="btc-qr-caption">Scan to pay</span>
+                  </div>
+                  <div class="btc-details">
+                    <div class="btc-amount-row">
+                      <span>Send exactly</span>
+                      <strong id="btcAmountLabel">Add items to see amount</strong>
+                    </div>
+                    <div class="crypto-meta-row">
+                      <span id="cryptoNetworkLabel" class="payment-badge">Tron (TRC20)</span>
+                    </div>
+                    <div class="btc-address-row">
+                      <code id="cryptoAddress" class="crypto-address">Loading Address...</code>
+                      <button id="copyCryptoAddress" class="copy-btn" type="button">Copy</button>
+                    </div>
+                    <p id="cryptoWarning" class="crypto-warning">
+                      Don’t send NFTs to this address. Only USDT on Tron (TRC20) — other networks will lose funds.
+                    </p>
+                  </div>
+                </div>
+                <label class="tx-hash-field">
+                  Transaction hash
+                  <input
+                    id="paymentReferenceInput"
+                    name="paymentReference"
+                    type="text"
+                    placeholder="Paste TRC20 transaction hash"
+                    autocomplete="off"
+                  />
+                </label>
+              </div>
+
+              <div id="paystackPaymentPanel" class="paystack-panel" hidden>
+                <div class="paystack-trust-card">
+                  <p class="paystack-trust-title">Recommended · Global Card / Bank</p>
+                  <p class="form-note">
+                    Continue to <strong>Paystack’s hosted checkout</strong>. Your card details are entered there—not on DTD—and are never stored by this website.
+                  </p>
+                  <ul class="paystack-channel-list">
+                    <li>Card (Visa / Mastercard)</li>
+                    <li>Bank payment (where supported)</li>
+                    <li>Email tied to your verified Order ID</li>
+                  </ul>
+                  <p class="form-note paystack-reassure">You leave briefly to Paystack, then return to DTD after verification. No crypto wallet or QR code is required.</p>
+                </div>
+              </div>
+
+              <div id="starsPaymentPanel" class="stars-payment-panel" hidden>
+                <p class="form-note">
+                  Pay instantly with <strong>Telegram Stars ⭐</strong> inside Telegram.
+                  Best in the Mini App — tap Pay with Stars below.
+                </p>
+                <p class="form-note" id="starsAmountHint">Add items to see Stars amount.</p>
+              </div>
+
+              <div id="telegramPaymentPanel" class="telegram-payment-panel" hidden>
+                <p class="form-note" id="telegramPaymentNote">Contact our team on Telegram for updates.</p>
+                <a id="telegramPaymentLink" class="secondary-button full-width" href="#" target="_blank" rel="noopener noreferrer">
+                  Message @DTDSTOREBOT
+                </a>
+              </div>
+            </div>
+
+            <div class="checkout-actions">
+              <button id="paystackButton" class="paystack-pay-button" type="button" style="display: none;">
+                Continue to secure Card / Bank payment
+              </button>
+              <button id="dtdPaymentPageButton" class="dtd-payment-page-button" type="button" style="display: none;">
+                <span class="dtd-payment-page-button__mark">DTD</span>
+                <span>
+                  <strong>DTD Payment Page</strong>
+                  <small>Open the custom checkout preview</small>
+                </span>
+                <span aria-hidden="true">→</span>
+              </button>
+              <button id="starsPayButton" class="stars-pay-button" type="button" style="display: none;">
+                ⭐ Pay with Telegram Stars
+              </button>
+              <button id="submitButton" class="primary-button full-width glow" type="submit">
+                Place order
+              </button>
+            </div>
+            <p class="form-note text-center">Delivery uses your email first. Telegram is an optional backup for order updates and support.</p>
+          </form>
+
+          <div id="checkoutSuccess" class="checkout-success glass" style="display: none;">
+            <div class="success-icon-wrap">
+              <svg class="success-svg" viewBox="0 0 52 52">
+                <circle class="success-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="success-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+              </svg>
+            </div>
+            <h2>Order placed</h2>
+            <p class="success-message">Payment received and pending confirmation.</p>
+            <div class="success-details">
+              <div class="success-row">
+                <span>Order ID</span>
+                <strong id="successOrderId">#--</strong>
+              </div>
+              <div class="success-row">
+                <span>Confirmation</span>
+                <span id="successUserContact">Email & Telegram</span>
+              </div>
+            </div>
+            <button id="successCloseButton" class="primary-button full-width" type="button">
+              Continue shopping
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer shell-footer">
+        <div class="footer-bottom">
+          <span>© <span id="footerYear"></span> DTD Store</span>
+          <a href="https://dvtechnologies.xyz" target="_blank" rel="noopener noreferrer">DV Technologies</a>
+          <button id="copyStoreLink" class="text-link-button" type="button">Copy store link</button>
+        </div>
+      </footer>
+    </div>
+
+    <div id="telegramBot" class="telegram-bot" aria-live="polite">
+      <div id="telegramBotPanel" class="telegram-bot-panel" hidden>
+        <header class="telegram-bot-header">
+          <div>
+            <strong>DTD Assistant</strong>
+            <span>Powered by Telegram</span>
+          </div>
+          <button id="telegramBotClose" class="icon-button" type="button" aria-label="Close chat">×</button>
+        </header>
+        <div id="telegramBotMessages" class="telegram-bot-messages"></div>
+        <form id="telegramBotForm" class="telegram-bot-form">
+          <input name="name" type="text" placeholder="Your name" />
+          <input name="contact" type="text" placeholder="Email or @telegram" />
+          <textarea name="message" rows="2" placeholder="Ask about products or your order..." required></textarea>
+          <div class="telegram-bot-actions">
+            <a id="openTelegramLink" class="secondary-button" href="#" target="_blank" rel="noopener noreferrer" hidden>Open in Telegram</a>
+            <button class="primary-button" type="submit">Send</button>
+          </div>
+        </form>
+      </div>
+      <button id="telegramBotToggle" class="telegram-bot-toggle" type="button" aria-expanded="false" aria-controls="telegramBotPanel">
+        <span class="bot-icon" aria-hidden="true">✦</span>
+        <span class="bot-label">Chat</span>
+      </button>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="navBackdrop" class="nav-backdrop" hidden></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="bot-widget.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="app.js"></script>
+    <script src="smtp-console.js"></script>
+    <script type="module" src="trading-console.js"></script>
+    <script type="module" src="chat.js"></script>
+  </body>
+</html>
+

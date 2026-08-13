@@ -1,0 +1,255 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111827" />
+    <title>DTD STORE Admin</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
+    <link rel="shortcut icon" type="image/png" href="assets/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="shell.css" />
+    <link rel="stylesheet" href="tg-premium-ui.css" />
+    <script>
+      document.documentElement.classList.add("tg-premium-skin");
+    </script>
+    <script src="theme.js"></script>
+  </head>
+  <body class="has-shell admin-body">
+    <aside id="sideNav" class="side-nav admin-side" aria-label="Admin navigation">
+      <div class="side-nav-head">
+        <a class="brand side-brand" href="index.html" aria-label="DTD Store home">
+          <span class="brand-mark" aria-hidden="true"><img src="assets/dtd-logo.png" alt="" width="42" height="42" /></span>
+          <span class="brand-name">DTD Admin</span>
+        </a>
+        <button type="button" class="nav-close" data-nav-close aria-label="Close menu">×</button>
+      </div>
+
+      <nav class="side-menu">
+        <button type="button" class="side-link is-active" data-admin-page="overview">
+          <span class="side-link-icon" aria-hidden="true">▣</span>
+          Overview
+        </button>
+        <button type="button" class="side-link" data-admin-page="products">
+          <span class="side-link-icon" aria-hidden="true">◈</span>
+          Products
+        </button>
+        <button type="button" class="side-link" data-admin-page="orders">
+          <span class="side-link-icon" aria-hidden="true">◎</span>
+          Orders
+        </button>
+      </nav>
+
+      <div class="side-footer">
+        <a class="side-link muted" href="index.html">← Storefront</a>
+        <button id="copyLiveLink" class="side-link muted" type="button">Copy live link</button>
+      </div>
+    </aside>
+
+    <div class="shell-main">
+      <header class="shell-topbar">
+        <div class="shell-topbar-left">
+          <button id="navToggle" class="nav-toggle" type="button" aria-expanded="false" aria-controls="sideNav" aria-label="Open menu">
+            <span class="nav-toggle-bars" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </span>
+            <span class="nav-toggle-text">Menu</span>
+          </button>
+          <div class="shell-topbar-copy">
+            <p class="eyebrow">Backend</p>
+            <h1 id="adminShellTitle" class="shell-page-title">Overview</h1>
+          </div>
+        </div>
+        <div class="shell-topbar-actions">
+          <button id="themeToggle" class="icon-button theme-toggle" type="button" aria-label="Toggle color theme">
+            <span class="theme-icon" aria-hidden="true">◐</span>
+          </button>
+          <button id="logoutButton" class="secondary-button" type="button" hidden>Sign out</button>
+        </div>
+      </header>
+
+      <main class="shell-pages admin-pages">
+        <!-- LOGIN (always available when signed out) -->
+        <section id="adminLoginPage" class="page is-active admin-page" data-admin-page="login">
+          <form id="loginForm" class="checkout-form admin-login page-form">
+            <p class="eyebrow">Admin login</p>
+            <h2 id="adminTitle">Sign in to manage the store</h2>
+            <label>
+              Email
+              <input name="email" type="email" placeholder="admin@email.com" required />
+            </label>
+            <label>
+              Password
+              <input name="password" type="password" placeholder="Your Supabase password" required />
+            </label>
+            <button class="primary-button" type="submit">Sign in</button>
+            <p id="authStatus" class="form-note">Use the Supabase admin user for this project.</p>
+          </form>
+        </section>
+
+        <!-- OVERVIEW -->
+        <section id="adminOverviewPage" class="page admin-page" data-admin-page="overview" hidden>
+          <div id="adminSessionBar" class="session-bar admin-session" hidden>
+            <div>
+              <span class="session-dot"></span>
+              <strong>Admin active</strong>
+              <p id="sessionEmail">Signed in</p>
+            </div>
+          </div>
+          <div id="adminStats" class="admin-stats-strip" aria-label="Admin overview"></div>
+          <div class="admin-overview-grid">
+            <article class="admin-panel">
+              <h2>Quick actions</h2>
+              <div class="admin-actions-stack">
+                <button type="button" class="primary-button" data-admin-page="products">Manage products</button>
+                <button type="button" class="secondary-button" data-admin-page="orders">Review orders</button>
+                <button id="publishAllProducts" class="secondary-button" type="button">Publish all products</button>
+                <button id="resetProducts" class="danger-button" type="button">Reset sample products</button>
+              </div>
+            </article>
+            <article class="admin-panel">
+              <h2>Store links</h2>
+              <p class="section-subtext">Official surfaces buyers and support use.</p>
+              <ul class="admin-link-list">
+                <li><a href="index.html#products">Store catalog</a></li>
+                <li><a href="https://t.me/DTDSTOREBOT" target="_blank" rel="noopener noreferrer">@DTDSTOREBOT</a></li>
+                <li><a href="mailto:contact@dvtechnologies.xyz">contact@dvtechnologies.xyz</a></li>
+                <li><a href="https://dvtechnologies.xyz" target="_blank" rel="noopener noreferrer">DV Technologies</a></li>
+                <li><a href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">Owner @Glock7money</a></li>
+                <li><a href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">Vendor @Glock7money</a></li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <!-- PRODUCTS -->
+        <section id="adminProductsPage" class="page admin-page" data-admin-page="products" hidden>
+          <div class="admin-layout">
+            <form id="productForm" class="checkout-form admin-form">
+              <div class="panel-title-row">
+                <h2>Add / edit product</h2>
+              </div>
+              <input name="id" type="hidden" />
+              <div class="form-row two-columns">
+                <label>
+                  Product name
+                  <input name="name" type="text" placeholder="Example: Premium Access" required />
+                </label>
+                <label>
+                  Price in USD
+                  <input name="price" type="number" min="0.01" step="0.01" placeholder="15.00" required />
+                </label>
+              </div>
+              <label>
+                Description
+                <textarea name="description" rows="4" placeholder="Short product details" required></textarea>
+              </label>
+              <div class="form-row two-columns">
+                <label>
+                  Color
+                  <input name="color" type="color" value="#0f766e" />
+                </label>
+                <label>
+                  Image URL
+                  <input name="imageUrl" type="url" placeholder="https://example.com/product.png" />
+                </label>
+              </div>
+              <div class="admin-image-upload">
+                <label>
+                  Or add from file
+                  <input id="productImageFile" name="imageFile" type="file" accept="image/*" />
+                </label>
+                <img id="productImagePreview" class="admin-image-preview" alt="Product preview" />
+                <p id="productImageStatus" class="form-note" role="status"></p>
+              </div>
+              <label>
+                Store visibility
+                <select name="active">
+                  <option value="true">Visible</option>
+                  <option value="false">Hidden</option>
+                </select>
+              </label>
+              <div class="admin-actions">
+                <button class="primary-button" type="submit">Save product</button>
+                <button id="cancelEdit" class="secondary-button" type="button">Cancel</button>
+              </div>
+            </form>
+
+            <section class="admin-list-panel" aria-labelledby="currentProductsTitle">
+              <div class="panel-title-row">
+                <h2 id="currentProductsTitle">Current products</h2>
+                <span id="adminProductCount" class="count-pill">0 products</span>
+              </div>
+              <div id="adminProducts" class="admin-products"></div>
+            </section>
+          </div>
+
+          <div class="admin-layout" style="margin-top: 26px;">
+            <form id="mmshopForm" class="checkout-form admin-form">
+              <div class="panel-title-row">
+                <h2>Add / edit DTDSHOP.CC row</h2>
+              </div>
+              <input name="id" type="hidden" />
+              <div class="form-row two-columns">
+                <label>
+                  CC
+                  <input name="cc" type="number" min="1" step="1" placeholder="1" required />
+                </label>
+                <label>
+                  Name
+                  <input name="name" type="text" placeholder="Product name" required />
+                </label>
+              </div>
+              <label>
+                Details
+                <textarea name="details" rows="3" placeholder="Short product details" required></textarea>
+              </label>
+              <label>
+                Product
+                <input name="product" type="text" placeholder="Product / link / extra info" required />
+              </label>
+              <div class="admin-actions">
+                <button class="primary-button" type="submit">Save DTDSHOP row</button>
+                <button id="cancelMmshopEdit" class="secondary-button" type="button">Cancel</button>
+              </div>
+            </form>
+
+            <section class="admin-list-panel" aria-labelledby="mmshopCatalogTitle">
+              <div class="panel-title-row">
+                <h2 id="mmshopCatalogTitle">DTDSHOP.CC catalog</h2>
+                <span id="mmshopCatalogCount" class="count-pill">0 rows</span>
+              </div>
+              <div id="mmshopCatalogList" class="admin-products"></div>
+            </section>
+          </div>
+        </section>
+
+        <!-- ORDERS -->
+        <section id="adminOrdersPage" class="page admin-page" data-admin-page="orders" hidden>
+          <section class="admin-list-panel orders-panel" aria-labelledby="ordersTitle">
+            <div class="panel-title-row">
+              <h2 id="ordersTitle">Orders</h2>
+              <button id="refreshOrders" class="icon-button" type="button">Refresh</button>
+            </div>
+            <div id="adminOrders" class="admin-orders"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="navBackdrop" class="nav-backdrop" hidden></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="admin.js"></script>
+  </body>
+</html>

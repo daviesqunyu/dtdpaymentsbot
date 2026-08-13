@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <meta name="description" content="DTD Payment — pay by Card / Bank (Paystack) or deposit USDT (TRC20). Order delivered by email." />
+    <title>DTD Payment</title>
+    <link rel="icon" href="assets/favicon-32.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="dtd-payment.css" />
+  </head>
+  <body>
+    <main class="pay-shell">
+      <section class="order-pane">
+        <div class="order-pane__inner">
+          <a class="brand" href="/#payment" aria-label="Back to DTD Store">
+            <img src="assets/dtd-logo.png" alt="" width="42" height="42" />
+            <span>DTD Store</span>
+          </a>
+
+          <div class="order-heading">
+            <a href="/#payment" class="back-link" aria-label="Back">‹</a>
+            <div>
+              <p>Pay DTD Store</p>
+              <h1 id="checkoutTotal">$0.00</h1>
+              <span class="currency-label">USD</span>
+            </div>
+          </div>
+
+          <div id="checkoutItems" class="checkout-items" aria-live="polite"></div>
+
+          <div class="summary-lines">
+            <div>
+              <span>Subtotal</span>
+              <strong id="checkoutSubtotal">$0.00</strong>
+            </div>
+            <div>
+              <span>Digital delivery</span>
+              <strong>Free</strong>
+            </div>
+            <div class="summary-total">
+              <span>Total due</span>
+              <strong id="checkoutDue">$0.00</strong>
+            </div>
+          </div>
+
+          <div class="order-assurance">
+            <span aria-hidden="true">✓</span>
+            <p><strong>Email-first delivery</strong> Your receipt and product delivery use the email entered on this page.</p>
+          </div>
+
+          <footer>
+            <span>Powered by DTD Payment</span>
+            <a href="/#faq">Support</a>
+          </footer>
+        </div>
+      </section>
+
+      <section class="payment-pane">
+        <div class="payment-pane__inner">
+          <header class="mobile-brand">
+            <img src="assets/dtd-logo.png" alt="" width="36" height="36" />
+            <div>
+              <strong>DTD Payment</strong>
+              <span id="mobileTotal">$0.00 USD</span>
+            </div>
+          </header>
+
+          <form id="payForm" novalidate>
+            <section class="form-section">
+              <h2>Delivery email</h2>
+              <label for="customerEmail">Email</label>
+              <input
+                id="customerEmail"
+                name="email"
+                type="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                required
+              />
+              <p class="field-help">Receipt, Order ID, and product delivery go here.</p>
+            </section>
+
+            <section class="form-section">
+              <h2>Pay with</h2>
+              <div class="method-tabs" role="tablist" aria-label="Payment method">
+                <button class="method-tab is-active" type="button" role="tab" aria-selected="true" data-method="paystack">
+                  <span aria-hidden="true">💳</span> Card / Bank
+                </button>
+                <button class="method-tab" type="button" role="tab" aria-selected="false" data-method="usdt">
+                  <span aria-hidden="true">₮</span> USDT (TRC20)
+                </button>
+              </div>
+
+              <div id="paystackPanel" class="method-panel">
+                <p class="method-panel__lead">
+                  Continue to our secure <strong>Paystack</strong> checkout — pay by global Card or Bank.
+                </p>
+                <ul class="method-check-list">
+                  <li>Card (Visa / Mastercard)</li>
+                  <li>Bank payment where supported</li>
+                  <li>You return here after payment</li>
+                </ul>
+              </div>
+
+              <div id="usdtPanel" class="method-panel" hidden>
+                <p class="method-panel__lead">
+                  Send the exact amount in <strong>USDT on Tron (TRC20)</strong> to the wallet below, then paste your transaction hash.
+                </p>
+                <div class="wallet-row">
+                  <code id="usdtAddress" class="crypto-address">Loading address…</code>
+                  <button id="copyAddress" class="copy-btn" type="button">Copy</button>
+                </div>
+                <label class="tx-hash-field">
+                  Transaction hash
+                  <input
+                    id="txHash"
+                    name="txHash"
+                    type="text"
+                    placeholder="Paste TRC20 transaction hash"
+                    autocomplete="off"
+                  />
+                </label>
+              </div>
+            </section>
+
+            <div id="formNotice" class="form-notice" role="status" hidden></div>
+
+            <button id="payButton" class="pay-button" type="submit">
+              <span id="payButtonLabel">Continue to Card / Bank</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </form>
+
+          <div id="successBox" class="success-box" hidden>
+            <div class="success-icon" aria-hidden="true">✓</div>
+            <h2>Order placed</h2>
+            <p>Payment received and pending confirmation.</p>
+            <div class="success-details">
+              <div class="success-row">
+                <span>Order ID</span>
+                <strong id="successOrderId">#--</strong>
+              </div>
+              <div class="success-row">
+                <span>Delivery</span>
+                <span id="successEmail">—</span>
+              </div>
+            </div>
+            <a class="pay-button" href="/#track">Track order</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="dtd-payment.js" defer></script>
+  </body>
+</html>
