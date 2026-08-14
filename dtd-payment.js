@@ -1,4 +1,4 @@
-/* DTD Payment — simple live checkout. Card/Bank via Paystack, or USDT (TRC20) deposit. */
+/* DTD Payment — rigid, fast checkout. Card/Bank via Paystack, or USDT (TRC20) deposit. */
 
 const formatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -22,7 +22,7 @@ function normalizeCheckout(value) {
     ? value.items
         .map((item) => ({
           id: String(item?.id || ""),
-          name: String(item?.name || "DTD product"),
+          name: String(item?.name || ""),
           description: String(item?.description || ""),
           quantity: Math.max(1, Number(item?.quantity || 1)),
           priceUsd: Math.max(0, Number(item?.priceUsd || 0))
@@ -42,26 +42,23 @@ function normalizeCheckout(value) {
 
 const checkout = normalizeCheckout(readJson(sessionStorage, storageKey, {}));
 
-const itemsRoot = document.querySelector("#checkoutItems");
-const totalNodes = [
-  document.querySelector("#checkoutTotal"),
-  document.querySelector("#checkoutSubtotal"),
-  document.querySelector("#checkoutDue"),
-  document.querySelector("#mobileTotal")
-];
-const form = document.querySelector("#payForm");
-const emailInput = document.querySelector("#customerEmail");
-const formNotice = document.querySelector("#formNotice");
-const payButton = document.querySelector("#payButton");
-const payButtonLabel = document.querySelector("#payButtonLabel");
-const successBox = document.querySelector("#successBox");
-const successOrderId = document.querySelector("#successOrderId");
-const successEmail = document.querySelector("#successEmail");
-const usdtPanel = document.querySelector("#usdtPanel");
-const paystackPanel = document.querySelector("#paystackPanel");
-const usdtAddress = document.querySelector("#usdtAddress");
-const copyAddress = document.querySelector("#copyAddress");
-const txHashInput = document.querySelector("#txHash");
+const $ = (selector) => document.querySelector(selector);
+const itemsRoot = $("#checkoutItems");
+const totalNodes = [$("#checkoutTotal"), $("#checkoutSubtotal"), $("#checkoutDue"), $("#mobileTotal")];
+const form = $("#payForm");
+const emailInput = $("#customerEmail");
+const formNotice = $("#formNotice");
+const payButton = $("#payButton");
+const payButtonLabel = $("#payButtonLabel");
+const successBox = $("#successBox");
+const successOrderId = $("#successOrderId");
+const successEmail = $("#successEmail");
+const usdtPanel = $("#usdtPanel");
+const paystackPanel = $("#paystackPanel");
+const usdtAddress = $("#usdtAddress");
+const copyAddress = $("#copyAddress");
+const txHashInput = $("#txHash");
+const methodTabs = document.querySelectorAll(".method-tab");
 
 let storeConfig = {
   paystackPublicKey: "",
@@ -70,13 +67,14 @@ let storeConfig = {
   paystackConversionRate: 129
 };
 let usdtTrc20Address = "";
+let busy = false;
 
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
-    .replace(/</g, "<")
-    .replace(/>/g, ">")
-    .replace(/"/g, """);
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function renderOrder() {
@@ -110,13 +108,15 @@ function renderOrder() {
     .join("");
 }
 
-function showNotice(message) {
+function showNotice(message, isError) {
+  if (!formNotice) return;
   formNotice.textContent = message;
+  formNotice.classList.toggle("is-error", Boolean(isError));
   formNotice.hidden = false;
 }
 
 function hideNotice() {
-  formNotice.hidden = true;
+  if (formNotice) formNotice.hidden = true;
 }
 
 function currentMethod() {
@@ -124,15 +124,17 @@ function currentMethod() {
 }
 
 function setMethod(method) {
-  document.querySelectorAll(".method-tab").forEach((tab) => {
+  methodTabs.forEach((tab) => {
     const active = tab.dataset.method === method;
     tab.classList.toggle("is-active", active);
     tab.setAttribute("aria-selected", String(active));
   });
   const usdt = method === "usdt";
-  usdtPanel.hidden = !usdt;
-  paystackPanel.hidden = usdt;
-  payButtonLabel.textContent = usdt ? "Place order after deposit" : "Continue to Card / Bank";
+  if (usdtPanel) usdtPanel.hidden = !usdt;
+  if (paystackPanel) paystackPanel.hidden = usdt;
+  if (payButtonLabel) {
+    payButtonLabel.textContent = usdt ? "Place order after deposit" : "Continue to Card / Bank";
+  }
   hideNotice();
 }
 
@@ -142,102 +144,60 @@ async function loadConfig() {
     if (response.ok) {
       const data = await response.json();
       storeConfig = { ...storeConfig, ...data };
+      usdtTrc20Address = data.usdtTrc20Address || "";
+      if (usdtAddress) usdtAddress.textContent = usdtTrc20Address || "Not configured";
     }
+  } catch {
+    /* offline-safe: fall back to defaults */
+  }
+}
 
-  async function startPaystack() {
-    if (!checkout?.items?.length || checkout.totalUsd <= 0) {
-      showNotice("Return to DTD Store and add a product before checking out.", true);
-      return;
-    }
-    const email = emailInput.value.trim();
-    if (!email) {
-      showNotice("Enter your delivery email to continue.", true);
-      emailInput.focus();
-      return;
-    }
-
-    payBtn.disabled = true;
-    payBtnLabel.textContent = "Opening Paystack…";
-    try {
-      const response = await fetch("/api/paystack/initialize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          name: checkout.name || "DTD Customer",
-          amountUsd: checkout.totalUsd,
-          cartItems: checkout.items.map((item) => `${item.name} x${item.quantity}`).join(", ")
-        })
-      });
-      const payload = await response.json();
-      if (!response.ok || !payload.ok || !payload.authorization_url) {
-        throw new Error(payload.error || "Could not start Paystack payment.");
-      }
-
-      sessionStorage.setItem(
-        PENDING_KEY,
-        JSON.stringify({
-          reference: payload.reference,
-          email,
-          name: checkout.name || "",
-          telegram: checkout.telegram || "",
-          productAccount: "",
-          orderNote: checkout.note || "",
-          totalUsd: checkout.totalUsd,
-          items: checkout.items.map((item) => ({
-            product_id: item.id,
-            product_name: item.name,
-            quantity: item.quantity,
-            unit_price_usd: item.priceUsd
-          }))
-        })
-      );
-      window.location.href = payload.authorization_url;
-    } catch (error) {
-      showNotice(error.message || "Paystack failed to open.", true);
-      payBtn.disabled = false;
-      payBtnLabel.textContent = "Deposit & Place Order";
-    }
+async function startPaystack() {
+  if (busy) return;
+  if (!checkout?.items?.length || checkout.totalUsd <= 0) {
+    showNotice("Return to DTD Store and add a product before checking out.", true);
+    return;
+  }
+  const email = emailInput.value.trim();
+  if (!email) {
+    showNotice("Enter your delivery email to continue.", true);
+    emailInput.focus();
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    showNotice("Enter a valid email address.", true);
+    emailInput.focus();
+    return;
   }
 
-  async function submitCrypto() {
-    const email = emailInput.value.trim();
-    if (!email) {
-      showNotice("Enter your delivery email to continue.", true);
-      emailInput.focus();
-      return;
-    }
-    const txHash = txHashInput.value.trim();
-    if (!txHash) {
-      showNotice("Paste your USDT transaction hash.", true);
-      txHashInput.focus();
-      return;
-    }
-
-    payBtn.disabled = true;
-    payBtnLabel.textContent = "Placing order…";
-    try {
-      const orderId = await saveOrder({ paymentMethod: "USDT", paymentReference: txHash, email });
-      showSuccess(orderId, email);
-    } catch (error) {
-      showNotice(error.message || "Could not place order.", true);
-      payBtn.disabled = false;
-      payBtnLabel.textContent = "Confirm USDT deposit";
-    }
-  }
-
-  async function saveOrder({ paymentMethod, paymentReference, email }) {
-    const response = await fetch("/api/orders", {
+  busy = true;
+  payButton.disabled = true;
+  payButtonLabel.textContent = "Opening Paystack…";
+  try {
+    const response = await fetch("/api/paystack/initialize", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        customerName: checkout.name || "DTD Customer",
-        customerEmail: email,
-        telegramUsername: checkout.telegram || null,
-        paymentMethod,
-        paymentReference,
-        productAccount: null,
-        deliveryDetails: checkout.note || null,
+        email,
+        name: checkout.name || "DTD Customer",
+        amountUsd: checkout.totalUsd,
+        cartItems: checkout.items.map((item) => `${item.name} x${item.quantity}`).join(", ")
+      })
+    });
+    const payload = await response.json();
+    if (!response.ok || !payload.ok || !payload.authorization_url) {
+      throw new Error(payload.error || "Could not start Paystack payment.");
+    }
+
+    sessionStorage.setItem(
+      pendingKey,
+      JSON.stringify({
+        reference: payload.reference,
+        email,
+        name: checkout.name || "",
+        telegram: checkout.telegram || "",
+        productAccount: "",
+        orderNote: checkout.note || "",
         totalUsd: checkout.totalUsd,
         items: checkout.items.map((item) => ({
           product_id: item.id,
@@ -246,86 +206,149 @@ async function loadConfig() {
           unit_price_usd: item.priceUsd
         }))
       })
-    });
-    const payload = await response.json();
-    if (!response.ok) throw new Error(payload.error || "Order not saved");
-    return payload.orderId;
+    );
+    window.location.href = payload.authorization_url;
+  } catch (error) {
+    showNotice(error.message || "Paystack failed to open.", true);
+    payButton.disabled = false;
+    payButtonLabel.textContent = "Continue to Card / Bank";
+    busy = false;
+  }
+}
+
+async function submitCrypto() {
+  if (busy) return;
+  const email = emailInput.value.trim();
+  if (!email) {
+    showNotice("Enter your delivery email to continue.", true);
+    emailInput.focus();
+    return;
+  }
+  const txHash = txHashInput.value.trim();
+  if (!txHash) {
+    showNotice("Paste your USDT transaction hash.", true);
+    txHashInput.focus();
+    return;
   }
 
-  async function verifyAndPlaceOrder(reference, pending) {
-    const verifyResponse = await fetch("/api/paystack/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reference })
-    });
-    const verifyPayload = await verifyResponse.json();
-    if (!verifyResponse.ok || !verifyPayload.paid) {
-      throw new Error(verifyPayload.error || "Payment not confirmed yet.");
-    }
-    const orderId = await saveOrder({
-      paymentMethod: "Paystack",
-      paymentReference: reference,
-      email: pending.email
-    });
-    return orderId;
+  busy = true;
+  payButton.disabled = true;
+  payButtonLabel.textContent = "Placing order…";
+  try {
+    const orderId = await saveOrder({ paymentMethod: "USDT", paymentReference: txHash, email });
+    showSuccess(orderId, email);
+  } catch (error) {
+    showNotice(error.message || "Could not place order.", true);
+    payButton.disabled = false;
+    payButtonLabel.textContent = "Place order after deposit";
+    busy = false;
+  }
+}
+
+async function saveOrder({ paymentMethod, paymentReference, email }) {
+  const response = await fetch("/api/orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      customerName: checkout.name || "DTD Customer",
+      customerEmail: email,
+      telegramUsername: checkout.telegram || null,
+      paymentMethod,
+      paymentReference,
+      productAccount: null,
+      deliveryDetails: checkout.note || null,
+      totalUsd: checkout.totalUsd,
+      items: checkout.items.map((item) => ({
+        product_id: item.id,
+        product_name: item.name,
+        quantity: item.quantity,
+        unit_price_usd: item.priceUsd
+      }))
+    })
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error || "Order not saved");
+  return payload.orderId;
+}
+
+async function verifyAndPlaceOrder(reference, pending) {
+  const verifyResponse = await fetch("/api/paystack/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reference })
+  });
+  const verifyPayload = await verifyResponse.json();
+  if (!verifyResponse.ok || !verifyPayload.paid) {
+    throw new Error(verifyPayload.error || "Payment not confirmed yet.");
+  }
+  return saveOrder({
+    paymentMethod: "Paystack",
+    paymentReference: reference,
+    email: pending.email
+  });
+}
+
+function showSuccess(orderId, email) {
+  if (successBox) successBox.hidden = false;
+  if (successOrderId) successOrderId.textContent = `#${orderId}`;
+  if (successEmail) successEmail.textContent = email || "—";
+  if (form) form.hidden = true;
+  sessionStorage.removeItem(pendingKey);
+  sessionStorage.removeItem(storageKey);
+}
+
+async function handlePaystackReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const reference = params.get("reference") || params.get("trxref");
+  if (!reference) return false;
+
+  let pending = null;
+  try {
+    pending = JSON.parse(sessionStorage.getItem(pendingKey) || "null");
+  } catch {
+    pending = null;
+  }
+  if (!pending) {
+    showNotice("Payment reference found, but order details are missing.", true);
+    return true;
   }
 
-  function showSuccess(orderId, email) {
-    const card = successCard;
-    if (card) card.hidden = false;
-    if (successOrderId) successOrderId.textContent = `#${orderId}`;
-    const payCard = $(".pay-card");
-    const summaryCard = $(".summary-card");
-    if (payCard) payCard.hidden = true;
-    if (summaryCard) summaryCard.hidden = true;
-    sessionStorage.removeItem(PENDING_KEY);
-    sessionStorage.removeItem(CHECKOUT_KEY);
+  busy = true;
+  payButton.disabled = true;
+  payButtonLabel.textContent = "Verifying payment…";
+  try {
+    const orderId = await verifyAndPlaceOrder(reference, pending);
+    showSuccess(orderId, pending.email);
+    return true;
+  } catch (error) {
+    showNotice(error.message || "Payment not confirmed yet.", true);
+    payButton.disabled = false;
+    payButtonLabel.textContent = "Continue to Card / Bank";
+    busy = false;
+    return true;
   }
+}
 
-  async function handlePaystackReturn() {
-    const params = new URLSearchParams(window.location.search);
-    const reference = params.get("reference") || params.get("trxref");
-    if (!reference) return false;
+function bind() {
+  if (emailInput) emailInput.value = checkout.email || "";
+  renderOrder();
+  loadConfig();
 
-    let pending = null;
-    try {
-      pending = JSON.parse(sessionStorage.getItem(PENDING_KEY) || "null");
-    } catch {
-      pending = null;
-    }
-    if (!pending) {
-      showNotice("Payment reference found, but order details are missing.", true);
-      return true;
-    }
+  methodTabs.forEach((tab) => {
+    tab.addEventListener("click", () => setMethod(tab.dataset.method));
+  });
 
-    payBtn.disabled = true;
-    payBtnLabel.textContent = "Verifying payment…";
-    try {
-      const orderId = await verifyAndPlaceOrder(reference, pending);
-      showSuccess(orderId, pending.email);
-      return true;
-    } catch (error) {
-      showNotice(error.message || "Payment not confirmed yet.", true);
-      payBtn.disabled = false;
-      payBtnLabel.textContent = "Deposit & Place Order";
-      return true;
-    }
-  }
-
-  function bind() {
-    checkout = readCheckout();
-    if (emailInput) emailInput.value = checkout?.email || "";
-    renderOrder();
-    loadConfig();
-
-    paystackBtn?.addEventListener("click", () => setMethod("paystack"));
-    cryptoBtn?.addEventListener("click", () => setMethod("usdt"));
-    payBtn?.addEventListener("click", () => {
-      if (method === "usdt") submitCrypto();
+  if (payButton) {
+    payButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (currentMethod() === "usdt") submitCrypto();
       else startPaystack();
     });
-    copyAddressBtn?.addEventListener("click", async () => {
-      const addr = config?.usdtTrc20Address || "";
+  }
+
+  if (copyAddress) {
+    copyAddress.addEventListener("click", async () => {
+      const addr = usdtTrc20Address || storeConfig.usdtTrc20Address || "";
       if (!addr) {
         showNotice("USDT address not configured.", true);
         return;
@@ -337,13 +360,13 @@ async function loadConfig() {
         showNotice("Copy failed — select the address manually.");
       }
     });
-
-    handlePaystackReturn();
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bind);
-  } else {
-    bind();
-  }
-})();
+  handlePaystackReturn();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bind);
+} else {
+  bind();
+}
