@@ -43,7 +43,7 @@ function getSupabase(env) {
       });
       return resp.json();
     },
-    async from(table) {
+    from(table) {
       return {
         async insert(rows) {
           const resp = await fetch(`${url}/rest/v1/${table}`, {
