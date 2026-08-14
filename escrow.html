@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0e1621" />
+    <meta
+      name="description"
+      content="DTD Escrow — secure two-party escrow deals between buyer and seller. Powered by Binance."
+    />
+    <title>Escrow · DTD Store</title>
+    <link rel="icon" href="assets/favicon-32.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&family=Sora:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="tg-premium-ui.css" />
+    <link rel="stylesheet" href="escrow.css" />
+  </head>
+  <body class="escrow-page" data-theme="dark">
+    <div class="escrow-ambient" aria-hidden="true">
+      <div class="escrow-glow glow-a"></div>
+      <div class="escrow-glow glow-b"></div>
+    </div>
+
+    <main class="escrow-shell">
+      <header class="escrow-topbar">
+        <a class="escrow-brand" href="/" aria-label="Back to DTD Store">
+          <span class="escrow-brand-mark" aria-hidden="true">🛡</span>
+          <span class="escrow-brand-name">DTD ESCROW</span>
+          <span class="escrow-brand-tag">Binance-powered escrow</span>
+        </a>
+        <div class="escrow-topbar-actions">
+          <button id="escrowRefresh" class="escrow-icon-btn" type="button" aria-label="Refresh deals">⟳</button>
+          <a href="/#tools" class="escrow-back-link">Back to Tools</a>
+        </div>
+      </header>
+
+      <section class="escrow-hero">
+        <div class="escrow-hero-copy">
+          <p class="escrow-eyebrow">Two-party deals · Admin-controlled</p>
+          <h1>Secure escrow between buyer &amp; seller</h1>
+          <p>
+            Funds are held by the DTD escrow wallet until the deal is completed. The
+            controlling account releases funds to the seller only after both parties confirm.
+          </p>
+          <div class="escrow-hero-cta">
+            <button id="openCreateEscrow" class="escrow-primary-btn" type="button">+ New escrow deal</button>
+            <button id="openTrackEscrow" class="escrow-ghost-btn" type="button">Track by code</button>
+          </div>
+        </div>
+        <div class="escrow-hero-art" aria-hidden="true">
+          <div class="escrow-shield">🛡</div>
+          <div class="escrow-handshake">🤝</div>
+          <div class="escrow-coin">₮</div>
+        </div>
+      </section>
+
+      <section class="escrow-stats" aria-label="Escrow overview">
+        <div class="escrow-stat-card">
+          <span class="escrow-stat-label">Total deals</span>
+          <strong id="statTotal">0</strong>
+        </div>
+        <div class="escrow-stat-card">
+          <span class="escrow-stat-label">Active</span>
+          <strong id="statActive">0</strong>
+        </div>
+        <div class="escrow-stat-card">
+          <span class="escrow-stat-label">Completed</span>
+          <strong id="statCompleted">0</strong>
+        </div>
+        <div class="escrow-stat-card">
+          <span class="escrow-stat-label">Volume</span>
+          <strong id="statVolume">$0</strong>
+        </div>
+      </section>
+
+      <section class="escrow-main">
+        <div class="escrow-filter-row">
+          <div class="escrow-tabs" role="tablist" aria-label="Filter escrow deals">
+            <button class="escrow-tab is-active" type="button" data-filter="all">All</button>
+            <button class="escrow-tab" type="button" data-filter="open">Open</button>
+            <button class="escrow-tab" type="button" data-filter="active">Active</button>
+            <button class="escrow-tab" type="button" data-filter="funded">Funded</button>
+            <button class="escrow-tab" type="button" data-filter="released">Completed</button>
+            <button class="escrow-tab" type="button" data-filter="disputed">Disputed</button>
+          </div>
+          <div class="escrow-search">
+            <input id="escrowSearch" type="search" placeholder="Search code / buyer / seller" autocomplete="off" />
+          </div>
+        </div>
+
+        <div id="escrowList" class="escrow-list" aria-live="polite">
+          <div class="escrow-empty">
+            <span aria-hidden="true">🛡</span>
+            <h3>No escrow deals yet</h3>
+            <p>Create your first escrow deal to securely manage a two-party transaction.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Create escrow modal -->
+    <div id="createEscrowModal" class="escrow-modal" hidden>
+      <div class="escrow-modal-backdrop" data-escrow-close></div>
+      <div class="escrow-modal-card" role="dialog" aria-modal="true" aria-labelledby="createEscrowTitle">
+        <header class="escrow-modal-head">
+          <div>
+            <h2 id="createEscrowTitle">New escrow deal</h2>
+            <p>Funds are held by the escrow wallet until both parties confirm.</p>
+          </div>
+          <button type="button" class="escrow-modal-close" data-escrow-close aria-label="Close">×</button>
+        </header>
+
+        <form id="createEscrowForm" novalidate>
+          <div class="escrow-field">
+            <label for="escrowTitle">Deal title</label>
+            <input id="escrowTitle" name="title" type="text" placeholder="e.g. iPhone 15 Pro sale" required />
+          </div>
+
+          <div class="escrow-field">
+            <label for="escrowDescription">Description</label>
+            <textarea id="escrowDescription" name="description" rows="2" placeholder="Condition, delivery terms, notes…"></textarea>
+          </div>
+
+          <div class="escrow-grid-2">
+            <div class="escrow-field">
+              <label for="escrowAmount">Amount (USD)</label>
+              <input id="escrowAmount" name="amountUsd" type="number" min="1" step="0.01" placeholder="0.00" required />
+            </div>
+            <div class="escrow-field">
+              <label for="escrowCurrency">Asset</label>
+              <select id="escrowCurrency" name="asset">
+                <option value="USDT">USDT</option>
+                <option value="BTC">BTC</option>
+                <option value="ETH">ETH</option>
+                <option value="BNB">BNB</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="escrow-grid-2">
+            <div class="escrow-field">
+              <label for="escrowFee">Escrow fee (%)</label>
+              <input id="escrowFee" name="feePercent" type="number" min="0" max="50" step="0.25" value="2" />
+            </div>
+            <div class="escrow-field">
+              <label for="escrowNetwork">Network</label>
+              <select id="escrowNetwork" name="network">
+                <option value="TRC20">TRC20 (Tron)</option>
+                <option value="BEP20">BEP20 (BSC)</option>
+                <option value="ERC20">ERC20 (Ethereum)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="escrow-section-label">Buyer</div>
+          <div class="escrow-field">
+            <label for="escrowBuyer">Buyer Telegram handle</label>
+            <input id="escrowBuyer" name="buyerTelegram" type="text" placeholder="@buyer_username" required />
+          </div>
+          <div class="escrow-field">
+            <label for="escrowBuyerAddress">Buyer payout address <span class="escrow-optional">(refund wallet)</span></label>
+            <input id="escrowBuyerAddress" name="buyerPayoutAddress" type="text" placeholder="TRC20 / BSC / ERC20 address" />
+          </div>
+
+          <div class="escrow-section-label">Seller</div>
+          <div class="escrow-field">
+            <label for="escrowSeller">Seller Telegram handle</label>
+            <input id="escrowSeller" name="sellerTelegram" type="text" placeholder="@seller_username" required />
+          </div>
+          <div class="escrow-field">
+            <label for="escrowSellerAddress">Seller payout address</label>
+            <input id="escrowSellerAddress" name="sellerPayoutAddress" type="text" placeholder="TRC20 / BSC / ERC20 address" />
+          </div>
+
+          <div id="escrowFormNotice" class="escrow-notice" hidden></div>
+
+          <div class="escrow-modal-foot">
+            <button type="button" class="escrow-ghost-btn" data-escrow-close>Cancel</button>
+            <button id="createEscrowSubmit" type="submit" class="escrow-primary-btn">Create escrow deal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Track modal -->
+    <div id="trackEscrowModal" class="escrow-modal" hidden>
+      <div class="escrow-modal-backdrop" data-escrow-close></div>
+      <div class="escrow-modal-card escrow-modal-card--sm" role="dialog" aria-modal="true" aria-labelledby="trackEscrowTitle">
+        <header class="escrow-modal-head">
+          <div>
+            <h2 id="trackEscrowTitle">Track escrow deal</h2>
+            <p>Enter the deal code (e.g. <code>ESR-XXXXXX</code>).</p>
+          </div>
+          <button type="button" class="escrow-modal-close" data-escrow-close aria-label="Close">×</button>
+        </header>
+        <form id="trackEscrowForm" novalidate>
+          <div class="escrow-field">
+            <label for="trackEscrowCode">Deal code</label>
+            <input id="trackEscrowCode" name="code" type="text" placeholder="ESR-XXXXXX" autocomplete="off" required />
+          </div>
+          <div id="trackEscrowNotice" class="escrow-notice" hidden></div>
+          <div class="escrow-modal-foot">
+            <button type="button" class="escrow-ghost-btn" data-escrow-close>Cancel</button>
+            <button type="submit" class="escrow-primary-btn">Look up deal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Detail modal -->
+    <div id="detailEscrowModal" class="escrow-modal" hidden>
+      <div class="escrow-modal-backdrop" data-escrow-close></div>
+      <div class="escrow-modal-card escrow-modal-card--lg" role="dialog" aria-modal="true">
+        <header class="escrow-modal-head">
+          <div>
+            <h2 id="detailEscrowTitle">Escrow deal</h2>
+            <span id="detailEscrowCode" class="escrow-code">ESR-XXXXXX</span>
+          </div>
+          <button type="button" class="escrow-modal-close" data-escrow-close aria-label="Close">×</button>
+        </header>
+
+        <div class="escrow-status-banner" id="detailEscrowStatus">—</div>
+
+        <div class="escrow-detail-body">
+          <div class="escrow-detail-summary">
+            <p class="escrow-detail-title" id="detailEscrowTitleText">—</p>
+            <p class="escrow-detail-desc" id="detailEscrowDesc">—</p>
+
+            <div class="escrow-detail-amounts">
+              <div>
+                <span>Amount</span>
+                <strong id="detailEscrowAmount">$0.00</strong>
+              </div>
+              <div>
+                <span>Fee</span>
+                <strong id="detailEscrowFee">0%</strong>
+              </div>
+              <div>
+                <span>Seller receives</span>
+                <strong id="detailEscrowNet">$0.00</strong>
+              </div>
+            </div>
+
+            <div class="escrow-parties">
+              <div class="escrow-party">
+                <span class="escrow-party-badge is-buyer" aria-hidden="true">B</span>
+                <div>
+                  <strong>Buyer</strong>
+                  <span id="detailEscrowBuyer">@—</span>
+                </div>
+              </div>
+              <div class="escrow-party-arrow" aria-hidden="true">⇄</div>
+              <div class="escrow-party">
+                <span class="escrow-party-badge is-seller" aria-hidden="true">S</span>
+                <div>
+                  <strong>Seller</strong>
+                  <span id="detailEscrowSeller">@—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="escrow-detail-section">
+            <h3>Deposit address</h3>
+            <div class="escrow-address-row">
+              <code id="detailEscrowAddress" class="escrow-address">—</code>
+              <button id="detailCopyAddress" class="escrow-icon-btn" type="button" aria-label="Copy deposit address">⧉</button>
+            </div>
+            <p class="escrow-field-help" id="detailEscrowNetworkHint">Send funds on this network.</p>
+          </div>
+
+          <div class="escrow-detail-section">
+            <h3>Timeline</h3>
+            <ul id="detailEscrowTimeline" class="escrow-timeline"></ul>
+          </div>
+
+          <div class="escrow-detail-section">
+            <h3>Deposit transaction</h3>
+            <div class="escrow-tx-row">
+              <input id="detailEscrowTxHash" type="text" placeholder="Paste deposit TXID / transaction hash" autocomplete="off" />
+              <button id="detailSaveTxHash" class="escrow-ghost-btn" type="button">Save</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="escrow-detail-actions" id="detailEscrowActions"></div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="escrowToast" class="escrow-toast" role="status" hidden></div>
+
+    <script src="escrow.js" defer></script>
+  </body>
+</html>

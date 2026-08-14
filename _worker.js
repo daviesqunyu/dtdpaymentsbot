@@ -69,6 +69,23 @@ function getSupabase(env) {
           });
           const data = await resp.json();
           return { data, error: resp.ok ? null : data };
+        },
+        async update(values, filter = {}) {
+          const filterParams = Object.entries(filter)
+            .map(([k, v]) => `${k}=eq.${encodeURIComponent(v)}`)
+            .join("&");
+          const resp = await fetch(`${url}/rest/v1/${table}?${filterParams}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: key,
+              Authorization: `Bearer ${key}`,
+              Prefer: "return=representation"
+            },
+            body: JSON.stringify(values)
+          });
+          const data = await resp.json();
+          return { data, error: resp.ok ? null : data };
         }
       };
     }
@@ -1025,6 +1042,295 @@ async function handleSmtpOtp(request, env) {
   return json({ error: "Method not allowed." }, 405);
 }
 
+// ─── Escrow (Binance-powered two-party escrow) ──────────
+
+function binanceBase(env) {
+  return env.BINANCE_API_BASE_URL || "https://api.binance.com";
+}
+
+function binanceConfigured(env) {
+  return Boolean(env.BINANCE_API_KEY && env.BINANCE_API_SECRET);
+}
+
+async function hmacSha256(secret, data) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(data)
+  );
+  return Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function binanceSignedRequest(env, path, params = {}) {
+  if (!binanceConfigured(env)) {
+    throw new Error("Binance API keys are not configured.");
+  }
+  const paramsWithTimestamp = { ...params, timestamp: Date.now() };
+  const query = new URLSearchParams(paramsWithTimestamp).toString();
+  const signature = await hmacSha256(env.BINANCE_API_SECRET, query);
+  const url = `${binanceBase(env)}${path}?${query}&signature=${signature}`;
+  const response = await fetch(url, {
+    headers: { "X-MBX-APIKEY": env.BINANCE_API_KEY }
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.msg || `Binance API error (${response.status}).`);
+  }
+  return data;
+}
+
+function binanceNetwork(asset, network) {
+  if (asset === "USDT") return network === "BEP20" ? "BSC" : network === "ERC20" ? "ETH" : "TRX";
+  if (asset === "BTC") return "BTC";
+  if (asset === "ETH") return "ETH";
+  if (asset === "BNB") return "BSC";
+  return "TRX";
+}
+
+async function binanceDepositAddress(env, asset, network) {
+  return binanceSignedRequest(env, "/sapi/v1/capital/deposit/address", {
+    coin: asset,
+    network: binanceNetwork(asset, network)
+  });
+}
+
+async function escrowDepositAddress(env, asset, network) {
+  if (binanceConfigured(env)) {
+    try {
+      const deposit = await binanceDepositAddress(env, asset, network);
+      if (deposit.address) return deposit.address;
+    } catch {
+      /* fall back to the admin wallet below */
+    }
+  }
+  if (asset === "USDT" && env.USDT_TRC20_ADDRESS) return env.USDT_TRC20_ADDRESS;
+  if (env.BTC_ADDRESS) return env.BTC_ADDRESS;
+  return `PENDING-${asset}-${network}`;
+}
+
+function escrowCode() {
+  const suffix = Math.random().toString(36).slice(2, 8).toUpperCase();
+  return `ESR-${suffix}`;
+}
+
+async function escrowInsert(sb, session, transactions) {
+  const { data, error } = await sb.from("escrow_sessions").insert(session);
+  if (error) throw new Error(error.message || "Could not save escrow session.");
+  const row = data?.[0] || session;
+  if (transactions?.length) {
+    const txRows = transactions.map((tx) => ({
+      session_id: row.id,
+      ...tx
+    }));
+    await sb.from("escrow_transactions").insert(txRows);
+  }
+  return row;
+}
+
+async function escrowList(sb) {
+  const { data, error } = await sb.from("escrow_sessions").select("*");
+  if (error) return [];
+  const sessions = data || [];
+  const out = [];
+  for (const session of sessions) {
+    const { data: txs } = await sb.from("escrow_transactions").select("*", { session_id: session.id });
+    out.push({ ...session, transactions: txs || [] });
+  }
+  return out;
+}
+
+async function handleEscrowList(env) {
+  const sb = getSupabase(env);
+  if (!sb) return json({ error: "Supabase is not configured." }, 500);
+  const escrows = await escrowList(sb);
+  return json({ escrows });
+}
+
+async function handleEscrowCreate(request, env) {
+  const sb = getSupabase(env);
+  if (!sb) return json({ error: "Supabase is not configured." }, 500);
+
+  const body = await request.json();
+  const title = String(body.title || "").trim();
+  const amountUsd = Number(body.amountUsd || 0);
+  const buyerTelegram = String(body.buyerTelegram || "").trim();
+  const sellerTelegram = String(body.sellerTelegram || "").trim();
+  const asset = String(body.asset || "USDT").trim();
+  const network = String(body.network || "TRC20").trim();
+  const feePercent = Number(body.feePercent || 0);
+
+  if (!title) return json({ error: "Deal title is required." }, 400);
+  if (!(amountUsd > 0)) return json({ error: "Amount must be greater than zero." }, 400);
+  if (!buyerTelegram || !sellerTelegram) return json({ error: "Both buyer and seller handles are required." }, 400);
+
+  const depositAddress = await escrowDepositAddress(env, asset, network);
+  const code = escrowCode();
+
+  let session;
+  try {
+    session = await escrowInsert(
+      sb,
+      {
+        code,
+        title,
+        description: String(body.description || "").trim(),
+        amount_usd: amountUsd,
+        currency: asset,
+        asset,
+        network,
+        buyer_telegram: buyerTelegram.replace(/^@/, ""),
+        seller_telegram: sellerTelegram.replace(/^@/, ""),
+        buyer_payout_address: String(body.buyerPayoutAddress || "").trim(),
+        seller_payout_address: String(body.sellerPayoutAddress || "").trim(),
+        deposit_address: depositAddress,
+        escrow_fee: feePercent,
+        status: "open"
+      },
+      [{ kind: "created", actor: "admin", amount_usd: amountUsd, message: "Escrow deal created." }]
+    );
+  } catch (error) {
+    return json({ error: error.message }, 500);
+  }
+
+  const escrowMessage = [
+    "<b>🛡 New Escrow Deal</b>",
+    `🔖 Code: <code>${code}</code>`,
+    `📌 Title: ${title}`,
+    `💵 Amount: $${amountUsd.toFixed(2)} ${asset} (${network})`,
+    feePercent ? `💸 Fee: ${feePercent}%` : null,
+    `👤 Buyer: @${buyerTelegram.replace(/^@/, "")}`,
+    `👤 Seller: @${sellerTelegram.replace(/^@/, "")}`,
+    `🏦 Deposit address: <code>${depositAddress}</code>`,
+    "",
+    "Wait for the buyer to fund the deposit wallet, then mark the deal as funded."
+  ].filter(Boolean).join("\n");
+  if (env.TELEGRAM_ADMIN_CHAT_ID) await sendTelegram(env, env.TELEGRAM_ADMIN_CHAT_ID, escrowMessage);
+
+  return json({ ok: true, escrow: session, message: "Escrow deal created." }, 201);
+}
+
+async function handleEscrowByCode(request, env, code) {
+  const sb = getSupabase(env);
+  if (!sb) return json({ error: "Supabase is not configured." }, 500);
+
+  const normalized = String(code || "").trim().toUpperCase();
+  const { data, error } = await sb.from("escrow_sessions").select("*", { code: normalized });
+  if (error) return json({ error: "Could not look up the deal." }, 500);
+  const session = (data || [])[0];
+  if (!session) return json({ error: "Escrow deal not found." }, 404);
+
+  const { data: txs } = await sb.from("escrow_transactions").select("*", { session_id: session.id });
+  return json({ ...session, transactions: txs || [] });
+}
+
+async function handleEscrowStatus(request, env, id) {
+  const sb = getSupabase(env);
+  if (!sb) return json({ error: "Supabase is not configured." }, 500);
+
+  const body = await request.json();
+  const nextStatus = String(body.status || "").trim();
+  const allowed = ["open", "active", "funded", "disputed", "released", "cancelled"];
+  if (!allowed.includes(nextStatus)) return json({ error: "Invalid status." }, 400);
+
+  const { data, error } = await sb.from("escrow_sessions").select("*", { id });
+  if (error) return json({ error: "Could not load the deal." }, 500);
+  const session = (data || [])[0];
+  if (!session) return json({ error: "Escrow deal not found." }, 404);
+
+  const updates = { status: nextStatus };
+  let releaseNote = "";
+
+  if (nextStatus === "funded") {
+    updates.funded_at = new Date().toISOString();
+    updates.deposit_tx_hash = String(body.txHash || session.deposit_tx_hash || "").trim() || session.deposit_tx_hash;
+  }
+  if (nextStatus === "released") {
+    updates.released_at = new Date().toISOString();
+    if (session.seller_payout_address && binanceConfigured(env)) {
+      try {
+        const amount = Number(session.amount_usd || 0);
+        const feePercent = Number(session.escrow_fee || 0);
+        const net = Math.max(0, amount - (amount * feePercent) / 100);
+        const withdraw = await binanceSignedRequest(env, "/sapi/v1/capital/withdraw/apply", {
+          coin: session.asset || "USDT",
+          network: binanceNetwork(session.asset || "USDT", session.network || "TRC20"),
+          address: session.seller_payout_address,
+          amount: net.toString(),
+          name: `Escrow ${session.code}`
+        });
+        releaseNote = withdraw.id ? `Withdrawal ID ${withdraw.id}.` : "Withdrawal submitted.";
+      } catch (err) {
+        releaseNote = `Auto-withdraw failed (${err.message}). Release marked manually.`;
+      }
+    } else {
+      releaseNote = "Released manually (no Binance payout address on file).";
+    }
+  }
+
+  const { error: updateError } = await sb.from("escrow_sessions").update(updates, { id });
+  if (updateError) return json({ error: updateError.message || "Update failed." }, 500);
+
+  await sb.from("escrow_transactions").insert({
+    session_id: id,
+    kind: nextStatus,
+    actor: "admin",
+    amount_usd: session.amount_usd,
+    tx_hash: updates.deposit_tx_hash || null,
+    message: releaseNote || `Status changed to ${nextStatus}.`
+  });
+
+  const statusMessage = [
+    `<b>🛡 Escrow Update</b>`,
+    `🔖 Code: <code>${session.code}</code>`,
+    `📌 ${session.title}`,
+    `🔄 Status: ${nextStatus.toUpperCase()}`,
+    releaseNote || "No message."
+  ].join("\n");
+  if (env.TELEGRAM_ADMIN_CHAT_ID) await sendTelegram(env, env.TELEGRAM_ADMIN_CHAT_ID, statusMessage);
+
+  return json({ ok: true, message: `Deal marked ${nextStatus}.`, note: releaseNote });
+}
+
+async function handleEscrowTxHash(request, env, id) {
+  const sb = getSupabase(env);
+  if (!sb) return json({ error: "Supabase is not configured." }, 500);
+
+  const body = await request.json();
+  const txHash = String(body.txHash || "").trim();
+  if (!txHash) return json({ error: "Transaction hash is required." }, 400);
+
+  const { data, error } = await sb.from("escrow_sessions").select("*", { id });
+  if (error) return json({ error: "Could not load the deal." }, 500);
+  const session = (data || [])[0];
+  if (!session) return json({ error: "Escrow deal not found." }, 404);
+
+  const { error: updateError } = await sb.from("escrow_sessions").update(
+    { deposit_tx_hash: txHash },
+    { id }
+  );
+  if (updateError) return json({ error: updateError.message || "Update failed." }, 500);
+
+  await sb.from("escrow_transactions").insert({
+    session_id: id,
+    kind: "funded",
+    actor: "admin",
+    amount_usd: session.amount_usd,
+    tx_hash: txHash,
+    message: "Deposit transaction hash recorded."
+  });
+
+  return json({ ok: true, message: "Transaction hash saved." });
+}
+
 // ─── Router ─────────────────────────────────────────────
 
 export default {
@@ -1054,6 +1360,24 @@ export default {
       if (path === "/api/smtp/send-sms" && method === "POST") return await handleSmtpSendSms(request, env);
       if (path === "/api/smtp/jobs" && method === "GET") return await handleSmtpJobs(request, env);
       if (path === "/api/smtp/otp" && (method === "GET" || method === "POST")) return await handleSmtpOtp(request, env);
+
+      if (path === "/api/escrow" && method === "GET") return await handleEscrowList(env);
+      if (path === "/api/escrow" && method === "POST") return await handleEscrowCreate(request, env);
+
+      const escrowByCodeMatch = path.match(/^\/api\/escrow\/code\/([^/]+)$/);
+      if (escrowByCodeMatch && method === "GET") {
+        return await handleEscrowByCode(request, env, decodeURIComponent(escrowByCodeMatch[1]));
+      }
+
+      const escrowStatusMatch = path.match(/^\/api\/escrow\/([^/]+)\/status$/);
+      if (escrowStatusMatch && method === "POST") {
+        return await handleEscrowStatus(request, env, escrowStatusMatch[1]);
+      }
+
+      const escrowTxMatch = path.match(/^\/api\/escrow\/([^/]+)\/txhash$/);
+      if (escrowTxMatch && method === "POST") {
+        return await handleEscrowTxHash(request, env, escrowTxMatch[1]);
+      }
 
       return json({ error: "Not found." }, 404);
     } catch (error) {
