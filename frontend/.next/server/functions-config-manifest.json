@@ -1,1 +1,1 @@
-{"version":1,"functions":{"/smtp":{},"/payment":{},"/chat":{},"/trade":{},"/track":{},"/dtdshopcc":{}}}
+{"version":1,"functions":{"/smtp":{},"/chat":{},"/track":{},"/trade":{},"/dtdshopcc":{},"/payment":{}}}

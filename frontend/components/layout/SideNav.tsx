@@ -6,6 +6,7 @@ import { Menu, X, Store, CreditCard, Bot, ShieldAlert, MessageSquare, Phone, Tre
 
 export default function SideNav({ className = '' }) {
   const [open, setOpen] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
 
   const navItems = [
     { href: '/',     icon: <Store size={20} />, label: 'Store' },
@@ -17,7 +18,8 @@ export default function SideNav({ className = '' }) {
   ]
 
   useEffect(() => {
-    setOpen(window.innerWidth >= 768)
+    setOpen(typeof window !== 'undefined' && window.innerWidth >= 768)
+    setIsMobile(typeof window !== 'undefined' && window.innerWidth < 768)
   }, [])
 
   return (
@@ -33,7 +35,7 @@ export default function SideNav({ className = '' }) {
             </span>
             <span className="font-sora font-bold text-xl text-cyber-text tracking-tight">DTD<span className="text-cyber-neon">STORE</span></span>
           </Link>
-          {window.innerWidth < 768 && (
+          {isMobile && (
             <button onClick={() => setOpen(false)} className="p-2 text-cyber-muted hover:text-cyber-text">
               <X size={20} />
             </button>
