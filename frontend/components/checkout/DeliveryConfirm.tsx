@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { ArrowRight, CheckCircle2, Mail, FileText } from 'lucide-react'
 
 export function DeliveryConfirm({ orderId, downloadUrl, email }: { orderId: string; downloadUrl?: string; email?: string }) {
@@ -33,9 +32,9 @@ export function DeliveryConfirm({ orderId, downloadUrl, email }: { orderId: stri
       <p className="text-xs text-cyber-muted mt-4">
         A receipt has been sent to your Telegram and email. Save your Order ID for support.
       </p>
-      <Link href="/track" className="mt-4 inline-flex items-center gap-2 text-sm text-cyber-neon hover:text-cyber-neon/80">
+      <a href="/track" className="mt-4 inline-flex items-center gap-2 text-sm text-cyber-neon hover:text-cyber-neon/80">
         Track order <ArrowRight size={16} />
-      </Link>
+      </a>
     </div>
   )
 }
