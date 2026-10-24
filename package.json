@@ -22,8 +22,11 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2"
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "ioredis": "^6.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.23.4"
   },
   "devDependencies": {
     "wrangler": "^4.22.0"

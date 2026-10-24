@@ -1,0 +1,18 @@
+FAIL 1718: cannot import name 'InputForumTopic' from 'telethon.tl.types' (/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/tl/types/__init__.py)
+FAIL 1719: cannot import name 'InputForumTopic' from 'telethon.tl.types' (/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/tl/types/__init__.py)
+FAIL 1720: cannot import name 'InputForumTopic' from 'telethon.tl.types' (/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/tl/types/__init__.py)
+Deleted stray 1725
+
+All topics:
+  id=1729 | 🚀 Mini App + in-chat shop. | One brand. One payments bot. Smoo
+  id=1728 | Files, promo codes, bulk deals, and special offers from Surv
+  id=1727 | Discuss survival gear, deals, and reviews. Ask questions, sh
+  id=1726 | Post product images, prices, and links here from the Surviva
+  id=1720 | 
+  id=1719 | 
+  id=1718 | 
+  id=1703 | 💬 COMMUNITY |  | 👥 488+ members strong | 🎯 Ask questions, share re
+  id=1702 | 🤖 BOT & ORDERS |  | ✅ Track orders: /order + your email | 💳 Pay vi
+  id=1701 | 💎 PREMIUM LOUNGE |  | 👑 Members-only drops before main store | 🔔 E
+  id=1700 | 📦 PRODUCT CATALOG |  | 🖼️ Every product with images & prices | 📊 U
+  id=1699 | 🔥 DEALS & DROPS |  | ✨ Fresh deals drop here every 30-60 min | 💰 V

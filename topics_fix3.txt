@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/tmp/fix_topics.py", line 4, in <module>
+    from telethon.tl.functions.messages import DeleteTopMessagesRequest
+ImportError: cannot import name 'DeleteTopMessagesRequest' from 'telethon.tl.functions.messages' (/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/tl/functions/messages.py). Did you mean: 'DeleteMessagesRequest'?

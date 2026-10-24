@@ -1,0 +1,9 @@
+OUTPUT:
+[unban] Client started
+[unban] Found group: Eboñy ẞtore🍑💦
+[unban] Found bot: 💎 DTD PAYMENT BOT
+[unban] Bot unbanned!
+[unban] Error: You're spamreported, you can't create channels or chats. (caused by EditAdminRequest)
+SCRIPT_DONE
+
+ERRORS:

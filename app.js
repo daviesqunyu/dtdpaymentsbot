@@ -93,7 +93,8 @@ const fallbackProducts = [
 const state = {
   cart: new Map(),
   products: [],
-  btcUsdPrice: 65000
+  btcUsdPrice: 65000,
+  tonUsdPrice: 5
 };
 
 const CART_STORAGE_KEY = "dtd_cart_v1";
@@ -262,8 +263,37 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function activeFlashConfig() {
+  const flash = storeConfig.flash;
+  if (!flash) return null;
+  const end = flash.expiresAt ? Date.parse(flash.expiresAt) : NaN;
+  if (!end || end <= Date.now()) return null;
+  return flash;
+}
+
+function isFlashProduct(product) {
+  const flash = activeFlashConfig();
+  if (!flash || !product) return false;
+  const idMatch = flash.productId && String(product.id) === String(flash.productId);
+  const nameMatch =
+    flash.productName &&
+    product.name &&
+    product.name.toLowerCase() === String(flash.productName).toLowerCase();
+  return Boolean(idMatch || nameMatch);
+}
+
+function engagedBundle() {
+  if (!state.bundleEngaged) return null;
+  return (storeConfig.bundles || []).find((bundle) => bundle.id === state.bundleEngaged) || null;
+}
+
 function productPrice(product) {
-  return Number(product.price_usd ?? product.price ?? 0);
+  const base = Number(product.price_usd ?? product.price ?? 0);
+  const flash = activeFlashConfig();
+  if (flash && isFlashProduct(product)) {
+    return Number(flash.flashPriceUsd) > 0 ? Number(flash.flashPriceUsd) : base;
+  }
+  return base;
 }
 
 function isAllowedProduct(product) {
@@ -272,7 +302,16 @@ function isAllowedProduct(product) {
 }
 
 function currentTotal() {
-  return cartEntries().reduce((sum, product) => sum + productPrice(product) * product.quantity, 0);
+  const bundle = engagedBundle();
+  let total = 0;
+  for (const product of cartEntries()) {
+    let price = productPrice(product);
+    if (bundle && (bundle.productIds || []).includes(String(product.id))) {
+      price *= 1 - (Number(bundle.discountPct) || 0) / 100;
+    }
+    total += price * product.quantity;
+  }
+  return Math.round(total * 100) / 100;
 }
 
 function selectedPaymentOption() {
@@ -291,8 +330,13 @@ function isUsdtPayment(option = selectedPaymentOption()) {
   return option.type === "crypto" && (option.asset === "USDT" || option.id === "USDT");
 }
 
+function isTonPayment(option = selectedPaymentOption()) {
+  return option.type === "crypto" && (option.asset === "TON" || option.id === "TON");
+}
+
 function activeCryptoAddress(option = selectedPaymentOption()) {
   if (isUsdtPayment(option)) return storeConfig.usdtTrc20Address || "";
+  if (isTonPayment(option)) return storeConfig.tonAddress || "";
   return storeConfig.btcAddress || "";
 }
 
@@ -505,6 +549,10 @@ async function loadStoreConfig() {
   if (window.initTelegramBot) {
     window.initTelegramBot(storeConfig);
   }
+
+  renderFlash();
+  loadSocialProof();
+  startFlashCountdown();
 
   updatePaymentHint();
 }
@@ -762,6 +810,18 @@ async function fetchBtcUsdPrice() {
   }
 }
 
+async function fetchTonUsdPrice() {
+  try {
+    const response = await fetch("https://api.coinbase.com/v2/prices/TON-USD/spot");
+    if (!response.ok) return;
+    const payload = await response.json();
+    const price = Number(payload?.data?.amount);
+    if (price > 0) state.tonUsdPrice = price;
+  } catch {
+    /* keep fallback */
+  }
+}
+
 async function loadProducts() {
   productsGrid.innerHTML = `<div class="empty-cart wide-empty shimmer">Loading products...</div>`;
 
@@ -840,6 +900,161 @@ function updateLiveStats() {
   `;
 }
 
+function timeAgo(value) {
+  const time = Date.parse(value);
+  if (!time) return "";
+  const seconds = Math.round((Date.now() - time) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.round(hours / 24)}d ago`;
+}
+
+function renderFlash() {
+  const banner = document.getElementById("flashBanner");
+  if (!banner) return;
+  const flash = activeFlashConfig();
+  if (!flash) {
+    banner.hidden = true;
+    banner.innerHTML = "";
+    return;
+  }
+  banner.hidden = false;
+  const pct = flash.discountPct || 0;
+  banner.innerHTML = `
+    <div class="flash-inner">
+      <div class="flash-label">⚡ FLASH DEAL</div>
+      <div class="flash-title">${escapeHtml(flash.productName || "Today's Deal")}</div>
+      <div class="flash-price">
+        <strong>${formatMoney(flash.flashPriceUsd)}</strong>
+        <span>${formatMoney(flash.originalPriceUsd)}</span>
+        <em>-${pct}%</em>
+      </div>
+      <div class="flash-countdown" data-flash-end="${escapeHtml(flash.expiresAt || "")}">—</div>
+      <button type="button" class="flash-cta" data-go-flash>Grab it</button>
+    </div>
+  `;
+  banner.querySelector("[data-go-flash]")?.addEventListener("click", () => {
+    const product = state.products.find(
+      (p) =>
+        (flash.productId && String(p.id) === String(flash.productId)) ||
+        (flash.productName && p.name && p.name.toLowerCase() === flash.productName.toLowerCase())
+    );
+    if (product) {
+      addToCart(product.id, { goCheckout: true });
+    } else {
+      navigateToPage("payment");
+    }
+  });
+}
+
+function formatFlashCountdown(endTime) {
+  const diff = endTime - Date.now();
+  if (diff <= 0) return "Ended";
+  const seconds = Math.max(0, Math.floor(diff / 1000));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return hours > 0 ? `${pad(hours)}:${pad(minutes)}:${pad(secs)}` : `${pad(minutes)}:${pad(secs)}`;
+}
+
+function startFlashCountdown() {
+  let lastActive = Boolean(activeFlashConfig());
+  setInterval(() => {
+    const active = Boolean(activeFlashConfig());
+    if (active !== lastActive) {
+      lastActive = active;
+      renderFlash();
+      renderProducts();
+      renderLiveTicker();
+    }
+    if (active) {
+      const counter = document.querySelector("[data-flash-end]");
+      if (counter) {
+        counter.textContent = `Ends in ${formatFlashCountdown(Date.parse(counter.dataset.flashEnd))}`;
+      }
+      const tickerFlash = document.querySelector("[data-ticker-flash]");
+      if (tickerFlash) {
+        tickerFlash.textContent = `ENDS ${formatFlashCountdown(Date.parse(activeFlashConfig().expiresAt))}`;
+      }
+    }
+  }, 1000);
+}
+
+function renderLiveTicker() {
+  const track = document.getElementById("liveTickerTrack");
+  if (!track) return;
+  const flash = activeFlashConfig();
+  const flashItem = flash
+    ? `<span class="ticker-flash">⚡ FLASH · ${escapeHtml(flash.productName || "DEAL")} · <span data-ticker-flash>ENDS ${formatFlashCountdown(Date.parse(flash.expiresAt))}</span></span>`
+    : `<span class="ticker-premium">👑 DTD PREMIUM · 20⭐</span>`;
+  const items = [
+    `<span class="ticker-live">🔴 DTD STORE · LIVE</span>`,
+    `<span>💬 @DTDSTOREBOT</span>`,
+    flashItem,
+    `<span id="tickerRevenue">📊 Today · —</span>`,
+  ];
+  const half = (list) => `<div class="ticker-half">${list.join("")}</div>`;
+  track.innerHTML = half(items) + half(items);
+  if (!renderLiveTicker.timer) {
+    renderLiveTicker.timer = setInterval(loadTickerRevenue, 60000);
+  }
+  loadTickerRevenue();
+}
+
+async function loadTickerRevenue() {
+  const el = document.getElementById("tickerRevenue");
+  if (!el) return;
+  try {
+    const response = await fetch("/api/market/status");
+    if (!response.ok) return;
+    const payload = await response.json();
+    const total = Number(payload.totalToday || 0);
+    el.textContent = `📊 Today · $${total.toFixed(2)}`;
+  } catch {
+    /* keep placeholder on failure */
+  }
+}
+
+async function loadSocialProof() {
+  const feed = document.getElementById("socialProof");
+  if (!feed) return;
+  try {
+    const response = await fetch("/api/social-proof");
+    if (!response.ok) throw new Error("social proof unavailable");
+    const payload = await response.json();
+    const posts = Array.isArray(payload.posts) ? payload.posts : [];
+    if (!posts.length) {
+      feed.hidden = true;
+      feed.innerHTML = "";
+      return;
+    }
+    feed.hidden = false;
+    feed.innerHTML = `
+      <div class="social-proof-head">🔴 Live activity</div>
+      <div class="social-proof-track">
+        ${posts
+          .map(
+            (post) => `
+          <div class="proof-item">
+            <span class="proof-name">${escapeHtml(post.buyer_name || "Customer")}</span>
+            <span class="proof-prod">bought ${escapeHtml(post.product_name || "")}</span>
+            <span class="proof-time">${escapeHtml(timeAgo(post.posted_at))}</span>
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+    `;
+  } catch {
+    feed.hidden = true;
+    feed.innerHTML = "";
+  }
+}
+
 function renderProducts(items = state.products, { emptyMessage } = {}) {
   const count = items.length;
   if (productCount) {
@@ -859,20 +1074,30 @@ function renderProducts(items = state.products, { emptyMessage } = {}) {
       const image = product.image_url
         ? `<img src="${escapeHtml(product.image_url)}" alt="${name}" loading="lazy" />`
         : `<img src="assets/store-feature-shop.png" alt="${name}" loading="lazy" />`;
+      const basePrice = Number(product.price_usd ?? product.price ?? 0);
+      const flashActive = isFlashProduct(product);
+      const flashStrike =
+        flashActive && productPrice(product) < basePrice
+          ? `<span class="price-strike">${formatMoney(basePrice)}</span>`
+          : "";
+      const flashBadge = flashActive
+        ? `<span class="flash-badge">⚡ ${activeFlashConfig() ? "-" + activeFlashConfig().discountPct + "%" : "FLASH"}</span>`
+        : "";
       return `
-        <article class="product-card reveal" style="--delay:${index * 70}ms">
+        <article class="product-card reveal ${flashActive ? "is-flash" : ""}" style="--delay:${index * 70}ms;--card-accent:${color}" data-name="${name}">
           <div class="product-image" style="background:${color}">
+            ${flashBadge}
             ${image}
           </div>
           <h3>${name}</h3>
           <p>${description}</p>
           <div class="product-meta">
-            <span class="price">${formatMoney(productPrice(product))}</span>
+            <span class="price" style="color:${color}">${flashStrike}${formatMoney(productPrice(product))}</span>
             <div class="product-actions">
               <button class="secondary-button" type="button" data-add="${escapeHtml(product.id)}">
                 Add to cart
               </button>
-              <button class="primary-button" type="button" data-buy="${escapeHtml(product.id)}">
+              <button class="primary-button" type="button" style="background:${color};border-color:${color}" data-buy="${escapeHtml(product.id)}">
                 Buy now
               </button>
             </div>
@@ -902,6 +1127,11 @@ function renderCart() {
   const totalPrice = currentTotal();
 
   cartCount.textContent = totalItems;
+  const bottomBadge = document.querySelector("#bottomCartBadge");
+  if (bottomBadge) {
+    bottomBadge.textContent = totalItems;
+    bottomBadge.hidden = totalItems <= 0;
+  }
   cartTotal.textContent = formatMoney(totalPrice);
   document.querySelector(".cart-toggle")?.classList.toggle("has-items", totalItems > 0);
   persistCart();
@@ -938,8 +1168,50 @@ function renderCart() {
     )
     .join("");
 
+  renderBundleUpsell();
+
   updatePaymentHint();
   syncTelegramMainButton();
+  window.DTDMotion?.refresh();
+}
+
+function bundleUpsellCandidates() {
+  const cartIds = new Set(cartEntries().map((product) => String(product.id)));
+  return (storeConfig.bundles || [])
+    .map((bundle) => {
+      const ids = (bundle.productIds || []).map(String);
+      const inCart = ids.filter((id) => cartIds.has(id));
+      if (!inCart.length || inCart.length >= ids.length) return null;
+      const missing = ids
+        .filter((id) => !cartIds.has(id))
+        .map((id) => state.products.find((product) => String(product.id) === id))
+        .filter(Boolean);
+      if (!missing.length) return null;
+      return { bundle, missing };
+    })
+    .filter(Boolean);
+}
+
+function renderBundleUpsell() {
+  const wrap = document.getElementById("bundleUpsell");
+  if (!wrap) return;
+  const candidate = bundleUpsellCandidates()[0];
+  if (!candidate) {
+    wrap.innerHTML = "";
+    return;
+  }
+  const { bundle, missing } = candidate;
+  const engaged = state.bundleEngaged === bundle.id;
+  const pct = Number(bundle.discountPct || 0);
+  wrap.innerHTML = `
+    <div class="bundle-upsell ${engaged ? "is-engaged" : ""}">
+      <div class="bundle-upsell-body">
+        <strong>🎁 ${escapeHtml(bundle.name)}</strong>
+        <span>Add ${missing.map((product) => escapeHtml(product.name)).join(" + ")} and save ${pct}%</span>
+      </div>
+      <button type="button" class="bundle-upsell-btn" data-bundle="${escapeHtml(bundle.id)}">${engaged ? "✓ Applied" : "Add & save"}</button>
+    </div>
+  `;
 }
 
 function addToCart(productId, { goCheckout = false } = {}) {
@@ -992,6 +1264,7 @@ async function saveOrder(formData) {
   const total = currentTotal();
   const paymentMethod = formData.get("payment") || "USDT";
   const meta = window.getVisitorMeta ? window.getVisitorMeta() : {};
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || null;
 
   const response = await fetch("/api/orders", {
     method: "POST",
@@ -999,7 +1272,8 @@ async function saveOrder(formData) {
     body: JSON.stringify({
       customerName: formData.get("name"),
       customerEmail: formData.get("email"),
-      telegramUsername: formData.get("telegram") || null,
+      telegramUsername: formData.get("telegram") || tgUser?.username || null,
+      telegramUserId: tgUser?.id || null,
       paymentMethod,
       paymentReference: formData.get("paymentReference") || null,
       productAccount: formData.get("productAccount") || null,
@@ -1020,7 +1294,28 @@ async function saveOrder(formData) {
   const payload = await response.json();
   if (!response.ok) throw new Error(payload.error || "Order not saved");
 
-  return payload.orderId;
+  return { orderId: payload.orderId, paymentId: payload.paymentId || null };
+}
+
+async function pollCryptoPayment(paymentId, email, orderId) {
+  if (!paymentId) return;
+  showToast("Waiting for on-chain confirmation… (up to a few minutes)");
+  for (let i = 0; i < 60; i += 1) {
+    await new Promise((r) => setTimeout(r, 5000));
+    try {
+      const check = await fetch(`/api/payments?id=${encodeURIComponent(paymentId)}`);
+      const row = await check.json();
+      if (row.ok && row.status === "confirmed") {
+        haptic("success");
+        showToast("Payment confirmed on-chain! Order is processing.");
+        trackEvent("crypto_confirmed", { currency: row.currency, tx_hash: row.tx_hash });
+        return;
+      }
+    } catch {
+      /* retry */
+    }
+  }
+  showToast("Still confirming… we'll notify you on Telegram when it lands.");
 }
 
 function updateTelegramPaymentPanel() {
@@ -1054,6 +1349,7 @@ function updatePaymentHint() {
   const isStars = option.type === "stars" || option.id === "Stars";
   const isTelegram = option.type === "telegram" || option.id === "Telegram";
   const usdt = isUsdtPayment(option);
+  const ton = isTonPayment(option);
   const address = activeCryptoAddress(option);
   const total = currentTotal();
 
@@ -1089,6 +1385,7 @@ function updatePaymentHint() {
     if (submitBtn) {
       submitBtn.style.display = "block";
       if (usdt) submitBtn.textContent = "Confirm USDT Payment";
+      else if (ton) submitBtn.textContent = "Confirm TON Payment";
       else if (isCrypto) submitBtn.textContent = "Confirm BTC Payment";
       else submitBtn.textContent = "Complete & Place Order";
     }
@@ -1099,51 +1396,69 @@ function updatePaymentHint() {
   if (isCrypto) {
     if (cryptoPanel) {
       cryptoPanel.classList.toggle("is-usdt", usdt);
-      cryptoPanel.classList.toggle("is-btc", !usdt);
+      cryptoPanel.classList.toggle("is-ton", ton);
+      cryptoPanel.classList.toggle("is-btc", !usdt && !ton);
     }
 
+    const asset = usdt ? "USDT" : ton ? "TON" : "BTC";
     if (cryptoAssetBadge) {
-      cryptoAssetBadge.textContent = usdt ? "USDT" : "BTC";
+      cryptoAssetBadge.textContent = asset;
       cryptoAssetBadge.classList.toggle("usdt", usdt);
-      cryptoAssetBadge.classList.toggle("btc", !usdt);
+      cryptoAssetBadge.classList.toggle("btc", !usdt && !ton);
     }
     if (cryptoAssetTitle) {
-      cryptoAssetTitle.textContent = usdt ? "USDT · Tron (TRC20)" : "Bitcoin · BTC network";
+      cryptoAssetTitle.textContent = usdt
+        ? "USDT · Tron (TRC20)"
+        : ton
+          ? "TON · The Open Network"
+          : "Bitcoin · BTC network";
     }
     if (cryptoNetworkHint) {
       cryptoNetworkHint.textContent = usdt
         ? "Send only USDT on the Tron TRC20 network to this address."
-        : "Send only Bitcoin (BTC) to this address — no other coins or networks.";
+        : ton
+          ? "Send only TON (The Open Network) to this address."
+          : "Send only Bitcoin (BTC) to this address — no other coins or networks.";
     }
     if (cryptoHowSteps) {
       cryptoHowSteps.innerHTML = usdt
         ? `
           <li>Scan the QR or copy the wallet address</li>
           <li>Send the exact amount on <strong>Tron (TRC20)</strong> only</li>
-          <li>Paste your transaction hash below to place the order</li>
+          <li>Payment is confirmed automatically on-chain</li>
+        `
+        : ton
+          ? `
+          <li>Scan the QR or copy the wallet address</li>
+          <li>Send the exact TON amount shown above</li>
+          <li>Payment is confirmed automatically on-chain</li>
         `
         : `
           <li>Scan the QR or copy the BTC wallet address</li>
           <li>Send the exact BTC amount shown above</li>
-          <li>Paste your Bitcoin txid below to place the order</li>
+          <li>Payment is confirmed automatically on-chain</li>
         `;
     }
     if (cryptoNetworkLabel) {
-      cryptoNetworkLabel.textContent = usdt ? "Tron (TRC20)" : "Bitcoin (BTC)";
+      cryptoNetworkLabel.textContent = usdt ? "Tron (TRC20)" : ton ? "The Open Network (TON)" : "Bitcoin (BTC)";
     }
     if (cryptoWarning) {
       cryptoWarning.textContent = usdt
         ? "Don’t send NFTs to this address. Only USDT on Tron (TRC20) — other networks will lose funds."
-        : "Send BTC only. Wrong asset or network cannot be recovered.";
+        : ton
+          ? "Send TON only. Wrong asset or network cannot be recovered."
+          : "Send BTC only. Wrong asset or network cannot be recovered.";
     }
     if (paymentReferenceInput) {
       paymentReferenceInput.placeholder = usdt
         ? "Paste TRC20 transaction hash"
-        : "Paste BTC txid";
+        : ton
+          ? "Paste TON transaction hash"
+          : "Paste BTC txid";
     }
 
     cryptoAddress.textContent =
-      address || (usdt ? "USDT TRC20 address not configured" : "BTC address not configured");
+      address || (usdt ? "USDT TRC20 address not configured" : ton ? "TON address not configured" : "BTC address not configured");
     if (copyCryptoAddressButton) {
       copyCryptoAddressButton.disabled = !address;
     }
@@ -1154,6 +1469,16 @@ function updatePaymentHint() {
           total > 0 ? `${total.toFixed(2)} USDT (= $${total.toFixed(2)} USD)` : "Add items to see amount";
       }
       renderCryptoQr(address, { asset: "USDT" });
+    } else if (ton) {
+      const rate = state.tonUsdPrice > 0 ? state.tonUsdPrice : 5;
+      const tonEstimate = total > 0 ? (total / rate).toFixed(4) : "";
+      if (btcAmountLabel) {
+        btcAmountLabel.textContent =
+          total > 0
+            ? `$${total.toFixed(2)} USD (~${tonEstimate} TON @ $${rate.toFixed(2)})`
+            : "Add items to see amount";
+      }
+      renderCryptoQr(address, { asset: "TON", tonAmount: tonEstimate });
     } else {
       const rate = state.btcUsdPrice > 0 ? state.btcUsdPrice : 65000;
       const btcEstimate = total > 0 ? (total / rate).toFixed(8) : "";
@@ -1264,15 +1589,17 @@ function buildBip21Uri(address, btcAmount) {
   return btcAmount && Number(btcAmount) > 0 ? `${base}?amount=${btcAmount}` : base;
 }
 
-function renderCryptoQr(address, { asset = "USDT", btcAmount = "" } = {}) {
+function renderCryptoQr(address, { asset = "USDT", btcAmount = "", tonAmount = "" } = {}) {
   if (!btcQrCode) return;
   if (!address) {
     btcQrCode.removeAttribute("src");
-    btcQrCode.alt = asset === "USDT" ? "USDT address not configured" : "BTC address not configured";
+    btcQrCode.alt =
+      asset === "USDT" ? "USDT address not configured" : asset === "TON" ? "TON address not configured" : "BTC address not configured";
     return;
   }
 
-  const payload = asset === "BTC" ? buildBip21Uri(address, btcAmount) : address;
+  const payload =
+    asset === "BTC" ? buildBip21Uri(address, btcAmount) : asset === "TON" ? `ton://transfer/${address}${tonAmount ? `?amount=${tonAmount}` : ""}` : address;
   const fallback = asset === "BTC" ? `bitcoin:${address}` : address;
   const primary = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=1&ecc=M&data=${encodeURIComponent(
     payload
@@ -1281,7 +1608,8 @@ function renderCryptoQr(address, { asset = "USDT", btcAmount = "" } = {}) {
     fallback
   )}`;
 
-  btcQrCode.alt = asset === "USDT" ? `USDT TRC20 payment QR for ${address}` : `Bitcoin payment QR for ${address}`;
+  btcQrCode.alt =
+    asset === "USDT" ? `USDT TRC20 payment QR for ${address}` : asset === "TON" ? `TON payment QR for ${address}` : `Bitcoin payment QR for ${address}`;
   btcQrCode.dataset.payload = payload;
   btcQrCode.onerror = () => {
     btcQrCode.onerror = null;
@@ -1318,8 +1646,11 @@ async function submitOrderDirectly(paymentReference) {
     if (paymentReference) {
       formData.set("paymentReference", paymentReference);
     }
-    const orderId = await saveOrder(formData);
+    const { orderId, paymentId } = await saveOrder(formData);
     showCheckoutSuccess(orderId, email);
+    if (paymentId && isCryptoPayment()) {
+      pollCryptoPayment(paymentId, email, orderId);
+    }
   } catch (error) {
     console.error(error);
     showToast(error.message || "Failed to submit order. Please contact support.");
@@ -1537,6 +1868,10 @@ async function resumePaystackReturn() {
 // Paystack verification handled server side or directly via submitOrderDirectly callback.
 
 productsGrid.addEventListener("click", (event) => {
+  const card = event.target.closest(".product-card");
+  if (card && card.dataset.name) {
+    trackEvent("product_view", { product: card.dataset.name });
+  }
   const buyButton = event.target.closest("[data-buy]");
   if (buyButton) {
     addToCart(buyButton.dataset.buy, { goCheckout: true });
@@ -1557,6 +1892,24 @@ cartItems.addEventListener("click", (event) => {
 
   if (decreaseButton) changeQuantity(decreaseButton.dataset.decrease, -1);
   if (increaseButton) changeQuantity(increaseButton.dataset.increase, 1);
+});
+
+document.addEventListener("click", (event) => {
+  const bundleButton = event.target.closest("[data-bundle]");
+  if (!bundleButton) return;
+  const bundle = (storeConfig.bundles || []).find((b) => b.id === bundleButton.dataset.bundle);
+  if (!bundle) return;
+  if (state.bundleEngaged === bundle.id) {
+    state.bundleEngaged = null;
+    trackEvent("bundle_removed", { bundle: bundle.id });
+  } else {
+    state.bundleEngaged = bundle.id;
+    (bundle.productIds || []).forEach((productId) => {
+      if (!state.cart.has(productId)) state.cart.set(productId, 1);
+    });
+    trackEvent("bundle_added", { bundle: bundle.id });
+  }
+  renderCart();
 });
 
 document.querySelector(".cart-toggle").addEventListener("click", () => {
@@ -1824,13 +2177,44 @@ function initHeroMotion() {
   });
 }
 
+function populateProfileLinks() {
+  const set = (id, url, sub) => {
+    const el = document.getElementById(id);
+    if (!el || !url) return;
+    el.href = url;
+    if (sub) {
+      const small = el.querySelector("small");
+      if (small) small.textContent = sub;
+    }
+  };
+  const ownerName = storeConfig.ownerUsername || "Glock7money";
+  const ownerUrl = storeConfig.telegramOwnerUrl || `https://t.me/${ownerName}`;
+  set("profileStoreLink", storeConfig.storeUrl);
+  set(
+    "profileBotLink",
+    storeConfig.telegramBotUrl,
+    storeConfig.telegramBotUsername ? `@${storeConfig.telegramBotUsername}` : null
+  );
+  set("profileOwnerLink", ownerUrl);
+  set("profileChannelLink", storeConfig.channelMainUrl, "Drops & flash deals");
+  set("profilePremiumLink", storeConfig.channelPremiumUrl, "Members-only deals · 20⭐");
+  const email = String(storeConfig.supportEmail || "contact@dvtechnologies.xyz");
+  set("profileSupportLink", email.includes("@") ? `mailto:${email}` : null, email);
+  const trustName = document.getElementById("profileTrustName");
+  if (trustName) trustName.textContent = `@${ownerName}`;
+  set("profileTrustTgLink", ownerUrl);
+  set("profileTgLink", ownerUrl);
+}
+
 async function boot() {
   restoreCart();
   bindShellNavigation();
   initTelegramMiniApp();
   initHeroMotion();
   trackEvent("page_view", { title: document.title });
-  await Promise.all([loadStoreConfig(), fetchBtcUsdPrice()]);
+  await Promise.all([loadStoreConfig(), fetchBtcUsdPrice(), fetchTonUsdPrice()]);
+  populateProfileLinks();
+  renderLiveTicker();
   const yearEl = document.querySelector("#footerYear");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
   await Promise.all([loadProducts(), loadTelegramFeed()]);

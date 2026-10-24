@@ -1,0 +1,15 @@
+ALL messages in GMONEY STORE:
+  id=1705 pin=False | 🚀 Mini App + in-chat shop. | One brand. One payments bot. Smooth from cart to inbox. |  | 💎 DTD MAIN STORE | 🔥 @DTDSTORE
+  id=1704 pin=False | 🚀 DTD MAIN STORE 💎 | ━━━━━━━━━━━━━━━━ | Digital products with fast delivery. | ⭐ Pay USDT (TRC20) · ₿ BTC · 💳 Paystack |
+  id=1703 pin=False | 💬 COMMUNITY |  | 👥 488+ members strong | 🎯 Ask questions, share reviews, vibe | ✅ No scam links · Respect the crew |  | 
+  id=1702 pin=False | 🤖 BOT & ORDERS |  | ✅ Track orders: /order + your email | 💳 Pay via USDT, BTC, Card, Stars | ⚡ Instant delivery on every
+  id=1701 pin=False | 💎 PREMIUM LOUNGE |  | 👑 Members-only drops before main store | 🔔 Early access + exclusive pricing | ⭐ Unlock with 20 sta
+  id=1700 pin=False | 📦 PRODUCT CATALOG |  | 🖼️ Every product with images & prices | 📊 Updated every 25 min (full 12h rotation) | 🎯 30+ produc
+  id=1699 pin=False | 🔥 DEALS & DROPS |  | ✨ Fresh deals drop here every 30-60 min | 💰 Verified prices, fast delivery | ⚡ Shop: https://dtdpay
+  id=1688 pin=None | 
+  id=1687 pin=None | 
+  id=1686 pin=None | 
+  id=1685 pin=None | 
+  id=1684 pin=None | 
+  id=1683 pin=None | 
+  id=1 pin=None | 

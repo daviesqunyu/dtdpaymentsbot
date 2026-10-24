@@ -1,0 +1,8 @@
+[error] promo DTD MAIN STORE🤑💰: The document file was invalid and can't be used in inline mode (caused by SendMessageRequest)
+[error] product promo DTD MAIN STORE🤑💰: The document file was invalid and can't be used in inline mode (caused by SendMessageRequest)
+[error] product promo DTD PREMIUM🤑🏦: The document file was invalid and can't be used in inline mode (caused by SendMessageRequest)
+Fatal error handling updates (this is a bug in Telethon v1.44.0, please report it)
+    raise self._updates_error
+[error] promo DTD MAIN STORE🤑💰: The document file was invalid and can't be used in inline mode (caused by SendMessageRequest)
+[error] product promo DTD MAIN STORE🤑💰: The document file was invalid and can't be used in inline mode (caused by SendMessageRequest)
+[error] product promo DTD PREMIUM🤑🏦: The document file was invalid and can't be used in inline mode (caused by SendMessageRequest)

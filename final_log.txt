@@ -1,0 +1,15 @@
+[ok] control plane active (promo / story / pin via agent_commands)
+[ok] channel agent active (react + comment on both channels)
+[ok] behavior tracker active (engagement analytics)
+[ok] store agent active (order monitoring + auto-promo)
+[ok] ecosystem heartbeat active (10 min cycle)
+[ok] listening...
+[ok] member management: welcome + activation on 2 channel(s)
+[ok] chat mirror: DTD MAIN STORE🤑💰
+[ok] chat mirror: DTD PREMIUM🤑🏦
+[chat] mirrored 3028 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 3029 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 302 -> feed (DTD PREMIUM🤑🏦)
+[ok] promo (image) -> DTD MAIN STORE🤑💰
+[ok] product promo -> DTD MAIN STORE🤑💰
+[ok] promo -> GMONEY STORE💵

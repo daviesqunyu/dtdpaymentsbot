@@ -1,0 +1,24 @@
+Connected to GMONEY STORE💵
+  Deleted history for topic 1683
+  EditForumTopic 1683: EditForumTopicRequest.__init__() got an unexpected keyword argument 'icon_color'
+  Deleted history for topic 1684
+  EditForumTopic 1684: EditForumTopicRequest.__init__() got an unexpected keyword argument 'icon_color'
+  Deleted history for topic 1685
+  EditForumTopic 1685: EditForumTopicRequest.__init__() got an unexpected keyword argument 'icon_color'
+  Deleted history for topic 1686
+  EditForumTopic 1686: EditForumTopicRequest.__init__() got an unexpected keyword argument 'icon_color'
+  Deleted history for topic 1687
+  EditForumTopic 1687: EditForumTopicRequest.__init__() got an unexpected keyword argument 'icon_color'
+  Deleted history for topic 1688
+  EditForumTopic 1688: EditForumTopicRequest.__init__() got an unexpected keyword argument 'icon_color'
+
+Final state:
+  id=1710 pinned=False | 🔥 Fresh drop energy — shop DTD today. | Browse → pay → get delivery. | Preferred cry
+  id=1709 pinned=False | 💡 Got a custom request? Talk to the owner — bulk deals & product questions welco
+  id=1708 pinned=False | 💎 Why people stay with DTD: | clear pricing · USDT/BTC/Paystack · tracked delivery
+  id=1703 pinned=False | 💬 COMMUNITY |  | 👥 488+ members strong | 🎯 Ask questions, share reviews, vibe | ✅ No sca
+  id=1702 pinned=False | 🤖 BOT & ORDERS |  | ✅ Track orders: /order + your email | 💳 Pay via USDT, BTC, Card, S
+  id=1701 pinned=False | 💎 PREMIUM LOUNGE |  | 👑 Members-only drops before main store | 🔔 Early access + exclus
+  id=1700 pinned=False | 📦 PRODUCT CATALOG |  | 🖼️ Every product with images & prices | 📊 Updated every 25 min 
+  id=1699 pinned=False | 🔥 DEALS & DROPS |  | ✨ Fresh deals drop here every 30-60 min | 💰 Verified prices, fast
+  id=1 pinned=None | 

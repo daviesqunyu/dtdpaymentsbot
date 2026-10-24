@@ -6,6 +6,67 @@
 const SESSION_KEY = "dtd_chat_session_v1";
 const POLL_MS = 25_000;
 
+const TAB_QUERY = {
+  latest: "",
+  premium: "&premium=true",
+  top: "&sort=top",
+  channels: "&source=channel",
+  calls: ""
+};
+
+const EMOJIS = [
+  "😀","😂","😅","😍","🥰","😎","🤔","🤩","🙃","😇",
+  "😭","😤","🥳","🤯","🫡","👍","👎","👏","🙏","💪",
+  "🔥","✨","💯","🎉","🤑","💎","🚀","📈","💰","🏆",
+  "💚","❤️","💙","💛","💜","⚡","☕","🍀","🌙","⭐",
+  "🤝","🧠","🎯","✅","❌","🔒","🔑","📦","🛒","📞",
+  "🫠","🫣","🥹","🤗","🤭","🫢","😶‍🌫️","🥶","🤧","🤡",
+  "👾","🤖","🦾","🦿","🫀","🫁","🧿","🪄","💫","🌠",
+  "🪙","🧧","🥇","🥈","🥉","🛡️","🧲","🔮","🪬","🧬",
+  "🫰","🫱","🫲","🤟","🤙","👌","🤌","💅","🫳","🫴",
+  "🖤","🤍","🤎","🧡","💝","💖","🫧","🌊","🧊","🫶"
+];
+
+/** Render emoji as high-quality Twemoji images (consistent premium look). */
+const EMOJI_SEG_RE = /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}]|\u{FE0F}|\u{20E3}|\u{200D}|\u{1F3FB}-\u{1F3FF}/u;
+
+function twemojiImg(emoji) {
+  const codepoints = [...emoji]
+    .map((cp) => cp.codePointAt(0).toString(16))
+    .join("-");
+  return `<img class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/${codepoints}.png" alt="${escapeHtml(emoji)}" loading="lazy" decoding="async" />`;
+}
+
+function maskEmoji(raw) {
+  const map = [];
+  let text;
+  try {
+    const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
+    let masked = "";
+    for (const { segment } of segmenter.segment(String(raw || ""))) {
+      if (EMOJI_SEG_RE.test(segment)) {
+        const token = `\uE000\uE001${map.length}\uE000\uE001`;
+        map.push({ token, emoji: segment });
+        masked += token;
+      } else {
+        masked += segment;
+      }
+    }
+    text = masked;
+  } catch {
+    text = String(raw || "");
+  }
+  return { text, map };
+}
+
+function restoreEmoji(html, map) {
+  let out = html;
+  for (const { token, emoji } of map) {
+    out = out.split(token).join(twemojiImg(emoji));
+  }
+  return out;
+}
+
 const state = {
   token: "",
   user: null,
@@ -14,7 +75,13 @@ const state = {
   claimCode: null,
   timer: null,
   booted: false,
-  pendingMedia: null // { file, previewUrl, mediaType, contentType, name }
+  pendingMedia: null, // { file, previewUrl, mediaType, contentType, name }
+  tab: "latest",
+  search: "",
+  peer: null,
+  peerReady: false,
+  activeCall: null, // { call, mediaStream, target }
+  videoModalActive: false
 };
 
 function $(sel) {
@@ -92,9 +159,17 @@ function isInternalHref(href) {
   }
 }
 
-/** Turn plain text into safe HTML with @mentions, #pages, and http(s) links. */
+/** Turn plain text into safe HTML with @mentions, #pages, http(s) links, [text](url), **bold**, *italic* and premium emoji. */
 function formatChatBody(raw) {
-  const text = String(raw || "");
+  const { text: maskedText, map } = maskEmoji(raw);
+  const mdLinks = [];
+  let text = maskedText.replace(
+    /\[([^\]]{1,120})\]\((https?:\/\/[^\s)]+)\)/g,
+    (_m, t, u) => {
+      mdLinks.push({ t, u });
+      return `\u0001${mdLinks.length - 1}\u0001`;
+    }
+  );
   const re =
     /((?:https?:\/\/|www\.)[^\s<]+)|(\/#([\w-]+))|(#([\w-]+))|(@([A-Za-z0-9_]{3,32}))/gi;
   let out = "";
@@ -132,7 +207,30 @@ function formatChatBody(raw) {
     last = match.index + match[0].length;
   }
   out += escapeHtml(text.slice(last)).replace(/\n/g, "<br>");
-  return out;
+
+  out = out.replace(/\u0001(\d+)\u0001/g, (_m, i) => {
+    const l = mdLinks[Number(i)];
+    if (!l) return "";
+    const internal = isInternalHref(l.u);
+    return `<a class="chat-link ${internal ? "is-internal" : "is-external"}" href="${escapeHtml(l.u)}"${
+      internal ? "" : ' target="_blank" rel="noopener noreferrer"'
+    }>${escapeHtml(l.t)}</a>`;
+  });
+
+  return restoreEmoji(inlineFormat(out), map);
+}
+
+/** Convert **bold** and *italic* only outside of already-rendered tags. */
+function inlineFormat(html) {
+  return html
+    .split(/(<[^>]+>)/)
+    .map((seg) => {
+      if (/^<[^>]+>$/.test(seg)) return seg;
+      return seg
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+    })
+    .join("");
 }
 
 function avatarMarkup({ username, profileUrl, avatarUrl, userId }) {
@@ -169,7 +267,7 @@ function syncComposer() {
   const who = $("#chatWho");
   const form = $("#chatComposer");
   const gate = $("#chatAuthGate");
-  const premium = Boolean(window.__dtdTelegramPremium);
+  const premium = Boolean(state.user?.isPremium ?? window.__dtdTelegramPremium);
   if (who) {
     who.innerHTML = state.user
       ? `@${state.user.username}${premium ? ' <span class="premium-badge">Premium</span>' : ""}`
@@ -209,6 +307,8 @@ function syncComposer() {
       composeAvatar.textContent = letter;
     }
   }
+  if (state.user) ensurePeerListen().catch(() => {});
+  else destroyPeer();
 }
 
 function renderRails() {
@@ -253,10 +353,21 @@ function mediaBlock(m) {
 
 function renderFeed(targetSel = "#chatFeed", messages = null) {
   const feed = $(targetSel);
-  const list = messages || state.messages;
+  const all = messages || state.messages;
   if (!feed) return;
+  const q = state.search.trim().toLowerCase();
+  const list = q
+    ? all.filter(
+        (m) =>
+          String(m.body || "").toLowerCase().includes(q) ||
+          String(m.displayName || "").toLowerCase().includes(q) ||
+          String(m.username || "").toLowerCase().includes(q)
+      )
+    : all;
   if (!list.length) {
-    feed.innerHTML = `<article class="chat-empty">
+    feed.innerHTML = q
+      ? `<article class="chat-empty"><strong>No matches</strong><span>Nothing found for “${escapeHtml(q)}” — try another keyword or clear the search.</span></article>`
+      : `<article class="chat-empty">
       <strong>Quiet for now</strong>
       <span>Be the first to post text, a link, or a photo — anyone with Telegram sign-in can drop in.</span>
     </article>`;
@@ -270,12 +381,16 @@ function renderFeed(targetSel = "#chatFeed", messages = null) {
       const shareWa = `https://wa.me/?text=${encodeURIComponent(`@${m.username} on DTD Store Chat:\n${shareLine}\n${location.origin}/#chat`)}`;
       const fullWhen = m.createdAt ? new Date(m.createdAt).toLocaleString() : "";
       const profileHref = escapeHtml(m.profileUrl || `#profile/${m.username}`);
-      return `<article class="chat-post dtd-post" data-id="${escapeHtml(m.id)}">
+      const isChannel = m.source === "channel";
+      const canCall = state.user && m.username && String(m.username) !== String(state.user.username);
+      return `<article class="chat-post dtd-post ${isChannel ? "is-channel" : ""}" data-id="${escapeHtml(m.id)}">
         ${avatarMarkup(m)}
         <div class="dtd-post-main">
           <header class="chat-post-head">
             <div class="chat-post-meta">
               <a class="chat-name" href="${profileHref}">${escapeHtml(m.displayName || m.username)}</a>
+              ${m.premium ? `<span class="premium-badge" title="Telegram Premium">💎</span>` : ""}
+              ${isChannel ? `<span class="channel-badge" title="Mirrored from the Telegram channel">📢</span>` : ""}
               <a class="chat-handle chat-mention" href="${profileHref}">@${escapeHtml(m.username)}</a>
               <span class="dtd-dot" aria-hidden="true">·</span>
               <time datetime="${escapeHtml(m.createdAt || "")}" title="${escapeHtml(fullWhen)}">${timeAgo(m.createdAt)}</time>
@@ -285,6 +400,7 @@ function renderFeed(targetSel = "#chatFeed", messages = null) {
           ${mediaBlock(m)}
           <footer class="chat-post-actions">
             <button type="button" class="chat-action dtd-comments" data-comments="${escapeHtml(m.id)}" aria-expanded="false">Comment <span>${m.comments || 0}</span></button>
+            ${canCall ? `<button type="button" class="chat-action dtd-call" data-call="${escapeHtml(m.username)}" title="Start a video call">📹 Call</button>` : ""}
             <a class="chat-action" href="${shareTg}" target="_blank" rel="noopener noreferrer">Share TG</a>
             <a class="chat-action" href="${shareWa}" target="_blank" rel="noopener noreferrer">Share WA</a>
             <button type="button" class="chat-action dtd-like ${m.liked ? "is-on" : ""}" data-like="${escapeHtml(m.id)}" ${state.user ? "" : "disabled"} aria-label="Like"><span class="dtd-heart" aria-hidden="true">♥</span> <span>${m.likes || 0}</span></button>
@@ -309,6 +425,9 @@ function renderFeed(targetSel = "#chatFeed", messages = null) {
 
   feed.querySelectorAll("[data-like]").forEach((btn) => {
     btn.addEventListener("click", () => toggleLike(btn.getAttribute("data-like")));
+  });
+  feed.querySelectorAll("[data-call]").forEach((btn) => {
+    btn.addEventListener("click", () => startVideoCall(btn.getAttribute("data-call")).catch(showErr));
   });
   feed.querySelectorAll("[data-comments]").forEach((btn) => {
     btn.addEventListener("click", () => toggleCommentsPanel(btn.getAttribute("data-comments")));
@@ -457,6 +576,8 @@ async function fetchFeed() {
   const status = $("#chatStatus");
   const feed = $("#chatFeed");
   const refresh = $("#chatRefresh");
+  const tab = state.tab;
+  if (tab === "calls") return;
   if (feed && !state.messages.length) {
     feed.innerHTML = `<article class="chat-empty chat-loading" aria-busy="true">Loading feed…</article>`;
   }
@@ -465,7 +586,7 @@ async function fetchFeed() {
     refresh.textContent = "Refreshing…";
   }
   try {
-    const resp = await fetch("/api/chat/messages?limit=50", {
+    const resp = await fetch(`/api/chat/messages?limit=50${TAB_QUERY[tab] || ""}`, {
       headers: { ...authHeaders() }
     });
     const data = await resp.json().catch(() => ({}));
@@ -745,6 +866,290 @@ function showErr(err) {
   }
 }
 
+function switchTab(tab) {
+  state.tab = tab;
+  document.querySelectorAll("#chatTabs .chat-tab").forEach((b) => {
+    b.classList.toggle("is-on", b.getAttribute("data-chat-tab") === tab);
+  });
+  const feed = $("#chatFeed");
+  const calls = $("#chatCallsPanel");
+  const searchbar = $(".chat-searchbar");
+  if (tab === "calls") {
+    if (feed) feed.hidden = true;
+    if (calls) calls.hidden = false;
+    if (searchbar) searchbar.hidden = true;
+    return;
+  }
+  if (feed) feed.hidden = false;
+  if (calls) calls.hidden = true;
+  if (searchbar) searchbar.hidden = false;
+  state.messages = [];
+  fetchFeed().catch(showErr);
+}
+
+function buildEmojiBar() {
+  const bar = $("#chatEmojiBar");
+  if (!bar || bar.dataset.built) return;
+  bar.dataset.built = "1";
+  bar.innerHTML = EMOJIS.map((e) => `<button type="button" class="chat-emoji" data-emoji="${escapeHtml(e)}" title="${escapeHtml(e)}">${twemojiImg(e)}</button>`).join("");
+  bar.querySelectorAll("[data-emoji]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      insertAtCursor(btn.getAttribute("data-emoji"));
+    });
+  });
+}
+
+function insertAtCursor(text) {
+  const input = $("#chatInput");
+  if (!input) return;
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  input.value = input.value.slice(0, start) + text + input.value.slice(end);
+  const pos = start + text.length;
+  input.selectionStart = pos;
+  input.selectionEnd = pos;
+  input.focus();
+  updateCount();
+}
+
+function wrapSelection(before, after) {
+  const input = $("#chatInput");
+  if (!input) return;
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  const sel = input.value.slice(start, end) || "text";
+  input.value = input.value.slice(0, start) + before + sel + after + input.value.slice(end);
+  const pos = start + before.length;
+  input.selectionStart = pos;
+  input.selectionEnd = sel === "text" ? pos : pos + sel.length;
+  input.focus();
+  updateCount();
+}
+
+function toggleEmojiBar() {
+  const bar = $("#chatEmojiBar");
+  if (!bar) return;
+  buildEmojiBar();
+  bar.hidden = !bar.hidden;
+}
+
+function fmtAction(fmt) {
+  if (fmt === "bold") wrapSelection("**", "**");
+  else if (fmt === "italic") wrapSelection("*", "*");
+  else if (fmt === "link") {
+    const url = window.prompt("Paste a link (https://…):", "https://");
+    if (!url) return;
+    insertAtCursor(`[${"link"}](...)`.replace("link", url.replace(/^https?:\/\//, "")));
+    const input = $("#chatInput");
+    if (input) {
+      const idx = input.value.lastIndexOf("(...)");
+      if (idx >= 0) {
+        input.selectionStart = idx + 1;
+        input.selectionEnd = idx + 4;
+        input.focus();
+      }
+    }
+  } else if (fmt === "emoji") toggleEmojiBar();
+}
+
+async function submitCallRequest(e) {
+  e.preventDefault();
+  const form = e.currentTarget;
+  const btn = form.querySelector('button[type="submit"]');
+  const status = $("#callFormStatus");
+  const fd = new FormData(form);
+  const payload = Object.fromEntries(fd.entries());
+  payload.telegram = String(payload.telegram || "").replace(/^@/, "").trim();
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = "Sending…";
+  try {
+    const resp = await fetch("/api/call-requests", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify(payload)
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(data.error || "Could not send request");
+    if (status) {
+      status.textContent = data.note || "Request sent — we’ll call you back shortly.";
+      status.classList.add("is-ok");
+    }
+    form.reset();
+  } catch (err) {
+    if (status) {
+      status.textContent = err.message || "Could not send request";
+      status.classList.remove("is-ok");
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// ── Video chat (WebRTC via PeerJS, one-to-one by @username) ──────────────
+
+function loadPeerJS() {
+  return new Promise((resolve, reject) => {
+    if (window.Peer) return resolve(window.Peer);
+    const s = document.createElement("script");
+    s.src = "https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js";
+    s.async = true;
+    s.onload = () => (window.Peer ? resolve(window.Peer) : reject(new Error("PeerJS failed to load.")));
+    s.onerror = () => reject(new Error("Could not load video chat service. Check your connection."));
+    document.head.appendChild(s);
+  });
+}
+
+async function ensurePeerListen() {
+  if (!state.user?.username) return;
+  if (state.peer && state.peerReady) return;
+  const Peer = await loadPeerJS();
+  if (state.peer) return;
+  const id = `dtd-vc-${String(state.user.username).toLowerCase()}`;
+  const peer = new Peer(id);
+  peer.on("open", () => {
+    state.peerReady = true;
+  });
+  peer.on("call", (call) => {
+    if (state.activeCall) {
+      call.close();
+      return;
+    }
+    const peerLabel = String(call.peer || "").replace(/^dtd-vc-/, "");
+    openVideoModal(`Incoming call`, `@${peerLabel} wants to talk`);
+    setVideoCallStatus(`@${peerLabel} is calling…`);
+    const acceptBtn = $("#videoCallAccept");
+    if (acceptBtn) acceptBtn.hidden = false;
+    state.activeCall = { call, mediaStream: null, target: peerLabel, incoming: true };
+    state.pendingIncoming = call;
+  });
+  peer.on("error", () => {});
+  state.peer = peer;
+}
+
+function destroyPeer() {
+  try {
+    state.activeCall?.call?.close();
+    state.activeCall?.mediaStream?.getTracks?.().forEach((t) => t.stop());
+  } catch {}
+  try {
+    state.peer?.destroy();
+  } catch {}
+  state.peer = null;
+  state.peerReady = false;
+  state.activeCall = null;
+  state.pendingIncoming = null;
+}
+
+function peerIdFor(username) {
+  return `dtd-vc-${String(username).replace(/^@/, "").toLowerCase()}`;
+}
+
+function openVideoModal(title, sub) {
+  const modal = $("#videoCallModal");
+  if (!modal) return;
+  modal.hidden = false;
+  state.videoModalActive = true;
+  document.body.classList.add("video-call-open");
+  if (title) $("#videoCallTitle").textContent = title;
+  if (sub) $("#videoCallSub").textContent = sub;
+  setVideoCallStatus("");
+}
+
+function closeVideoModal() {
+  const modal = $("#videoCallModal");
+  if (modal) modal.hidden = true;
+  state.videoModalActive = false;
+  document.body.classList.remove("video-call-open");
+  $("#videoCallRemote").srcObject = null;
+  $("#videoCallLocal").srcObject = null;
+  $("#videoCallRemote").classList.add("is-away");
+  $("#videoCallLocal").classList.add("is-away");
+  $("#videoCallMute").classList.remove("is-on");
+  $("#videoCallCam").classList.remove("is-on");
+}
+
+function setVideoCallStatus(text) {
+  const el = $("#videoCallStatus");
+  if (el) el.textContent = text || "";
+}
+
+function hangUpVideo() {
+  try {
+    state.activeCall?.call?.close();
+    state.activeCall?.mediaStream?.getTracks?.().forEach((t) => t.stop());
+  } catch {}
+  state.activeCall = null;
+  state.pendingIncoming = null;
+  const acceptBtn = $("#videoCallAccept");
+  if (acceptBtn) acceptBtn.hidden = true;
+  setVideoCallStatus("Call ended");
+  setTimeout(closeVideoModal, 900);
+}
+
+async function startVideoCall(targetUsername) {
+  if (!state.user) throw new Error("Sign in with Telegram to start a video call.");
+  const target = String(targetUsername).replace(/^@/, "").toLowerCase();
+  if (target === String(state.user.username).toLowerCase()) throw new Error("That’s you!");
+  await ensurePeerListen();
+  if (!state.peerReady) throw new Error("Video chat is still connecting — try again in a second.");
+  const media = await navigator.mediaDevices
+    .getUserMedia({ video: true, audio: true })
+    .catch(() => { throw new Error("Camera/mic permission needed for video calls."); });
+  openVideoModal(`Calling @${target}`, "Ringing…");
+  const acceptBtn = $("#videoCallAccept");
+  if (acceptBtn) acceptBtn.hidden = true;
+  $("#videoCallLocal").srcObject = media;
+  $("#videoCallLocal").classList.remove("is-away");
+  const call = state.peer.call(peerIdFor(target), media);
+  state.activeCall = { call, mediaStream: media, target, incoming: false };
+  call.on("stream", (remote) => {
+    const v = $("#videoCallRemote");
+    v.srcObject = remote;
+    v.classList.remove("is-away");
+    $("#videoCallSub").textContent = `Connected to @${target}`;
+    setVideoCallStatus("");
+  });
+  call.on("close", () => hangUpVideo());
+  call.on("error", (err) => {
+    const msg = String(err?.type || "");
+    if (msg === "peer-unavailable") {
+      setVideoCallStatus(`@${target} isn’t online right now.`);
+      $("#videoCallSub").textContent = "No answer";
+    } else {
+      setVideoCallStatus("Call failed — check your connection.");
+    }
+    setTimeout(hangUpVideo, 2600);
+  });
+}
+
+async function acceptIncomingCall() {
+  const pending = state.pendingIncoming;
+  if (!pending) return;
+  const acceptBtn = $("#videoCallAccept");
+  if (acceptBtn) acceptBtn.hidden = true;
+  const media = await navigator.mediaDevices
+    .getUserMedia({ video: true, audio: true })
+    .catch(() => {
+      setVideoCallStatus("Camera/mic permission needed.");
+      return null;
+    });
+  if (!media) return;
+  state.pendingIncoming = null;
+  if (state.activeCall) state.activeCall.mediaStream = media;
+  $("#videoCallLocal").srcObject = media;
+  $("#videoCallLocal").classList.remove("is-away");
+  pending.answer(media);
+  pending.on("stream", (remote) => {
+    const v = $("#videoCallRemote");
+    v.srcObject = remote;
+    v.classList.remove("is-away");
+    $("#videoCallSub").textContent = `Connected to @${state.activeCall?.target || "peer"}`;
+    setVideoCallStatus("");
+  });
+  pending.on("close", () => hangUpVideo());
+  pending.on("error", () => hangUpVideo());
+}
+
 function bindUi() {
   $("#chatSignMini")?.addEventListener("click", () => signInMiniApp().catch(showErr));
   $("#chatLinkTg")?.addEventListener("click", () => startClaim().catch(showErr));
@@ -753,6 +1158,46 @@ function bindUi() {
     syncComposer();
     fetchFeed();
   });
+
+  document.querySelectorAll("#chatTabs .chat-tab").forEach((b) => {
+    b.addEventListener("click", () => switchTab(b.getAttribute("data-chat-tab")));
+  });
+  const search = $("#chatSearch");
+  if (search) {
+    search.addEventListener("input", () => {
+      state.search = search.value;
+      renderFeed();
+    });
+  }
+
+  document.querySelectorAll(".chat-fmt-btn").forEach((b) => {
+    b.addEventListener("click", () => fmtAction(b.getAttribute("data-fmt")));
+  });
+
+  $("#chatCtaCall")?.addEventListener("click", () => switchTab("calls"));
+  $("#callRequestForm")?.addEventListener("submit", submitCallRequest);
+
+  $("#videoCallEnd")?.addEventListener("click", () => hangUpVideo());
+  $("#videoCallAccept")?.addEventListener("click", () => acceptIncomingCall().catch(showErr));
+  $("#videoCallMute")?.addEventListener("click", () => {
+    const track = state.activeCall?.mediaStream?.getAudioTracks?.()[0];
+    if (!track) return;
+    track.enabled = !track.enabled;
+    $("#videoCallMute").classList.toggle("is-on", !track.enabled);
+  });
+  $("#videoCallCam")?.addEventListener("click", () => {
+    const track = state.activeCall?.mediaStream?.getVideoTracks?.()[0];
+    if (!track) return;
+    track.enabled = !track.enabled;
+    $("#videoCallCam").classList.toggle("is-on", !track.enabled);
+  });
+  $("#videoCallModal")?.addEventListener("click", (e) => {
+    if (e.target.id === "videoCallModal") hangUpVideo();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && state.videoModalActive) hangUpVideo();
+  });
+
   $("#chatComposer")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const input = $("#chatInput");

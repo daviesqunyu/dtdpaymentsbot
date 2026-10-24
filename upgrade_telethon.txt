@@ -1,0 +1,7 @@
+Requirement already satisfied: telethon in ./venv/lib/python3.12/site-packages (1.44.0)
+Requirement already satisfied: pyaes in ./venv/lib/python3.12/site-packages (from telethon) (1.6.1)
+Requirement already satisfied: rsa in ./venv/lib/python3.12/site-packages (from telethon) (4.9.1)
+Requirement already satisfied: pyasn1>=0.1.3 in ./venv/lib/python3.12/site-packages (from rsa->telethon) (0.6.4)
+
+[notice] A new release of pip is available: 26.1.2 -> 26.2.1
+[notice] To update, run: pip install --upgrade pip

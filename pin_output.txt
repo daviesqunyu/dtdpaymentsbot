@@ -1,0 +1,4 @@
+OUT:
+[ok] Welcome pinned!
+
+ERR:

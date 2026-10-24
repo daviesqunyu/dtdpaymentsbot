@@ -971,6 +971,7 @@ textarea {
 }
 
 .product-card {
+  position: relative;
   display: grid;
   gap: 14px;
   min-height: 100%;
@@ -980,6 +981,19 @@ textarea {
   padding: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.product-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(
+    90deg,
+    var(--card-accent, var(--primary)),
+    color-mix(in srgb, var(--card-accent, var(--primary)) 35%, transparent)
+  );
 }
 
 .product-card.reveal {
@@ -995,8 +1009,8 @@ textarea {
 
 .product-card:hover {
   transform: translateY(-4px);
-  border-color: color-mix(in srgb, var(--primary) 40%, var(--line));
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35), 0 0 0 1px color-mix(in srgb, var(--primary) 15%, transparent);
+  border-color: color-mix(in srgb, var(--card-accent, var(--primary)) 40%, var(--line));
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35), 0 0 0 1px color-mix(in srgb, var(--card-accent, var(--primary)) 15%, transparent);
 }
 
 [data-theme="light"] .product-card {
@@ -3764,3 +3778,192 @@ html.tg-mini-app .smtp-section {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* ── Market brain: flash deal banner ─────────────────────────── */
+.flash-banner {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 1.25rem;
+  border-radius: 20px;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  background:
+    radial-gradient(120% 160% at 0% 0%, rgba(245, 158, 11, 0.28), transparent 55%),
+    radial-gradient(120% 160% at 100% 100%, rgba(239, 68, 68, 0.25), transparent 55%),
+    linear-gradient(135deg, #1a1408, #241307);
+  color: #fff;
+}
+.flash-inner {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 1rem 1.4rem;
+  align-items: center;
+  padding: 1.1rem 1.25rem;
+  flex-wrap: wrap;
+}
+.flash-label {
+  grid-row: 1 / 3;
+  align-self: center;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  padding: 8px 12px;
+  border-radius: 12px;
+  white-space: nowrap;
+  animation: flash-pulse 1.6s ease-in-out infinite;
+}
+@keyframes flash-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); }
+  50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+}
+.flash-title {
+  font-weight: 800;
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+.flash-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  white-space: nowrap;
+}
+.flash-price strong { font-size: 1.45rem; color: #fbbf24; }
+.flash-price span { text-decoration: line-through; opacity: 0.55; font-size: 0.9rem; }
+.flash-price em {
+  font-style: normal;
+  font-weight: 800;
+  color: #7f1d1d;
+  background: #fbbf24;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.78rem;
+}
+.flash-countdown {
+  grid-column: 1 / -1;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fde68a;
+  font-size: 0.85rem;
+}
+.flash-cta {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.flash-cta:hover { filter: brightness(1.1); transform: translateY(-1px); }
+@media (min-width: 720px) {
+  .flash-inner {
+    grid-template-columns: auto 1fr auto auto auto;
+    grid-template-rows: auto auto;
+  }
+  .flash-countdown { grid-column: auto; }
+  .flash-cta { grid-column: auto; width: auto; padding: 12px 22px; }
+}
+
+/* Flash badge + strike on product cards */
+.product-card { position: relative; }
+.flash-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  padding: 5px 10px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45);
+}
+.product-card.is-flash {
+  box-shadow: 0 0 0 1.5px rgba(245, 158, 11, 0.55), 0 12px 32px rgba(245, 158, 11, 0.18);
+}
+.price-strike {
+  text-decoration: line-through;
+  opacity: 0.5;
+  font-size: 0.82em;
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+/* ── Social proof live feed ──────────────────────────────────── */
+.social-proof {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  overflow: hidden;
+  margin: 0 0 1.25rem;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  background: rgba(45, 212, 191, 0.06);
+}
+.social-proof-head {
+  flex: none;
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: #2dd4bf;
+  white-space: nowrap;
+}
+.social-proof-track {
+  display: flex;
+  gap: 1.4rem;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.proof-item { display: inline-flex; gap: 0.45rem; align-items: baseline; font-size: 0.84rem; }
+.proof-name { font-weight: 800; color: var(--text); }
+.proof-prod { color: var(--muted); }
+.proof-prod::before { content: "·"; margin-right: 0.45rem; }
+.proof-time { color: var(--muted); opacity: 0.7; font-size: 0.75rem; }
+
+/* ── Bundle upsell ───────────────────────────────────────────── */
+.bundle-upsell-wrap:empty { display: none; }
+.bundle-upsell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px dashed rgba(45, 212, 191, 0.4);
+  background: rgba(45, 212, 191, 0.07);
+}
+.bundle-upsell.is-engaged { border-style: solid; border-color: rgba(52, 211, 153, 0.5); }
+.bundle-upsell-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.bundle-upsell-body strong { font-size: 0.9rem; }
+.bundle-upsell-body span { font-size: 0.78rem; color: var(--muted); }
+.bundle-upsell-btn {
+  flex: none;
+  border: none;
+  border-radius: 999px;
+  padding: 9px 14px;
+  font-weight: 800;
+  font-size: 0.78rem;
+  cursor: pointer;
+  background: linear-gradient(135deg, #0f766e, #2dd4bf);
+  color: #fff;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+.bundle-upsell-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.bundle-upsell.is-engaged .bundle-upsell-btn { background: #059669; }
