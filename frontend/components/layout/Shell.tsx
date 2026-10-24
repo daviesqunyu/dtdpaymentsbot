@@ -1,3 +1,5 @@
+'use client'
+
 import Head from 'next/head'
 import SideNav from '@/components/layout/SideNav'
 import TopBar from '@/components/layout/TopBar'
