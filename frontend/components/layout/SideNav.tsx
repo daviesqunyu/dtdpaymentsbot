@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Menu, X, Store, CreditCard, Bot, ShieldAlert, MessageSquare, Phone, TrendingUp } from 'lucide-react'

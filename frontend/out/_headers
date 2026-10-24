@@ -1,8 +1,0 @@
-/.well-known/apple-developer-merchantid-domain-association
-  Content-Type: application/text
-
-/*
-  X-Content-Type-Options: nosniff
-  X-Frame-Options: DENY
-  Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; connect-src 'self' https://api.paystack.co https://api.telegram.org https://api.binance.com wss://stream.binance.com https://api.trongrid.io https://blockstream.info https://iqoffsnkptulvuqmdcce.supabase.co; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; frame-ancestors 'none'; base-uri 'self';
