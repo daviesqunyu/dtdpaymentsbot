@@ -1,0 +1,29 @@
+--- ls -la /opt/dtd-mirror/assets/promo-*.jpg 2>/dev/n ---
+-rw-r--r-- 1 dvtech dvtech 100229 Aug 15 19:51 /opt/dtd-mirror/assets/promo-1.jpg
+-rw-r--r-- 1 dvtech dvtech 101133 Aug 15 19:51 /opt/dtd-mirror/assets/promo-2.jpg
+-rw-r--r-- 1 dvtech dvtech 103553 Aug 15 19:51 /opt/dtd-mirror/assets/promo-3.jpg
+-rw-r--r-- 1 dvtech dvtech 100847 Aug 15 19:51 /opt/dtd-mirror/assets/promo-4.jpg
+-rw-r--r-- 1 dvtech dvtech  97305 Aug 15 19:51 /opt/dtd-mirror/assets/promo-5.jpg
+-rw-r--r-- 1 dvtech dvtech 101595 Aug 15 19:51 /opt/dtd-mirror/assets/promo-6.jpg
+-rw-r--r-- 1 dvtech dvtech 106226 Aug 15 19:51 /opt/dtd-mirror/assets/promo-7.jpg
+-rw-r--r-- 1 dvtech dvtech  97233 Aug 15 19:51 /opt/dtd-mirror/assets/promo-8.jpg
+
+
+
+--- file /opt/dtd-mirror/assets/promo-*.jpg 2>/dev/nul ---
+/opt/dtd-mirror/assets/promo-1.jpg: JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 1280x720, components 3
+/opt/dtd-mirror/assets/promo-2.jpg: JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 1280x720, components 3
+/opt/dtd-mirror/assets/promo-3.jpg: JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 1280x720, components 3
+/opt/dtd-mirror/assets/promo-4.jpg: JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 1280x720, components 3
+/opt/dtd-mirror/assets/promo-5.jpg: JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 1280x720, components 3
+/opt/dtd-mirror/assets/promo-6.jpg: JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 1280x720, components 3
+/opt/dtd-mirror/assets/promo-7.jpg: JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 1280x720, components 3
+/opt/dtd-mirror/assets/promo-8.jpg: JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, baseline, precision 8, 1280x720, components 3
+
+
+
+--- ls -la /opt/dtd-mirror/assets/product-promo/ 2>/de ---
+no product-promo dir
+
+
+

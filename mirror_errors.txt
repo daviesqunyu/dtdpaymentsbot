@@ -1,0 +1,30 @@
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[store-agent] loop error: HTTP Error 400: Bad Request
+[error] 185373: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185373: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 62606: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 62606: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185374: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185374: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185375: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185375: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185376: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185376: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185377: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185377: _safe_send_message() missing 1 required positional argument: 'text'

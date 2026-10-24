@@ -1,0 +1,40 @@
+[chat] mirrored 305 -> feed (DTD PREMIUM🤑🏦)
+[ok] promo (image) -> DTD MAIN STORE🤑💰
+[ok] product promo -> DTD MAIN STORE🤑💰
+[ok] promo (image) -> GMONEY STORE💵
+[ok] product promo -> DTD PREMIUM🤑🏦
+[chat] mirrored 3048 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 3049 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 306 -> feed (DTD PREMIUM🤑🏦)
+[ok] @Glock7money
+[ok] source: Wall Street Shop
+[ok] source: Leads|Affiliate|Database Group
+[ok] dest: DTD MAIN STORE🤑💰
+[ok] dest: GMONEY STORE💵
+[ok] watching 2 resolved source chat(s)
+[ok] promo: DTD MAIN STORE🤑💰
+[ok] promo: GMONEY STORE💵
+[warn] bio '?? Premium Vendor · @DTDSTOREBOT · dtdpaymentsbot.pages.dev': 'utf-8' codec can't encode characters in position 0-1: surrogates not allowed
+[warn] bio '?? Premium Vendor · @DTDSTOREBOT': 'utf-8' codec can't encode characters in position 0-1: surrogates not allowed
+[warn] about DTD MAIN STORE🤑💰: 'utf-8' codec can't encode characters in position 0-1: surrogates not allowed
+[warn] about GMONEY STORE💵: 'utf-8' codec can't encode characters in position 0-1: surrogates not allowed
+[ok] product promo: DTD MAIN STORE🤑💰
+[ok] product promo: DTD PREMIUM🤑🏦
+[ok] delay=2.0-8.0s translate=True catch_up=0
+[ok] promo every ~30-60 min, rotating 2 chat(s), 10 variants
+[ok] product promo every ~0h, rotating 2 chat(s)
+[ok] daily story every day ~09:00 to 2 chat(s), banners rotating daily
+[ok] channel -> chat feed mirror every ~120s (2 channel(s))
+[ok] control plane active (promo / story / pin via agent_commands)
+[ok] channel agent active (react + comment on both channels)
+[ok] behavior tracker active (engagement analytics)
+[ok] store agent active (order monitoring + auto-promo)
+[ok] ecosystem heartbeat active (10 min cycle)
+[ok] listening...
+[ok] member management: welcome + activation on 2 channel(s)
+[ok] chat mirror: DTD MAIN STORE🤑💰
+[ok] chat mirror: DTD PREMIUM🤑🏦
+[chat] mirrored 3050 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 307 -> feed (DTD PREMIUM🤑🏦)
+[ok] promo (image) -> GMONEY STORE💵
+[ok] product promo -> DTD MAIN STORE🤑💰

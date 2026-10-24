@@ -1,0 +1,41 @@
+STDOUT:
+Found 30 products, 9 paid orders
+Intro posted
+  Image error for 100 BAND FULLZ: HTTP Error 403: Forbidden
+[1/30] 100 BAND FULLZ
+[2/30] API KEYS
+[3/30] ATT Automation
+[4/30] AWS CRACKER SMTP
+[5/30] BANK LOGS
+[6/30] BULK EMAILS (DOZEN)
+[7/30] Bulk SMS Sender
+[8/30] Call Centre Development
+[9/30] Cashback Program
+  Image error for CLI AND NON CLI: HTTP Error 403: Forbidden
+[10/30] CLI AND NON CLI
+  Image error for Comcast: HTTP Error 403: Forbidden
+[11/30] Comcast
+[12/30] DIGITAL SERVICES
+[13/30] DTD STORE FULL METHODS
+[14/30] Evilginx Course
+[15/30] Non VbV 10 band Banch
+[16/30] Non VbV 5 band Banch
+[17/30] OTP BYPASS
+[18/30] OUTLIRE AI VERIFIED ACCOUNTS
+[19/30] PHONE NUMBERS
+[20/30] PREMIUM COURSES DTD
+[21/30] Proxy AI Access
+[22/30] RDP
+[23/30] Reserved API keys
+[24/30] SC Sessions API
+[25/30] SCREEN PORTALHOST SERVICES
+[26/30] SMTP
+[27/30] TELEGRAM PREMIUM SCAMPAGE
+[28/30] VANILLA GIFT CARD
+[29/30] VERIFIED HANDSHAKE AI ACCOUNT
+  Image error for Warm GPT: HTTP Error 403: Forbidden
+[30/30] Warm GPT
+
+Done - all products posted
+
+STDERR:

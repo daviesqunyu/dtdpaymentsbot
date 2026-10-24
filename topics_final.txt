@@ -1,0 +1,12 @@
+  Deleted stray msg 1711
+  Deleted stray msg 1710
+  Deleted stray msg 1709
+  Deleted stray msg 1708
+
+Final state:
+  id=1703 | 💬 COMMUNITY |  | 👥 488+ members strong | 🎯 Ask questions, share reviews, vibe | ✅ No sca
+  id=1702 | 🤖 BOT & ORDERS |  | ✅ Track orders: /order + your email | 💳 Pay via USDT, BTC, Card, S
+  id=1701 | 💎 PREMIUM LOUNGE |  | 👑 Members-only drops before main store | 🔔 Early access + exclus
+  id=1700 | 📦 PRODUCT CATALOG |  | 🖼️ Every product with images & prices | 📊 Updated every 25 min 
+  id=1699 | 🔥 DEALS & DROPS |  | ✨ Fresh deals drop here every 30-60 min | 💰 Verified prices, fast
+  id=1 | 

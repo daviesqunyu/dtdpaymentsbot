@@ -48,9 +48,15 @@ def sb(path: str, method: str = "GET", body: dict | None = None, prefer: str = "
     req = urllib.request.Request(
         f"{SUPABASE_URL}/rest/v1/{path}", data=data, headers=headers, method=method
     )
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        raw = resp.read().decode("utf-8")
-        return json.loads(raw) if raw else None
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            raw = resp.read().decode("utf-8")
+            return json.loads(raw) if raw else None
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", "replace")[:300].strip()
+        raise RuntimeError(
+            f"HTTP {exc.code} on {path} ({detail})" if detail else f"HTTP {exc.code} on {path}"
+        ) from exc
 
 
 def tg_notify(text: str) -> None:
@@ -105,22 +111,23 @@ def claim_jobs(channel: str, limit: int = 5):
     stale_before = time.strftime(
         "%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - 300)
     )
-    stale = (
-        sb(
-            f"smtp_jobs?channel=eq.{channel}&status=eq.sending&updated_at=lt.{stale_before}&order=created_at.asc&limit={limit}",
-            prefer="return=representation",
-        )
-        or []
-    )
-    if not stale:
-        # Fallback if updated_at missing — use created_at
-        stale = (
-            sb(
-                f"smtp_jobs?channel=eq.{channel}&status=eq.sending&created_at=lt.{stale_before}&order=created_at.asc&limit={limit}",
-                prefer="return=representation",
+    stale = []
+    # The table may lack an `updated_at` column → Supabase returns 42703 (400).
+    # Prefer updated_at, fall back to created_at, and never crash the poll loop.
+    for col in ("updated_at", "created_at"):
+        if stale:
+            break
+        try:
+            stale = (
+                sb(
+                    f"smtp_jobs?channel=eq.{channel}&status=eq.sending&{col}=lt.{stale_before}&order=created_at.asc&limit={limit}",
+                    prefer="return=representation",
+                )
+                or []
             )
-            or []
-        )
+        except Exception as exc:  # noqa: BLE001
+            print(f"[{_ts()}] stale reclaim ({col}) skipped: {exc}", file=sys.stderr)
+            stale = []
     for job in stale:
         sb(
             f"smtp_jobs?id=eq.{job['id']}&status=eq.sending",

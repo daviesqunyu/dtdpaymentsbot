@@ -1,0 +1,11 @@
+● dtd-mirror.service - DTD Mirror Bot (24/7)
+     Loaded: loaded (/etc/systemd/system/dtd-mirror.service; enabled; preset: enabled)
+     Active: active (running) since Mon 2026-08-17 22:43:29 CEST; 8h ago
+   Main PID: 3430401 (python)
+      Tasks: 2 (limit: 9483)
+     Memory: 50.3M (peak: 51.2M)
+        CPU: 1min 4.977s
+     CGroup: /system.slice/dtd-mirror.service
+             └─3430401 /opt/dtd-mirror/venv/bin/python scripts/telethon_mirror.py
+
+Aug 17 22:43:29 mail.dvtechnologies.xyz systemd[1]: Started dtd-mirror.service - DTD Mirror Bot (24/7).

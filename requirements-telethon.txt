@@ -1,3 +1,6 @@
-telethon>=1.36.0
+# Pinned <1.45: telethon 1.45+ removed channels.EditChannelRequest in a
+# breaking way; the mirror code supports 1.36–1.44 (EditChatAboutRequest path).
+telethon>=1.36.0,<1.45
 python-dotenv>=1.0.0
 deep-translator>=1.11.4
+Pillow>=10.0.0

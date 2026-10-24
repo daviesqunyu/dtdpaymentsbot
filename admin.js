@@ -9,6 +9,8 @@ const sessionEmail = document.querySelector("#sessionEmail");
 const adminProducts = document.querySelector("#adminProducts");
 const adminProductCount = document.querySelector("#adminProductCount");
 const adminOrders = document.querySelector("#adminOrders");
+const adminCustomers = document.querySelector("#adminCustomers");
+const refreshCustomers = document.querySelector("#refreshCustomers");
 const mmshopForm = document.querySelector("#mmshopForm");
 const mmshopCatalogList = document.querySelector("#mmshopCatalogList");
 const mmshopCatalogCount = document.querySelector("#mmshopCatalogCount");
@@ -169,16 +171,73 @@ async function renderAdminStats(products = [], orders = []) {
   if (!adminStats) return;
 
   const visibleProducts = products.filter((product) => product.active).length;
-  const pendingOrders = orders.filter(
-    (order) => order.payment_status !== "paid" || order.order_status === "pending"
-  ).length;
+  const paidOrders = orders.filter((order) =>
+    /paid|confirmed|delivered/i.test(String(order.payment_status || ""))
+  );
+  const revenue = paidOrders.reduce((s, o) => s + Number(o.total_usd || 0), 0);
+  const pendingOrders = orders.length - paidOrders.length;
 
-  adminStats.innerHTML = `
-    <span class="admin-stat-pill">${visibleProducts} visible products</span>
-    <span class="admin-stat-pill">${products.length} total products</span>
-    <span class="admin-stat-pill">${pendingOrders} pending orders</span>
-    <span class="admin-stat-pill">${orders.length} recent orders</span>
-  `;
+  let chatPosts = null;
+  let chatComments = null;
+  try {
+    const [postsRes, cmtsRes] = await Promise.all([
+      supabaseClient.from("chat_messages").select("id", { count: "exact", head: true }),
+      supabaseClient.from("chat_comments").select("id", { count: "exact", head: true })
+    ]);
+    chatPosts = postsRes.count ?? null;
+    chatComments = cmtsRes.count ?? null;
+  } catch {
+    chatPosts = null;
+    chatComments = null;
+  }
+
+  const cards = [
+    { label: "Revenue (paid)", value: formatMoney(revenue), icon: "💰", tone: "green" },
+    { label: "Orders", value: String(orders.length), icon: "🧾", tone: "blue" },
+    { label: "Pending payment", value: String(pendingOrders), icon: "⏳", tone: "amber" },
+    { label: "Products visible", value: `${visibleProducts}/${products.length}`, icon: "🛍", tone: "teal" },
+    { label: "Chat posts", value: chatPosts == null ? "—" : String(chatPosts), icon: "💬", tone: "purple" },
+    { label: "Chat comments", value: chatComments == null ? "—" : String(chatComments), icon: "🗨", tone: "slate" }
+  ];
+
+  adminStats.innerHTML = cards
+    .map(
+      (c) => `
+      <div class="admin-stat-card tone-${c.tone}">
+        <span class="admin-stat-icon" aria-hidden="true">${c.icon}</span>
+        <span class="admin-stat-value">${c.value}</span>
+        <span class="admin-stat-label">${c.label}</span>
+      </div>`
+    )
+    .join("");
+
+  renderAdminRecentOrders(orders);
+}
+
+function renderAdminRecentOrders(orders) {
+  const el = document.querySelector("#adminRecentOrders");
+  if (!el) return;
+  if (!orders.length) {
+    el.innerHTML = `<div class="empty-cart">No orders yet.</div>`;
+    return;
+  }
+  el.innerHTML = orders
+    .slice(0, 6)
+    .map(
+      (order) => `
+      <div class="admin-recent-order">
+        <div class="admin-recent-order-main">
+          <strong>${order.customer_name || "Guest"}</strong>
+          <span class="order-date">${formatDate(order.created_at)}</span>
+        </div>
+        <div class="admin-recent-order-side">
+          ${renderOrderBadges(order)}
+          <strong>${formatMoney(order.total_usd)}</strong>
+          <span class="order-date">${order.payment_method || "—"}</span>
+        </div>
+      </div>`
+    )
+    .join("");
 }
 
 function formatMoney(value) {
@@ -208,12 +267,14 @@ function setAdminEnabled(isEnabled) {
   if (resetProducts) resetProducts.disabled = !isEnabled;
   if (publishAllProducts) publishAllProducts.disabled = !isEnabled;
   if (refreshOrders) refreshOrders.disabled = !isEnabled;
+  if (refreshCustomers) refreshCustomers.disabled = !isEnabled;
 }
 
 const ADMIN_TITLES = {
   overview: "Overview",
   products: "Products",
   orders: "Orders",
+  customers: "Customers",
   login: "Sign in"
 };
 
@@ -304,6 +365,7 @@ async function refreshAuth() {
     adminProductCount.textContent = "0 products";
     adminProducts.innerHTML = `<div class="empty-cart">Sign in to manage products.</div>`;
     adminOrders.innerHTML = `<div class="empty-cart">Sign in to check orders.</div>`;
+    if (adminCustomers) adminCustomers.innerHTML = `<div class="empty-cart">Sign in to check customers.</div>`;
     if (adminStats) adminStats.innerHTML = "";
     showAdminPage("login");
     return;
@@ -317,6 +379,7 @@ async function refreshAuth() {
   setAdminEnabled(true);
   await renderAdminProducts();
   await renderAdminOrders();
+  await renderAdminCustomers();
   showAdminPage("overview");
 }
 
@@ -396,6 +459,74 @@ async function renderAdminOrders() {
       `;
     })
     .join("");
+}
+
+async function loadAdminCustomers() {
+  const { data, error } = await supabaseClient
+    .from("tool_downloads")
+    .select("id,name,email,phone,tool,tool_name,kind,price_usd,file,ip,created_at")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) throw error;
+  return data || [];
+}
+
+async function renderAdminCustomers() {
+  if (adminCustomers) {
+    adminCustomers.innerHTML = `<div class="empty-cart">Loading customers...</div>`;
+  }
+
+  let customers = [];
+  try {
+    customers = await loadAdminCustomers();
+  } catch (error) {
+    console.error(error);
+    if (adminCustomers) {
+      adminCustomers.innerHTML = `<div class="empty-cart">Could not load customers. Run supabase-tool-downloads.sql in Supabase, or the table is missing.</div>`;
+    }
+    return;
+  }
+
+  if (!customers.length) {
+    if (adminCustomers) {
+      adminCustomers.innerHTML = `<div class="empty-cart">No customers yet. They appear here the moment someone downloads a tool.</div>`;
+    }
+    return;
+  }
+
+  adminCustomers.innerHTML = customers
+    .map((customer) => {
+      const priceLine =
+        customer.kind === "pro"
+          ? `<span class="status-pill active">Pro · $${Number(customer.price_usd || 0).toFixed(0)}</span>`
+          : `<span class="status-pill hidden">Free</span>`;
+      return `
+        <article class="admin-order">
+          <div>
+            <div class="order-topline">
+              <strong>${escapeHtml(customer.name || "—")}</strong>
+              ${priceLine}
+              <span class="status-pill hidden">${escapeHtml(customer.kind || "free")}</span>
+            </div>
+            <p class="order-date">${formatDate(customer.created_at)}</p>
+            <p>📧 <a href="mailto:${escapeHtml(customer.email)}">${escapeHtml(customer.email)}</a></p>
+            <p>📞 ${escapeHtml(customer.phone || "—")}</p>
+            <p>🧰 ${escapeHtml(customer.tool_name || customer.tool || "")}</p>
+            ${customer.ip ? `<p class="muted-small">IP: ${escapeHtml(customer.ip)}</p>` : ""}
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function escapeHtml(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 async function renderAdminProducts() {
@@ -770,6 +901,7 @@ copyLiveLink.addEventListener("click", () => {
 });
 
 refreshOrders.addEventListener("click", renderAdminOrders);
+refreshCustomers.addEventListener("click", renderAdminCustomers);
 
 bindAdminShell();
 refreshAuth();

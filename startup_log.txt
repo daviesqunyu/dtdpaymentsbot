@@ -1,0 +1,50 @@
+[ok] @Glock7money
+[ok] source: Wall Street Shop
+[ok] source: Leads|Affiliate|Database Group
+[ok] dest: DTD MAIN STORE🤑💰
+[ok] watching 2 resolved source chat(s)
+[ok] promo: DTD MAIN STORE🤑💰
+[warn] bio '?? Premium Vendor · @DTDSTOREBOT · dtdpaymentsbot.pages.dev': 'utf-8' codec can't encode characters in position 0-1: surrogates not allowed
+[warn] bio '?? Premium Vendor · @DTDSTOREBOT': 'utf-8' codec can't encode characters in position 0-1: surrogates not allowed
+[warn] about DTD MAIN STORE🤑💰: 'utf-8' codec can't encode characters in position 0-1: surrogates not allowed
+[ok] product promo: DTD MAIN STORE🤑💰
+[ok] product promo: DTD PREMIUM🤑🏦
+[ok] delay=2.0-8.0s translate=True catch_up=0
+[ok] promo every ~180-360 min, rotating 1 chat(s), 10 variants
+[ok] product promo every ~1h, rotating 2 chat(s)
+[ok] daily story every day ~09:00 to 2 chat(s), banners rotating daily
+[ok] channel -> chat feed mirror every ~120s (2 channel(s))
+[ok] control plane active (promo / story / pin via agent_commands)
+[ok] channel agent active (react + comment on both channels)
+[ok] behavior tracker active (engagement analytics)
+[ok] store agent active (order monitoring + auto-promo)
+[ok] ecosystem heartbeat active (10 min cycle)
+[ok] listening...
+[ok] member management: welcome + activation on 2 channel(s)
+[ok] chat mirror: DTD MAIN STORE🤑💰
+[ok] chat mirror: DTD PREMIUM🤑🏦
+[error] promo DTD MAIN STORE🤑💰: The document file was invalid and can't be used in inline mode (caused by SendMessageRequest)
+[warn] product image failed (DTD MAIN STORE🤑💰): The document file was invalid and can't be used in inline mode (caused by SendMediaRequest)
+[warn] product document also failed (DTD MAIN STORE🤑💰): The document file was invalid and can't be used in inline mode (caused by SendMediaRequest)
+[error] product promo DTD MAIN STORE🤑💰: The document file was invalid and can't be used in inline mode (caused by SendMessageRequest)
+[warn] product image failed (DTD PREMIUM🤑🏦): The document file was invalid and can't be used in inline mode (caused by SendMediaRequest)
+[warn] product document also failed (DTD PREMIUM🤑🏦): The document file was invalid and can't be used in inline mode (caused by SendMediaRequest)
+[error] product promo DTD PREMIUM🤑🏦: The document file was invalid and can't be used in inline mode (caused by SendMessageRequest)
+Fatal error handling updates (this is a bug in Telethon v1.44.0, please report it)
+Traceback (most recent call last):
+  File "/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/client/updates.py", line 498, in _update_loop
+    _preprocess_updates = await self._preprocess_updates(processed, users, chats)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/client/updates.py", line 509, in _preprocess_updates
+    await utils.maybe_async(self.session.process_entities(types.contacts.ResolvedPeer(None, users, chats)))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/sessions/sqlite.py", line 318, in process_entities
+    c.executemany(
+sqlite3.OperationalError: database is locked
+Task exception was never retrieved
+future: <Task finished name='Task-77' coro=<TelegramBaseClient._disconnect_coro() done, defined at /opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/client/telegrambaseclient.py:724> exception=OperationalError('database is locked')>
+Traceback (most recent call last):
+  File "/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/client/telegrambaseclient.py", line 754, in _disconnect_coro
+    await self._save_states_and_entities()
+  File "/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/client/telegrambaseclient.py", line 709, in _save_states_and_entities
+    self.session.process_entities(

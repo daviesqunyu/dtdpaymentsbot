@@ -1,0 +1,8 @@
+DejaVuSans-Bold.ttf
+DejaVuSans.ttf
+DejaVuSansMono-Bold.ttf
+DejaVuSansMono-BoldOblique.ttf
+DejaVuSansMono-Oblique.ttf
+DejaVuSansMono.ttf
+DejaVuSerif-Bold.ttf
+DejaVuSerif.ttf

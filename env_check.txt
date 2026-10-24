@@ -1,0 +1,16 @@
+GMONEY lines in .env:
+
+ADDED topic IDs to .env
+
+Image files:
+/opt/dtd-mirror/assets/promo-2.jpg
+/opt/dtd-mirror/assets/promo-7.jpg
+/opt/dtd-mirror/assets/promo-4.jpg
+/opt/dtd-mirror/assets/promo-6.jpg
+/opt/dtd-mirror/assets/promo-1.jpg
+/opt/dtd-mirror/assets/promo-5.jpg
+/opt/dtd-mirror/assets/promo-3.jpg
+/opt/dtd-mirror/assets/dtd-promo-banner.png
+/opt/dtd-mirror/assets/promo-8.jpg
+/opt/dtd-mirror/assets/dtd-howto-banner.png
+/opt/dtd-mirror/assets/dtd-logo.png

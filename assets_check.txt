@@ -1,0 +1,1 @@
+-rw-r--r-- 1 dvtech dvtech 1875738 Jul 22 18:15 /opt/dtd-mirror/assets/dtd-promo-banner.png

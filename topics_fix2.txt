@@ -1,0 +1,27 @@
+DeleteTopicRequest failed for 1683: module 'telethon.tl.functions.channels' has no attribute 'DeleteTopicRequest'
+  EditForumTopic also failed: module 'telethon.tl.functions.channels' has no attribute 'EditForumTopicRequest'
+DeleteTopicRequest failed for 1684: module 'telethon.tl.functions.channels' has no attribute 'DeleteTopicRequest'
+  EditForumTopic also failed: module 'telethon.tl.functions.channels' has no attribute 'EditForumTopicRequest'
+DeleteTopicRequest failed for 1685: module 'telethon.tl.functions.channels' has no attribute 'DeleteTopicRequest'
+  EditForumTopic also failed: module 'telethon.tl.functions.channels' has no attribute 'EditForumTopicRequest'
+DeleteTopicRequest failed for 1686: module 'telethon.tl.functions.channels' has no attribute 'DeleteTopicRequest'
+  EditForumTopic also failed: module 'telethon.tl.functions.channels' has no attribute 'EditForumTopicRequest'
+DeleteTopicRequest failed for 1687: module 'telethon.tl.functions.channels' has no attribute 'DeleteTopicRequest'
+  EditForumTopic also failed: module 'telethon.tl.functions.channels' has no attribute 'EditForumTopicRequest'
+DeleteTopicRequest failed for 1688: module 'telethon.tl.functions.channels' has no attribute 'DeleteTopicRequest'
+  EditForumTopic also failed: module 'telethon.tl.functions.channels' has no attribute 'EditForumTopicRequest'
+
+Final state:
+  id=1708 | 💎 Why people stay with DTD: | clear pricing · USDT/BTC/Paystack · tracked delivery
+  id=1703 | 💬 COMMUNITY |  | 👥 488+ members strong | 🎯 Ask questions, share reviews, vibe | ✅ No sca
+  id=1702 | 🤖 BOT & ORDERS |  | ✅ Track orders: /order + your email | 💳 Pay via USDT, BTC, Card, S
+  id=1701 | 💎 PREMIUM LOUNGE |  | 👑 Members-only drops before main store | 🔔 Early access + exclus
+  id=1700 | 📦 PRODUCT CATALOG |  | 🖼️ Every product with images & prices | 📊 Updated every 25 min 
+  id=1699 | 🔥 DEALS & DROPS |  | ✨ Fresh deals drop here every 30-60 min | 💰 Verified prices, fast
+  id=1688 | 
+  id=1687 | 
+  id=1686 | 
+  id=1685 | 
+  id=1684 | 
+  id=1683 | 
+  id=1 | 

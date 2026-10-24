@@ -56,6 +56,10 @@ html.tg-premium-skin .side-nav {
   border-right-color: var(--line);
 }
 
+html.tg-premium-skin .side-footer {
+  background: color-mix(in srgb, var(--panel) 98%, var(--bg));
+}
+
 html.tg-premium-skin .side-link.is-active,
 html.tg-premium-skin .nav-group-links a.is-active {
   background: var(--tg-bubble);

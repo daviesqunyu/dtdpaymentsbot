@@ -1,0 +1,34 @@
+Connected to GMONEY STORE💵
+
+Deleting old topics...
+  Deleted msg 1698
+  Deleted msg 1697
+  Deleted msg 1696
+  Deleted msg 1695
+  Deleted msg 1693
+  Deleted msg 1692
+  Deleted msg 1691
+  Deleted msg 1690
+  Deleted msg 1689
+  Deleted msg 1688
+  Deleted msg 1687
+  Deleted msg 1686
+  Deleted msg 1685
+  Deleted msg 1684
+  Deleted msg 1683
+  Deleted msg 1682
+  Deleted msg 1681
+  Created: 🔥 • DEALS & DROPS -> id=1699
+  Created: 📦 • PRODUCT CATALOG -> id=1700
+  Created: 💎 • PREMIUM LOUNGE -> id=1701
+  Created: 🤖 • BOT & ORDERS -> id=1702
+  Created: 💬 • COMMUNITY -> id=1703
+
+=== TOPIC IDS ===
+🔥 • DEALS & DROPS = 1699
+📦 • PRODUCT CATALOG = 1700
+💎 • PREMIUM LOUNGE = 1701
+🤖 • BOT & ORDERS = 1702
+💬 • COMMUNITY = 1703
+
+Done!

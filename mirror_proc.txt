@@ -1,0 +1,1 @@
+root     3430401  0.2  0.8 153436 65820 ?        Ssl  Aug17   1:05 /opt/dtd-mirror/venv/bin/python scripts/telethon_mirror.py

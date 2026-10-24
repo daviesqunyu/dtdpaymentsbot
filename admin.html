@@ -46,6 +46,10 @@
           <span class="side-link-icon" aria-hidden="true">◎</span>
           Orders
         </button>
+        <button type="button" class="side-link" data-admin-page="customers">
+          <span class="side-link-icon" aria-hidden="true">✉</span>
+          Customers
+        </button>
       </nav>
 
       <div class="side-footer">
@@ -104,7 +108,7 @@
               <p id="sessionEmail">Signed in</p>
             </div>
           </div>
-          <div id="adminStats" class="admin-stats-strip" aria-label="Admin overview"></div>
+          <div id="adminStats" class="admin-stats-strip admin-stat-grid" aria-label="Admin overview"></div>
           <div class="admin-overview-grid">
             <article class="admin-panel">
               <h2>Quick actions</h2>
@@ -126,6 +130,15 @@
                 <li><a href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">Owner @Glock7money</a></li>
                 <li><a href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">Vendor @Glock7money</a></li>
               </ul>
+            </article>
+            <article class="admin-panel admin-recent-panel">
+              <div class="panel-title-row">
+                <h2>Recent orders</h2>
+                <button type="button" class="secondary-button" data-admin-page="orders">View all</button>
+              </div>
+              <div id="adminRecentOrders" class="admin-recent-orders">
+                <div class="empty-cart">Loading…</div>
+              </div>
             </article>
           </div>
         </section>
@@ -240,6 +253,21 @@
               <button id="refreshOrders" class="icon-button" type="button">Refresh</button>
             </div>
             <div id="adminOrders" class="admin-orders"></div>
+          </section>
+        </section>
+
+        <!-- CUSTOMERS (tool downloads) -->
+        <section id="adminCustomersPage" class="page admin-page" data-admin-page="customers" hidden>
+          <section class="admin-list-panel orders-panel" aria-labelledby="customersTitle">
+            <div class="panel-title-row">
+              <h2 id="customersTitle">Customers</h2>
+              <button id="refreshCustomers" class="icon-button" type="button">Refresh</button>
+            </div>
+            <p class="section-subtext">
+              People who entered their details on the Free / Pro tools download pages.
+              Stored as plain text in the <code>tool_downloads</code> table.
+            </p>
+            <div id="adminCustomers" class="admin-orders"></div>
           </section>
         </section>
       </main>

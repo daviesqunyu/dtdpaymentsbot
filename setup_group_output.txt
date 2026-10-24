@@ -1,0 +1,11 @@
+[setup] Client started
+[ok] Found group: Eboñy ẞtore🍑💦 (id=4318041006)
+[ok] Renamed to: GMONEY STORE💵
+[ok] Description set
+[ok] Permissions set (default member rights)
+[error] Could not promote @B1yteBandit: You're spamreported, you can't create channels or chats. (caused by EditAdminRequest)
+[error] Could not promote @Oxy1Monster: You're spamreported, you can't create channels or chats. (caused by EditAdminRequest)
+[warn] Could not promote bot: You're spamreported, you can't create channels or chats. (caused by EditAdminRequest)
+[error] Pin failed: cannot import name 'PinMessageRequest' from 'telethon.tl.functions.messages' (/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/tl/functions/messages.py)
+
+[done] Group setup complete!

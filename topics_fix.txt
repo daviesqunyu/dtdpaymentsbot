@@ -1,0 +1,30 @@
+Deleting old/stray messages (keeping only topic headers 1699-1703)...
+  Deleted 1707: 🔥 Short version of DTD 👇 💎 DTD MAIN STOR
+  Deleted 1706: 
+  Deleted 1705: 🚀 Mini App + in-chat shop. One brand. On
+  Deleted 1704: 🚀 DTD MAIN STORE 💎 ━━━━━━━━━━━━━━━━ Digi
+  KEEPING topic header 1703
+  KEEPING topic header 1702
+  KEEPING topic header 1701
+  KEEPING topic header 1700
+  KEEPING topic header 1699
+  Deleted 1688: 
+  Deleted 1687: 
+  Deleted 1686: 
+  Deleted 1685: 
+  Deleted 1684: 
+  Deleted 1683: 
+
+Verifying...
+  id=1703 | 💬 COMMUNITY |  | 👥 488+ members strong | 🎯 Ask questions, share re
+  id=1702 | 🤖 BOT & ORDERS |  | ✅ Track orders: /order + your email | 💳 Pay vi
+  id=1701 | 💎 PREMIUM LOUNGE |  | 👑 Members-only drops before main store | 🔔 E
+  id=1700 | 📦 PRODUCT CATALOG |  | 🖼️ Every product with images & prices | 📊 U
+  id=1699 | 🔥 DEALS & DROPS |  | ✨ Fresh deals drop here every 30-60 min | 💰 V
+  id=1688 | 
+  id=1687 | 
+  id=1686 | 
+  id=1685 | 
+  id=1684 | 
+  id=1683 | 
+  id=1 | 

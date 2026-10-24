@@ -215,11 +215,17 @@
 }
 
 .side-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding-top: 8px;
   border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 97%, var(--bg));
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
 .shell-main {
@@ -436,6 +442,10 @@
     color-mix(in srgb, #0a1628 92%, #000);
 }
 
+[data-theme="light"] .side-footer {
+  background: #ffffff;
+}
+
 /* Admin shell refinements */
 .admin-body {
   background: var(--admin-shell-bg);
@@ -443,6 +453,10 @@
 
 .admin-body .side-nav {
   background: color-mix(in srgb, var(--bg-soft) 92%, #000 8%);
+}
+
+.admin-body .side-footer {
+  background: color-mix(in srgb, var(--bg-soft) 96%, #000 4%);
 }
 
 .admin-pages {
@@ -490,6 +504,101 @@
   color: var(--primary);
   font-weight: 600;
   text-decoration: none;
+}
+
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+.admin-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 16px;
+  box-shadow: var(--panel-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-stat-card::after {
+  content: "";
+  position: absolute;
+  right: -22px;
+  top: -22px;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: var(--stat-tint, rgba(14, 165, 233, 0.12));
+}
+
+.admin-stat-card.tone-green { --stat-tint: rgba(20, 184, 166, 0.16); }
+.admin-stat-card.tone-blue { --stat-tint: rgba(59, 130, 246, 0.16); }
+.admin-stat-card.tone-amber { --stat-tint: rgba(245, 158, 11, 0.16); }
+.admin-stat-card.tone-teal { --stat-tint: rgba(20, 184, 166, 0.14); }
+.admin-stat-card.tone-purple { --stat-tint: rgba(168, 85, 247, 0.16); }
+.admin-stat-card.tone-slate { --stat-tint: rgba(100, 116, 139, 0.16); }
+
+.admin-stat-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.admin-stat-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.05;
+}
+
+.admin-stat-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.admin-recent-panel {
+  grid-column: 1 / -1;
+}
+
+.admin-recent-orders {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 340px;
+  overflow: auto;
+}
+
+.admin-recent-order {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--soft);
+  padding: 12px 14px;
+}
+
+.admin-recent-order-main,
+.admin-recent-order-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-recent-order-side {
+  align-items: flex-end;
+  text-align: right;
+  flex-shrink: 0;
 }
 
 .admin-session {
@@ -921,10 +1030,14 @@
     left: 0;
     top: 0;
     width: min(300px, 88vw);
+    height: 100vh;
+    height: 100dvh;
     transform: translateX(-105%);
     transition: transform 0.24s ease;
     box-shadow: var(--shadow);
-    z-index: 50;
+    z-index: 1300;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   body.nav-open .side-nav {
@@ -1068,7 +1181,123 @@
   }
 }
 
-/* Telegram Mini App: always use phone layout (WebView width can report desktop sizes). */
+/* ============================================================
+   UI rigidity pass: fixed centered layout, sticky chrome,
+   stronger borders, consistent grids. Styling only — no content.
+   ============================================================ */
+
+/* 1) Fixed centered layout: unify every content column to 1100px */
+.has-shell .shell-topbar,
+.shell-pages {
+  width: 100%;
+}
+
+.hero-section,
+.section-shell,
+.checkout-section,
+.home-features,
+.home-stats,
+.home-visual-strip,
+.topbar {
+  width: min(1100px, calc(100% - 32px)) !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 2) Sticky header + footer */
+.shell-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border-bottom: 2px solid var(--line);
+  background: color-mix(in srgb, var(--header-bg) 92%, var(--bg));
+}
+
+.shell-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 25;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--line);
+}
+
+/* 3) Stronger card / button borders */
+.product-card,
+.hub-card,
+.faq-item,
+.track-form,
+.feature-tile,
+.method-card,
+.smtp-panel,
+.trade-panel,
+.chat-post,
+.bots-detail {
+  border: 2px solid var(--line);
+}
+
+.product-card {
+  box-shadow: 0 2px 0 var(--line), 0 14px 34px rgba(0, 0, 0, 0.22);
+}
+
+.product-card:hover {
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--line));
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--primary) 45%, var(--line)), 0 20px 48px rgba(0, 0, 0, 0.3);
+}
+
+.secondary-button,
+.ghost-btn,
+.smtp-ghost-btn,
+.icon-button,
+.nav-toggle {
+  border: 2px solid color-mix(in srgb, var(--primary) 22%, var(--line));
+}
+
+.primary-button {
+  border: 2px solid color-mix(in srgb, var(--primary-dark) 60%, transparent);
+}
+
+.has-shell:not(.admin-body) input,
+.has-shell:not(.admin-body) select,
+.has-shell:not(.admin-body) textarea {
+  border: 2px solid var(--line) !important;
+}
+
+.has-shell:not(.admin-body) input:focus,
+.has-shell:not(.admin-body) select:focus,
+.has-shell:not(.admin-body) textarea:focus {
+  border-color: var(--primary) !important;
+  outline: none;
+}
+
+/* 4) Consistent grid alignment */
+.products-grid,
+.telegram-hub-grid,
+.faq-grid,
+.home-features {
+  align-items: stretch;
+}
+
+.products-grid > *,
+.telegram-hub-grid > *,
+.faq-grid > *,
+.home-features > * {
+  min-height: 100%;
+}
+
+.product-card .product-actions,
+.product-card .product-meta {
+  margin-top: auto;
+}
+
+.product-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+}
+
+/* ============================================================
+   Telegram Mini App: always use phone layout (WebView width can report desktop sizes). */
 html.tg-mini-app,
 html.tg-mini-app body.has-shell {
   grid-template-columns: 1fr !important;
@@ -1081,8 +1310,12 @@ html.tg-mini-app .side-nav {
   left: 0;
   top: 0;
   width: min(300px, 88vw);
+  height: 100vh;
+  height: 100dvh;
   transform: translateX(-105%);
-  z-index: 50;
+  z-index: 1300;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 html.tg-mini-app body.nav-open .side-nav {

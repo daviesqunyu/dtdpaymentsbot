@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="trading.css" />
     <link rel="stylesheet" href="chat.css" />
     <link rel="stylesheet" href="tg-premium-ui.css" />
+    <link rel="stylesheet" href="scroll.css" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="theme.js"></script>
     <script>
@@ -34,6 +35,8 @@
       <div class="ambient ambient-a"></div>
       <div class="ambient ambient-b"></div>
     </div>
+
+    <div id="scrollProgress" class="scroll-progress" aria-hidden="true"></div>
 
     <aside id="sideNav" class="side-nav" aria-label="Store navigation">
       <div class="side-nav-head">
@@ -48,14 +51,26 @@
 
       <nav class="side-menu">
         <a class="side-link is-active" href="#home" data-nav="home">
-          <span class="side-link-icon" aria-hidden="true">⌂</span>
+          <span class="side-link-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 10.5 12 3l9 7.5"></path>
+              <path d="M5 9.5V21h14V9.5"></path>
+              <path d="M10 21v-6h4v6"></path>
+            </svg>
+          </span>
           Home
         </a>
 
         <details class="nav-group" open>
           <summary>
             <span class="nav-group-label">
-              <span class="side-link-icon" aria-hidden="true">▣</span>
+              <span class="side-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 8 12 3 3 8v8l9 5 9-5Z"></path>
+                  <path d="m3 8 9 5 9-5"></path>
+                  <path d="M12 13v8"></path>
+                </svg>
+              </span>
               Shop
             </span>
             <span class="nav-chevron" aria-hidden="true"></span>
@@ -70,7 +85,13 @@
         <details class="nav-group">
           <summary>
             <span class="nav-group-label">
-              <span class="side-link-icon" aria-hidden="true">◎</span>
+              <span class="side-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z"></path>
+                  <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path>
+                  <path d="M12 17.5v-11"></path>
+                </svg>
+              </span>
               Orders
             </span>
             <span class="nav-chevron" aria-hidden="true"></span>
@@ -80,29 +101,21 @@
           </div>
         </details>
 
-        <details class="nav-group" open>
-          <summary>
-            <span class="nav-group-label">
-              <span class="side-link-icon" aria-hidden="true">◈</span>
-              Trading
-            </span>
-            <span class="nav-chevron" aria-hidden="true"></span>
-          </summary>
-          <div class="nav-group-links">
-            <a href="#trade" data-nav="trade">DTD Trade Platform</a>
-            <a href="#trade-bots" data-nav="trade" data-trade-open="bots">Trading Bots</a>
-          </div>
-        </details>
-
         <details class="nav-group">
           <summary>
             <span class="nav-group-label">
-              <span class="side-link-icon" aria-hidden="true">✉</span>
+              <span class="side-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                </svg>
+              </span>
               Tools
             </span>
             <span class="nav-chevron" aria-hidden="true"></span>
           </summary>
           <div class="nav-group-links">
+            <a href="free-tools.html" class="nav-link-premium">Free Tools <span class="nav-premium-pill">New</span></a>
+            <a href="pro-tools.html" class="nav-link-premium">Pro Tools <span class="nav-premium-pill">New</span></a>
             <a href="escrow.html" class="nav-link-premium">Escrow <span class="nav-premium-pill">New</span></a>
             <a href="#smtp" data-nav="smtp" class="nav-link-premium">SMTP Console <span class="nav-premium-pill">Premium</span></a>
           </div>
@@ -111,7 +124,11 @@
         <details class="nav-group">
           <summary>
             <span class="nav-group-label">
-              <span class="side-link-icon" aria-hidden="true">✦</span>
+              <span class="side-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </span>
               Connect
             </span>
             <span class="nav-chevron" aria-hidden="true"></span>
@@ -121,6 +138,31 @@
             <a href="#profile" data-nav="profile">Profiles</a>
             <a href="#telegram" data-nav="telegram">Telegram</a>
             <a href="#faq" data-nav="faq">Help / FAQ</a>
+          </div>
+        </details>
+
+        <details class="nav-group" open>
+          <summary>
+            <span class="nav-group-label">
+              <span class="side-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 5v4"></path>
+                  <rect width="4" height="6" x="7" y="6" rx="1"></rect>
+                  <path d="M9 15v2"></path>
+                  <rect width="4" height="8" x="7" y="13" rx="1"></rect>
+                  <path d="M17 3v2"></path>
+                  <rect width="4" height="5" x="15" y="4" rx="1"></rect>
+                  <path d="M17 13v3"></path>
+                  <rect width="4" height="5" x="15" y="12" rx="1"></rect>
+                </svg>
+              </span>
+              Trading
+            </span>
+            <span class="nav-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="nav-group-links">
+            <a href="#trade" data-nav="trade">DTD Trade Platform</a>
+            <a href="#trade-bots" data-nav="trade" data-trade-open="bots">Trading Bots</a>
           </div>
         </details>
       </nav>
@@ -159,7 +201,7 @@
       <main class="shell-pages">
         <!-- HOME -->
         <section id="home" class="page is-active" data-page="home" aria-labelledby="pageTitle">
-          <div class="hero-section hero-page">
+          <div class="hero-section hero-page" data-scrolly>
             <div class="hero-visual" aria-hidden="true">
               <div class="hero-orbit hero-orbit-a"></div>
               <div class="hero-orbit hero-orbit-b"></div>
@@ -178,6 +220,7 @@
               </p>
               <div class="hero-actions">
                 <a class="primary-button glow" href="#products" data-nav="products">Shop products</a>
+                <a class="secondary-button" href="free-tools.html">Free Tools</a>
                 <a class="secondary-button" href="#trade" data-nav="trade">Open Trade Platform</a>
               </div>
               <div id="liveStats" class="trust-row home-stats" aria-label="Store highlights"></div>
@@ -206,7 +249,60 @@
             </div>
           </div>
 
-          <section class="home-visual-strip" aria-hidden="true">
+          <div class="live-ticker" aria-hidden="true">
+            <div id="liveTickerTrack" class="ticker-track"></div>
+          </div>
+
+          <section class="home-reel" id="homeReel" aria-label="What DTD does" data-scrolly>
+            <div class="reel-sticky">
+              <div class="reel-stage">
+                <figure class="reel-frame is-live">
+                  <img src="assets/store-feature-shop.png" alt="" width="640" height="640" loading="lazy" />
+                  <figcaption>
+                    <span class="reel-tag">Shop</span>
+                    <h3>Digital products delivered by email</h3>
+                    <p>From API keys to premium tools — pick a product, check out, and it lands in your inbox in minutes.</p>
+                    <a class="reel-cta" href="#products" data-nav="products">Browse the catalog →</a>
+                  </figcaption>
+                </figure>
+                <figure class="reel-frame">
+                  <img src="assets/store-feature-crypto.png" alt="" width="640" height="640" loading="lazy" />
+                  <figcaption>
+                    <span class="reel-tag">Pay your way</span>
+                    <h3>Card, bank or crypto</h3>
+                    <p>Global card and bank via Paystack, or USDT / BTC — whichever is easiest for you.</p>
+                    <a class="reel-cta" href="#payment" data-nav="payment">Go to payment →</a>
+                  </figcaption>
+                </figure>
+                <figure class="reel-frame">
+                  <img src="assets/store-feature-telegram.png" alt="" width="640" height="640" loading="lazy" />
+                  <figcaption>
+                    <span class="reel-tag">Always live</span>
+                    <h3>Buy and chat inside Telegram</h3>
+                    <p>Order in chat, track by ID, and talk to the community in DTD Chat.</p>
+                    <a class="reel-cta" href="#telegram" data-nav="telegram">Open the hub →</a>
+                  </figcaption>
+                </figure>
+                <figure class="reel-frame">
+                  <img src="assets/store-feature-trade.png" alt="" width="640" height="640" loading="lazy" />
+                  <figcaption>
+                    <span class="reel-tag">Trade</span>
+                    <h3>Charts, spot desk and bots</h3>
+                    <p>Live market data with a built-in trading platform — right here in the store.</p>
+                    <a class="reel-cta" href="#trade" data-nav="trade">Open trade platform →</a>
+                  </figcaption>
+                </figure>
+              </div>
+              <div class="reel-progress" aria-hidden="true">
+                <span class="reel-dot is-active"></span>
+                <span class="reel-dot"></span>
+                <span class="reel-dot"></span>
+                <span class="reel-dot"></span>
+              </div>
+            </div>
+          </section>
+
+          <section class="home-visual-strip" aria-hidden="true" data-scrolly>
             <figure class="home-visual-card">
               <img src="assets/store-feature-shop.png" alt="" width="640" height="640" loading="lazy" />
             </figure>
@@ -254,6 +350,17 @@
                 <a class="secondary-button" href="#trade" data-nav="trade">Open Trade</a>
               </div>
             </article>
+            <article class="feature-tile feature-tile--tools">
+              <img src="assets/store-feature-crypto.png" alt="Free and pro tools" width="640" height="640" loading="lazy" />
+              <div>
+                <h3>Free &amp; Pro Tools</h3>
+                <p>Grab free, ready-to-run tools instantly — or buy a Pro tool and unlock your download after checkout.</p>
+                <div class="hero-actions">
+                  <a class="primary-button glow" href="free-tools.html">Free Tools</a>
+                  <a class="secondary-button" href="pro-tools.html">Pro Tools</a>
+                </div>
+              </div>
+            </article>
           </section>
         </section>
 
@@ -284,6 +391,8 @@
             </label>
             <button id="refreshProducts" class="icon-button" type="button">Refresh</button>
           </div>
+          <div id="flashBanner" class="flash-banner" hidden></div>
+          <div id="socialProof" class="social-proof" hidden></div>
           <div id="productsGrid" class="products-grid"></div>
         </section>
 
@@ -426,7 +535,8 @@
               <h2 id="chatTitle">DTD Store Chat</h2>
               <p class="section-subtext">
                 Open feed for everyone: sign in with Telegram, then post text, any link, photos, or video —
-                just like a captioned social post. Channel membership not required.
+                just like a captioned social post. Format with bold/italic, drop an emoji, search the feed,
+                or request a callback if you'd rather talk on the phone.
               </p>
             </div>
           </header>
@@ -439,6 +549,19 @@
                   <button type="button" class="ghost-btn" id="chatRefresh">Refresh</button>
                   <button type="button" class="ghost-btn" id="chatSignOut" hidden>Sign out</button>
                 </div>
+              </div>
+
+              <nav class="chat-tabs" id="chatTabs" aria-label="Chat views">
+                <button type="button" class="chat-tab is-on" data-chat-tab="latest">Latest</button>
+                <button type="button" class="chat-tab" data-chat-tab="premium">Premium</button>
+                <button type="button" class="chat-tab" data-chat-tab="channels">Channels</button>
+                <button type="button" class="chat-tab" data-chat-tab="top">Top</button>
+                <button type="button" class="chat-tab" data-chat-tab="calls">📞 Call</button>
+              </nav>
+
+              <div class="chat-searchbar">
+                <label class="sr-only" for="chatSearch">Search posts</label>
+                <input id="chatSearch" type="search" placeholder="Search posts, names, @handles…" autocomplete="off" />
               </div>
 
               <div id="chatAuthGate" class="chat-auth-gate">
@@ -460,6 +583,15 @@
                     <div id="chatMediaPreview" class="chat-media-preview" hidden></div>
                   </div>
                 </div>
+                <div class="dtd-compose-tools">
+                  <div class="chat-fmt-group" role="group" aria-label="Formatting tools">
+                    <button type="button" class="chat-fmt-btn" data-fmt="bold" title="Bold" aria-label="Bold"><strong>B</strong></button>
+                    <button type="button" class="chat-fmt-btn" data-fmt="italic" title="Italic" aria-label="Italic"><em>I</em></button>
+                    <button type="button" class="chat-fmt-btn" data-fmt="link" title="Insert link" aria-label="Insert link">🔗</button>
+                    <button type="button" class="chat-fmt-btn" data-fmt="emoji" title="Emoji" aria-label="Emoji" aria-haspopup="true">😀</button>
+                  </div>
+                  <div class="chat-emoji-bar" id="chatEmojiBar" hidden role="menu" aria-label="Pick an emoji"></div>
+                </div>
                 <div class="chat-composer-bar">
                   <div class="chat-composer-tools">
                     <input id="chatMediaInput" class="chat-file-input" type="file" accept="image/*,video/*" />
@@ -474,10 +606,63 @@
 
               <p id="chatStatus" class="form-note" role="status"></p>
               <div id="chatFeed" class="chat-feed dtd-feed-list" aria-live="polite"></div>
+
+              <section id="chatCallsPanel" class="chat-calls" hidden aria-label="Request a phone call">
+                <div class="chat-calls-head">
+                  <h3>📞 Phone call</h3>
+                  <p>Skip the typing. Tell us how to reach you and what you need — the store calls you back by phone or Telegram.</p>
+                </div>
+                <form id="callRequestForm" class="call-form">
+                  <div class="call-form-grid">
+                    <label>Your name
+                      <input name="name" type="text" maxlength="120" placeholder="Jane" required />
+                    </label>
+                    <label>Phone <span class="field-opt">(optional)</span>
+                      <input name="phone" type="tel" maxlength="60" placeholder="+1 555 000 0000" />
+                    </label>
+                    <label>Telegram <span class="field-opt">(optional)</span>
+                      <input name="telegram" type="text" maxlength="60" placeholder="@handle" />
+                    </label>
+                    <label>Topic
+                      <select name="topic">
+                        <option value="General question">General question</option>
+                        <option value="Order & tracking">Order & tracking</option>
+                        <option value="Product help">Product help</option>
+                        <option value="Payment help">Payment help</option>
+                        <option value="Bulk / wholesale">Bulk / wholesale</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label>Preferred time
+                    <select name="preferredTime">
+                      <option value="ASAP">ASAP</option>
+                      <option value="Today">Today</option>
+                      <option value="Tomorrow">Tomorrow</option>
+                      <option value="This week">This week</option>
+                      <option value="Anytime">Anytime</option>
+                    </select>
+                  </label>
+                  <label>What do you need help with?
+                    <textarea name="message" maxlength="2000" rows="3" required placeholder="e.g. I placed an order yesterday — can you call to confirm a faster shipping option?"></textarea>
+                  </label>
+                  <p class="form-note">We only use this to reach you about your request — no spam, ever.</p>
+                  <button type="submit" class="primary-button">Request a call</button>
+                  <p id="callFormStatus" class="form-note" role="status"></p>
+                </form>
+                <div class="chat-calls-note">
+                  <p><strong>Prefer messaging?</strong> Reply to the store on Telegram any time — a human answers during store hours.</p>
+                </div>
+              </section>
             </div>
 
             <aside class="chat-side dtd-feed-side" aria-label="Channels and tips">
               <div id="chatRails" class="chat-rails" aria-label="Chat channels"></div>
+              <div class="chat-side-card chat-call-cta">
+                <h3>📞 Prefer a phone call?</h3>
+                <p>Leave a callback request and the store phones you back — no typing required.</p>
+                <button type="button" class="primary-button" id="chatCtaCall">Request a call</button>
+              </div>
               <div class="chat-side-card">
                 <h3>How it works</h3>
                 <ol>
@@ -495,22 +680,98 @@
           </div>
         </section>
 
+        <!-- VIDEO CALL MODAL -->
+        <div id="videoCallModal" class="video-call-modal" hidden>
+          <div class="video-call-box">
+            <header class="video-call-head">
+              <h3 id="videoCallTitle">Video call</h3>
+              <p id="videoCallSub" class="form-note">Connecting…</p>
+            </header>
+            <div class="video-call-stage">
+              <video id="videoCallRemote" class="is-away" autoplay playsinline muted></video>
+              <video id="videoCallLocal" class="is-away" autoplay playsinline muted></video>
+              <div id="videoCallStatus" class="video-call-status"></div>
+            </div>
+            <div class="video-call-controls">
+              <button type="button" class="vc-btn" id="videoCallMute" title="Mute">🎤</button>
+              <button type="button" class="vc-btn" id="videoCallCam" title="Camera">📷</button>
+              <button type="button" class="vc-btn vc-accept" id="videoCallAccept" title="Accept" hidden>✅ Accept</button>
+              <button type="button" class="vc-btn vc-end" id="videoCallEnd" title="End call">📵</button>
+            </div>
+          </div>
+        </div>
+
         <!-- PROFILE -->
         <section id="profile" class="page section-shell chat-section dtd-feed profile-section" data-page="profile" aria-labelledby="profileTitle" hidden>
           <header class="dtd-profile-hero" id="profileHero">
             <div class="dtd-profile-avatar" id="profileAvatar" aria-hidden="true">?</div>
             <div class="dtd-profile-copy">
-              <p class="eyebrow">Telegram profile</p>
+              <p class="eyebrow">Official DTD Store admin</p>
               <h2 id="profileTitle">Profile</h2>
-              <p class="section-subtext" id="profileSub">Simple activity from DTD Store Chat — posts, likes, and comments.</p>
+              <p class="section-subtext" id="profileSub">Verified seller — @Glock7money runs DTD MAIN STORE, DTD PREMIUM and the web store. ✅ NO SCAMMERS.</p>
               <div class="dtd-profile-actions">
-                <a class="secondary-button" id="profileTgLink" href="https://t.me/" target="_blank" rel="noopener noreferrer">Open on Telegram</a>
+                <a class="secondary-button" id="profileTgLink" href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">Chat with admin</a>
                 <a class="ghost-btn" href="#chat" data-nav="chat">Back to Chat</a>
               </div>
             </div>
           </header>
 
           <div class="dtd-profile-stats" id="profileStats" aria-label="Activity stats"></div>
+
+          <div class="dtd-profile-trust" data-reveal>
+            <div class="dtd-trust-shield" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
+            </div>
+            <div class="dtd-trust-copy">
+              <p class="dtd-trust-title"><strong id="profileTrustName">@Glock7money</strong> · <span>Verified Store Admin</span></p>
+              <p class="dtd-trust-note">✅ NO SCAMMERS — official DTD Store. Every deal, drop and payment is handled directly by the admin here.</p>
+            </div>
+            <a id="profileTrustTgLink" class="dtd-trust-cta" href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">Contact admin →</a>
+          </div>
+
+          <section class="dtd-profile-links" aria-label="Store links" data-reveal>
+            <h3>Join &amp; shop</h3>
+            <div class="dtd-profile-links-grid">
+              <a id="profileStoreLink" class="profile-link-card" href="https://dtdpaymentsbot.pages.dev" target="_blank" rel="noopener noreferrer">
+                <span class="profile-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                </span>
+                <span><strong>Webstore</strong><small>Browse, pay &amp; track</small></span>
+              </a>
+              <a id="profileChannelLink" class="profile-link-card" href="https://t.me/+ysMSObZyNWpjNTA0" target="_blank" rel="noopener noreferrer">
+                <span class="profile-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg>
+                </span>
+                <span><strong>DTD Store channel</strong><small>Drops &amp; flash deals</small></span>
+                <b class="profile-link-join">Join →</b>
+              </a>
+              <a id="profilePremiumLink" class="profile-link-card" href="https://t.me/+ZYBP2Qrr-JgyYTQ0" target="_blank" rel="noopener noreferrer">
+                <span class="profile-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"></path><path d="M5 16v2h14v-2"></path></svg>
+                </span>
+                <span><strong>DTD PREMIUM</strong><small>Members-only deals · 20⭐</small></span>
+                <b class="profile-link-join">Join →</b>
+              </a>
+              <a id="profileBotLink" class="profile-link-card" href="https://t.me/DTDSTOREBOT" target="_blank" rel="noopener noreferrer">
+                <span class="profile-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+                </span>
+                <span><strong>@DTDSTOREBOT</strong><small>Checkout, track &amp; support</small></span>
+              </a>
+              <a id="profileOwnerLink" class="profile-link-card" href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">
+                <span class="profile-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </span>
+                <span><strong>@Glock7money</strong><small>Owner / support</small></span>
+              </a>
+              <a id="profileSupportLink" class="profile-link-card" href="mailto:contact@dvtechnologies.xyz">
+                <span class="profile-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                </span>
+                <span><strong>Email support</strong><small>contact@dvtechnologies.xyz</small></span>
+              </a>
+            </div>
+          </section>
 
           <div class="chat-layout profile-layout">
             <div class="chat-main dtd-feed-main">
@@ -1157,6 +1418,7 @@
             <p class="eyebrow">Your order</p>
             <h2 id="checkoutTitle">Summary</h2>
             <div id="cartItems" class="cart-items"></div>
+            <div id="bundleUpsell" class="bundle-upsell-wrap"></div>
             <div class="receipt-divider"></div>
             <div class="total-row">
               <span>Total <span class="currency-badge">USD</span></span>
@@ -1381,6 +1643,57 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <div id="navBackdrop" class="nav-backdrop" hidden></div>
 
+    <nav id="bottomTabs" class="bottom-tabs" aria-label="Primary navigation">
+      <a class="bottom-tab is-active" href="#home" data-nav="home">
+        <span class="bt-ic" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 10.5 12 3l9 7.5"></path>
+            <path d="M5 9.5V21h14V9.5"></path>
+            <path d="M10 21v-6h4v6"></path>
+          </svg>
+        </span>
+        <span class="bt-label">Home</span>
+      </a>
+      <a class="bottom-tab" href="#products" data-nav="products">
+        <span class="bt-ic" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+            <path d="M3 6h18"></path>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+        </span>
+        <span class="bt-label">Shop</span>
+      </a>
+      <a class="bottom-tab" href="#chat" data-nav="chat">
+        <span class="bt-ic" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"></path>
+          </svg>
+        </span>
+        <span class="bt-label">Chat</span>
+      </a>
+      <a class="bottom-tab" href="#trade" data-nav="trade">
+        <span class="bt-ic" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 17 8 13l4 4 7-7"></path>
+            <path d="M14 10h6v6"></path>
+          </svg>
+        </span>
+        <span class="bt-label">Trade</span>
+      </a>
+      <a class="bottom-tab" href="#payment" data-nav="payment">
+        <span class="bt-ic" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="14" x="2" y="5" rx="2.5"></rect>
+            <path d="M2 10h20"></path>
+            <path d="M6 15h4"></path>
+          </svg>
+        </span>
+        <span class="bt-label">Pay</span>
+        <span id="bottomCartBadge" class="bt-badge" hidden></span>
+      </a>
+    </nav>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <script src="supabase-config.js"></script>
@@ -1390,6 +1703,7 @@
     <script src="smtp-console.js"></script>
     <script type="module" src="trading-console.js"></script>
     <script type="module" src="chat.js"></script>
+    <script src="scroll.js"></script>
   </body>
 </html>
 

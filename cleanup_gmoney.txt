@@ -1,0 +1,24 @@
+Traceback (most recent call last):
+  File "/tmp/cleanup_gmoney.py", line 33, in <module>
+    asyncio.run(main())
+  File "/usr/lib/python3.12/asyncio/runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 687, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/tmp/cleanup_gmoney.py", line 12, in main
+    await client.start()
+  File "/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/client/auth.py", line 135, in _start
+    await self.connect()
+  File "/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/client/telegrambaseclient.py", line 571, in connect
+    self.session.auth_key = self._sender.auth_key
+    ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/sessions/sqlite.py", line 191, in auth_key
+    self._update_session_table()
+  File "/opt/dtd-mirror/venv/lib/python3.12/site-packages/telethon/sessions/sqlite.py", line 210, in _update_session_table
+    c.execute('delete from sessions')
+sqlite3.OperationalError: database is locked

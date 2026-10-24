@@ -1,0 +1,20 @@
+[ok] product promo: DTD PREMIUM🤑🏦
+[ok] delay=2.0-8.0s translate=True catch_up=0
+[ok] promo every ~30-60 min, rotating 2 chat(s), 10 variants
+[ok] product promo every ~0h, rotating 2 chat(s)
+[ok] daily story every day ~09:00 to 2 chat(s), banners rotating daily
+[ok] channel -> chat feed mirror every ~120s (2 channel(s))
+[ok] control plane active (promo / story / pin via agent_commands)
+[ok] channel agent active (react + comment on both channels)
+[ok] behavior tracker active (engagement analytics)
+[ok] store agent active (order monitoring + auto-promo)
+[ok] ecosystem heartbeat active (10 min cycle)
+[ok] listening...
+[ok] member management: welcome + activation on 2 channel(s)
+[ok] chat mirror: DTD MAIN STORE🤑💰
+[ok] chat mirror: DTD PREMIUM🤑🏦
+[ok] promo (image) -> DTD MAIN STORE🤑💰
+[ok] product promo -> DTD MAIN STORE🤑💰
+[ok] promo -> GMONEY STORE💵
+[ok] member scan: 1 new member(s) handled in DTD MAIN STORE🤑💰
+[ok] product promo -> DTD PREMIUM🤑🏦

@@ -1,0 +1,26 @@
+Channel functions with Forum/Topic:
+  channels.DeleteChannelRequest
+  channels.DeleteHistoryRequest
+  channels.DeleteMessagesRequest
+  channels.DeleteParticipantHistoryRequest
+  channels.EditAdminRequest
+  channels.EditBannedRequest
+  channels.EditLocationRequest
+  channels.EditPhotoRequest
+  channels.EditTitleRequest
+  channels.ToggleForumRequest
+  channels.ToggleViewForumAsMessagesRequest
+
+Message functions with Forum/Topic:
+  messages.CreateForumTopicRequest
+  messages.DeleteTopicHistoryRequest
+  messages.EditForumTopicRequest
+  messages.GetForumTopicsByIDRequest
+  messages.GetForumTopicsRequest
+  messages.GetTopReactionsRequest
+  messages.ReorderPinnedForumTopicsRequest
+  messages.UpdatePinnedForumTopicRequest
+GetPeerDialogsRequest available
+
+Checking telethon version...
+Telethon version: 1.44.0

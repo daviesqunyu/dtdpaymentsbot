@@ -1,0 +1,200 @@
+[tracker] -1004317499796 msg=3149 views=11 reactions=0 preview=🏠 SC Sessions API ━━━━━━━━━━━━━ sharing and maintaining visitor/shopper states between headless frontends and legacy ser
+[tracker] -1004317499796 msg=3148 views=19 reactions=0 preview=🏠 RDP ━━━━━━━━━━━━━ Rdp Protocol Remote Desktop Protocol Stock EUROPE AMERICA ASIA  💰 Price: $130 USD ━━━━━━━━━━━━━ 📢 DT
+[tracker] -1004317499796 msg=3147 views=17 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004317499796 msg=3146 views=18 reactions=0 preview=🏠 Comcast ━━━━━━━━━━━━━ FRESH XFINITY COMCAST LOGINS  💰 Price: $35 USD ━━━━━━━━━━━━━ 📢 DTD Main Store · 🔥 @DTDSTOREBOT 📢
+[tracker] -1004317499796 msg=3145 views=24 reactions=0 preview=🏠 CLI AND NON CLI ━━━━━━━━━━━━━ VOICE ROUTES (EUROPE, AFRICA,ASIA) -CLI routes guarantee caller ID delivery, Non-CLI rou
+[tracker] -1004317499796 msg=3144 views=33 reactions=0 preview=🏠 API KEYS ━━━━━━━━━━━━━ PREMIUM API KEYS BANCH. (100 to 500) Live Keys Available: 1.CLAUDE AI API 2.OPENAI PRO API 3.WH
+[tracker] -1004317499796 msg=3142 views=31 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1795 views=0 reactions=0 preview=🔥 Fresh drop energy — shop DTD today. Browse → pay → get delivery. Preferred crypto: USDT on Tron (TRC20).  💎 DTD MAIN S
+[tracker] -1004318041006 msg=1794 views=0 reactions=0 preview=💡 Got a custom request? Talk to the owner — bulk deals & product questions welcome.  💎 DTD MAIN STORE 🔥 @DTDSTOREBOT · 🏠
+[tracker] -1004318041006 msg=1793 views=0 reactions=0 preview=🚀 DTD MAIN STORE 💎 ━━━━━━━━━━━━━━━━ Digital products with fast delivery. ⭐ Pay USDT (TRC20) · ₿ BTC · 💳 Paystack  💎 DTD 
+[tracker] -1004318041006 msg=1792 views=0 reactions=0 preview=💎 Why people stay with DTD: clear pricing · USDT/BTC/Paystack · tracked delivery · real support.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1791 views=0 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1790 views=0 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1789 views=0 reactions=0 preview=🔥 Fresh drop energy — shop DTD today. Browse → pay → get delivery. Preferred crypto: USDT on Tron (TRC20).  💎 DTD MAIN S
+[tracker] -1004318041006 msg=1788 views=0 reactions=0 preview=
+[tracker] -1004318041006 msg=1787 views=0 reactions=0 preview=
+[tracker] -1004318041006 msg=1786 views=0 reactions=0 preview=Free resources:  - Store: https://dtdpaymentsbot.pages.dev - Bot: https://t.me/DTDSTOREBOT - Main Channel: https://t.me/
+[store-agent] loop error: HTTP Error 400: Bad Request
+[ok] member scan: 1 new member(s) handled in DTD MAIN STORE🤑💰
+[ok] product promo -> DTD MAIN STORE🤑💰
+[ok] product promo -> DTD PREMIUM🤑🏦
+[chat] mirrored 3151 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 380 -> feed (DTD PREMIUM🤑🏦)
+[heartbeat] ecosystem alive at 2026-08-18 03:53 UTC
+[store-agent] loop error: HTTP Error 400: Bad Request
+[heartbeat] ecosystem alive at 2026-08-18 04:03 UTC
+[ok] promo (image) -> DTD MAIN STORE🤑💰
+[chat] mirrored 3152 -> feed (DTD MAIN STORE🤑💰)
+[ok] member scan: 2 new member(s) handled in DTD MAIN STORE🤑💰
+[heartbeat] ecosystem alive at 2026-08-18 04:13 UTC
+[tracker] -1004317499796 msg=3152 views=2 reactions=0 preview=🆕 Thanks for being in the DTD community. Share with a friend who needs digital products + proper delivery.  💎 DTD MAIN S
+[tracker] -1004317499796 msg=3151 views=6 reactions=0 preview=🏠 PREMIUM COURSES DTD ━━━━━━━━━━━━━ 1.SPAMMING& CRACKING. 2.SMTP COURSE + TOOLS. 3.VVIP MEMBERSHIP  💰 Price: $179 USD ━━
+[tracker] -1004317499796 msg=3150 views=12 reactions=0 preview=🏠 SCREEN PORTALHOST SERVICES ━━━━━━━━━━━━━ 1.VPS/RDP 2.CPANEL(BULET PROOF)  💰 Price: $79 USD ━━━━━━━━━━━━━ 📢 DTD Main St
+[tracker] -1004317499796 msg=3149 views=16 reactions=0 preview=🏠 SC Sessions API ━━━━━━━━━━━━━ sharing and maintaining visitor/shopper states between headless frontends and legacy ser
+[tracker] -1004317499796 msg=3148 views=23 reactions=0 preview=🏠 RDP ━━━━━━━━━━━━━ Rdp Protocol Remote Desktop Protocol Stock EUROPE AMERICA ASIA  💰 Price: $130 USD ━━━━━━━━━━━━━ 📢 DT
+[tracker] -1004317499796 msg=3147 views=20 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004317499796 msg=3146 views=21 reactions=0 preview=🏠 Comcast ━━━━━━━━━━━━━ FRESH XFINITY COMCAST LOGINS  💰 Price: $35 USD ━━━━━━━━━━━━━ 📢 DTD Main Store · 🔥 @DTDSTOREBOT 📢
+[tracker] -1004317499796 msg=3145 views=27 reactions=0 preview=🏠 CLI AND NON CLI ━━━━━━━━━━━━━ VOICE ROUTES (EUROPE, AFRICA,ASIA) -CLI routes guarantee caller ID delivery, Non-CLI rou
+[tracker] -1004317499796 msg=3144 views=36 reactions=0 preview=🏠 API KEYS ━━━━━━━━━━━━━ PREMIUM API KEYS BANCH. (100 to 500) Live Keys Available: 1.CLAUDE AI API 2.OPENAI PRO API 3.WH
+[tracker] -1004318041006 msg=1795 views=0 reactions=0 preview=🔥 Fresh drop energy — shop DTD today. Browse → pay → get delivery. Preferred crypto: USDT on Tron (TRC20).  💎 DTD MAIN S
+[tracker] -1004318041006 msg=1794 views=0 reactions=0 preview=💡 Got a custom request? Talk to the owner — bulk deals & product questions welcome.  💎 DTD MAIN STORE 🔥 @DTDSTOREBOT · 🏠
+[tracker] -1004318041006 msg=1793 views=0 reactions=0 preview=🚀 DTD MAIN STORE 💎 ━━━━━━━━━━━━━━━━ Digital products with fast delivery. ⭐ Pay USDT (TRC20) · ₿ BTC · 💳 Paystack  💎 DTD 
+[tracker] -1004318041006 msg=1792 views=0 reactions=0 preview=💎 Why people stay with DTD: clear pricing · USDT/BTC/Paystack · tracked delivery · real support.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1791 views=0 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1790 views=0 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1789 views=0 reactions=0 preview=🔥 Fresh drop energy — shop DTD today. Browse → pay → get delivery. Preferred crypto: USDT on Tron (TRC20).  💎 DTD MAIN S
+[tracker] -1004318041006 msg=1788 views=0 reactions=0 preview=
+[tracker] -1004318041006 msg=1787 views=0 reactions=0 preview=
+[tracker] -1004318041006 msg=1786 views=0 reactions=0 preview=Free resources:  - Store: https://dtdpaymentsbot.pages.dev - Bot: https://t.me/DTDSTOREBOT - Main Channel: https://t.me/
+[store-agent] loop error: HTTP Error 400: Bad Request
+[ok] product promo -> DTD MAIN STORE🤑💰
+[ok] product promo -> DTD PREMIUM🤑🏦
+[chat] mirrored 3153 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 3154 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 381 -> feed (DTD PREMIUM🤑🏦)
+[chat] mirrored 382 -> feed (DTD PREMIUM🤑🏦)
+[ok] member scan: 1 new member(s) handled in DTD PREMIUM🤑🏦
+[heartbeat] ecosystem alive at 2026-08-18 04:23 UTC
+[store-agent] loop error: HTTP Error 400: Bad Request
+[heartbeat] ecosystem alive at 2026-08-18 04:33 UTC
+[ok] member scan: 1 new member(s) handled in DTD MAIN STORE🤑💰
+[ok] member scan: 1 new member(s) handled in DTD PREMIUM🤑🏦
+[ok] product promo -> DTD MAIN STORE🤑💰
+[ok] product promo -> DTD PREMIUM🤑🏦
+[chat] mirrored 3155 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 383 -> feed (DTD PREMIUM🤑🏦)
+[ok] promo -> GMONEY STORE💵
+[heartbeat] ecosystem alive at 2026-08-18 04:43 UTC
+[tracker] -1004317499796 msg=3155 views=1 reactions=0 preview=🏠 Reserved API keys ━━━━━━━━━━━━━ 40 Reserved API KEYS  💰 Price: $27 USD ━━━━━━━━━━━━━ 📢 DTD Main Store · 🔥 @DTDSTOREBOT
+[tracker] -1004317499796 msg=3153 views=4 reactions=0 preview=🏠 DIGITAL SERVICES ━━━━━━━━━━━━━ 1.Custom Bot Development-(Custom Telegram/Discord bot development service tailored to y
+[tracker] -1004317499796 msg=3152 views=4 reactions=0 preview=🆕 Thanks for being in the DTD community. Share with a friend who needs digital products + proper delivery.  💎 DTD MAIN S
+[tracker] -1004317499796 msg=3151 views=7 reactions=0 preview=🏠 PREMIUM COURSES DTD ━━━━━━━━━━━━━ 1.SPAMMING& CRACKING. 2.SMTP COURSE + TOOLS. 3.VVIP MEMBERSHIP  💰 Price: $179 USD ━━
+[tracker] -1004317499796 msg=3150 views=13 reactions=0 preview=🏠 SCREEN PORTALHOST SERVICES ━━━━━━━━━━━━━ 1.VPS/RDP 2.CPANEL(BULET PROOF)  💰 Price: $79 USD ━━━━━━━━━━━━━ 📢 DTD Main St
+[tracker] -1004317499796 msg=3149 views=17 reactions=0 preview=🏠 SC Sessions API ━━━━━━━━━━━━━ sharing and maintaining visitor/shopper states between headless frontends and legacy ser
+[tracker] -1004317499796 msg=3148 views=24 reactions=0 preview=🏠 RDP ━━━━━━━━━━━━━ Rdp Protocol Remote Desktop Protocol Stock EUROPE AMERICA ASIA  💰 Price: $130 USD ━━━━━━━━━━━━━ 📢 DT
+[tracker] -1004317499796 msg=3147 views=20 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004317499796 msg=3146 views=21 reactions=0 preview=🏠 Comcast ━━━━━━━━━━━━━ FRESH XFINITY COMCAST LOGINS  💰 Price: $35 USD ━━━━━━━━━━━━━ 📢 DTD Main Store · 🔥 @DTDSTOREBOT 📢
+[tracker] -1004318041006 msg=1796 views=0 reactions=0 preview=🔥 Short version of DTD 👇 💎 DTD MAIN STORE 🔥 @DTDSTOREBOT · 🏠 https://dtdpaymentsbot.pages.dev 📢 Main channel: https://t.
+[tracker] -1004318041006 msg=1795 views=0 reactions=0 preview=🔥 Fresh drop energy — shop DTD today. Browse → pay → get delivery. Preferred crypto: USDT on Tron (TRC20).  💎 DTD MAIN S
+[tracker] -1004318041006 msg=1794 views=0 reactions=0 preview=💡 Got a custom request? Talk to the owner — bulk deals & product questions welcome.  💎 DTD MAIN STORE 🔥 @DTDSTOREBOT · 🏠
+[tracker] -1004318041006 msg=1793 views=0 reactions=0 preview=🚀 DTD MAIN STORE 💎 ━━━━━━━━━━━━━━━━ Digital products with fast delivery. ⭐ Pay USDT (TRC20) · ₿ BTC · 💳 Paystack  💎 DTD 
+[tracker] -1004318041006 msg=1792 views=0 reactions=0 preview=💎 Why people stay with DTD: clear pricing · USDT/BTC/Paystack · tracked delivery · real support.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1791 views=0 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1790 views=0 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1789 views=0 reactions=0 preview=🔥 Fresh drop energy — shop DTD today. Browse → pay → get delivery. Preferred crypto: USDT on Tron (TRC20).  💎 DTD MAIN S
+[tracker] -1004318041006 msg=1788 views=0 reactions=0 preview=
+[tracker] -1004318041006 msg=1787 views=0 reactions=0 preview=
+[store-agent] loop error: HTTP Error 400: Bad Request
+[chat] mirrored 3156 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 384 -> feed (DTD PREMIUM🤑🏦)
+[heartbeat] ecosystem alive at 2026-08-18 04:53 UTC
+[ok] member scan: 1 new member(s) handled in DTD MAIN STORE🤑💰
+[store-agent] loop error: HTTP Error 400: Bad Request
+[heartbeat] ecosystem alive at 2026-08-18 05:03 UTC
+[chat] mirrored 3157 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 385 -> feed (DTD PREMIUM🤑🏦)
+[ok] product promo -> DTD MAIN STORE🤑💰
+[chat] mirrored 3158 -> feed (DTD MAIN STORE🤑💰)
+[ok] product promo -> DTD PREMIUM🤑🏦
+[chat] mirrored 386 -> feed (DTD PREMIUM🤑🏦)
+[heartbeat] ecosystem alive at 2026-08-18 05:13 UTC
+[tracker] -1004317499796 msg=3158 views=3 reactions=0 preview=🏠 TELEGRAM PREMIUM SCAMPAGE ━━━━━━━━━━━━━ Telegram sçampage with malicious links for telegram users.  💰 Price: $23 USD ━
+[tracker] -1004317499796 msg=3155 views=6 reactions=0 preview=🏠 Reserved API keys ━━━━━━━━━━━━━ 40 Reserved API KEYS  💰 Price: $27 USD ━━━━━━━━━━━━━ 📢 DTD Main Store · 🔥 @DTDSTOREBOT
+[tracker] -1004317499796 msg=3153 views=6 reactions=0 preview=🏠 DIGITAL SERVICES ━━━━━━━━━━━━━ 1.Custom Bot Development-(Custom Telegram/Discord bot development service tailored to y
+[tracker] -1004317499796 msg=3152 views=6 reactions=0 preview=🆕 Thanks for being in the DTD community. Share with a friend who needs digital products + proper delivery.  💎 DTD MAIN S
+[tracker] -1004317499796 msg=3151 views=10 reactions=0 preview=🏠 PREMIUM COURSES DTD ━━━━━━━━━━━━━ 1.SPAMMING& CRACKING. 2.SMTP COURSE + TOOLS. 3.VVIP MEMBERSHIP  💰 Price: $179 USD ━━
+[tracker] -1004317499796 msg=3150 views=16 reactions=0 preview=🏠 SCREEN PORTALHOST SERVICES ━━━━━━━━━━━━━ 1.VPS/RDP 2.CPANEL(BULET PROOF)  💰 Price: $79 USD ━━━━━━━━━━━━━ 📢 DTD Main St
+[tracker] -1004317499796 msg=3149 views=19 reactions=0 preview=🏠 SC Sessions API ━━━━━━━━━━━━━ sharing and maintaining visitor/shopper states between headless frontends and legacy ser
+[tracker] -1004318041006 msg=1796 views=0 reactions=0 preview=🔥 Short version of DTD 👇 💎 DTD MAIN STORE 🔥 @DTDSTOREBOT · 🏠 https://dtdpaymentsbot.pages.dev 📢 Main channel: https://t.
+[tracker] -1004318041006 msg=1795 views=0 reactions=0 preview=🔥 Fresh drop energy — shop DTD today. Browse → pay → get delivery. Preferred crypto: USDT on Tron (TRC20).  💎 DTD MAIN S
+[tracker] -1004318041006 msg=1794 views=0 reactions=0 preview=💡 Got a custom request? Talk to the owner — bulk deals & product questions welcome.  💎 DTD MAIN STORE 🔥 @DTDSTOREBOT · 🏠
+[tracker] -1004318041006 msg=1793 views=0 reactions=0 preview=🚀 DTD MAIN STORE 💎 ━━━━━━━━━━━━━━━━ Digital products with fast delivery. ⭐ Pay USDT (TRC20) · ₿ BTC · 💳 Paystack  💎 DTD 
+[tracker] -1004318041006 msg=1792 views=0 reactions=0 preview=💎 Why people stay with DTD: clear pricing · USDT/BTC/Paystack · tracked delivery · real support.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1791 views=0 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1790 views=0 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1789 views=0 reactions=0 preview=🔥 Fresh drop energy — shop DTD today. Browse → pay → get delivery. Preferred crypto: USDT on Tron (TRC20).  💎 DTD MAIN S
+[tracker] -1004318041006 msg=1788 views=0 reactions=0 preview=
+[store-agent] loop error: HTTP Error 400: Bad Request
+[heartbeat] ecosystem alive at 2026-08-18 05:23 UTC
+[store-agent] loop error: HTTP Error 400: Bad Request
+[heartbeat] ecosystem alive at 2026-08-18 05:33 UTC
+[ok] promo (image) -> DTD MAIN STORE🤑💰
+[chat] mirrored 3159 -> feed (DTD MAIN STORE🤑💰)
+[ok] product promo -> DTD MAIN STORE🤑💰
+[ok] product promo -> DTD PREMIUM🤑🏦
+[chat] mirrored 3160 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 387 -> feed (DTD PREMIUM🤑🏦)
+[heartbeat] ecosystem alive at 2026-08-18 05:43 UTC
+[tracker] -1004317499796 msg=3160 views=2 reactions=0 preview=🏠 OTP BYPASS ━━━━━━━━━━━━━ OTP BYPASS PER MONTH PREMIUM ACCESS  💰 Price: $100 USD ━━━━━━━━━━━━━ 📢 DTD Main Store · 🔥 @DT
+[tracker] -1004317499796 msg=3159 views=2 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004317499796 msg=3158 views=11 reactions=0 preview=🏠 TELEGRAM PREMIUM SCAMPAGE ━━━━━━━━━━━━━ Telegram sçampage with malicious links for telegram users.  💰 Price: $23 USD ━
+[tracker] -1004317499796 msg=3155 views=13 reactions=0 preview=🏠 Reserved API keys ━━━━━━━━━━━━━ 40 Reserved API KEYS  💰 Price: $27 USD ━━━━━━━━━━━━━ 📢 DTD Main Store · 🔥 @DTDSTOREBOT
+[tracker] -1004317499796 msg=3153 views=12 reactions=0 preview=🏠 DIGITAL SERVICES ━━━━━━━━━━━━━ 1.Custom Bot Development-(Custom Telegram/Discord bot development service tailored to y
+[tracker] -1004317499796 msg=3152 views=11 reactions=0 preview=🆕 Thanks for being in the DTD community. Share with a friend who needs digital products + proper delivery.  💎 DTD MAIN S
+[tracker] -1004317499796 msg=3151 views=15 reactions=0 preview=🏠 PREMIUM COURSES DTD ━━━━━━━━━━━━━ 1.SPAMMING& CRACKING. 2.SMTP COURSE + TOOLS. 3.VVIP MEMBERSHIP  💰 Price: $179 USD ━━
+[tracker] -1004318041006 msg=1796 views=0 reactions=0 preview=🔥 Short version of DTD 👇 💎 DTD MAIN STORE 🔥 @DTDSTOREBOT · 🏠 https://dtdpaymentsbot.pages.dev 📢 Main channel: https://t.
+[tracker] -1004318041006 msg=1795 views=0 reactions=0 preview=🔥 Fresh drop energy — shop DTD today. Browse → pay → get delivery. Preferred crypto: USDT on Tron (TRC20).  💎 DTD MAIN S
+[tracker] -1004318041006 msg=1794 views=0 reactions=0 preview=💡 Got a custom request? Talk to the owner — bulk deals & product questions welcome.  💎 DTD MAIN STORE 🔥 @DTDSTOREBOT · 🏠
+[tracker] -1004318041006 msg=1793 views=0 reactions=0 preview=🚀 DTD MAIN STORE 💎 ━━━━━━━━━━━━━━━━ Digital products with fast delivery. ⭐ Pay USDT (TRC20) · ₿ BTC · 💳 Paystack  💎 DTD 
+[tracker] -1004318041006 msg=1792 views=0 reactions=0 preview=💎 Why people stay with DTD: clear pricing · USDT/BTC/Paystack · tracked delivery · real support.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1791 views=0 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1790 views=0 reactions=0 preview=💡 Prefer Telegram checkout? Open the bot → /buy → scan QR → paste tx hash → send delivery email.  💎 DTD MAIN STORE 🔥 @DT
+[tracker] -1004318041006 msg=1789 views=0 reactions=0 preview=🔥 Fresh drop energy — shop DTD today. Browse → pay → get delivery. Preferred crypto: USDT on Tron (TRC20).  💎 DTD MAIN S
+[tracker] -1004318041006 msg=1788 views=0 reactions=0 preview=
+[store-agent] loop error: HTTP Error 400: Bad Request
+[ok] @Glock7money
+[ok] source: Wall Street Shop
+[ok] source: Leads|Affiliate|Database Group
+[ok] source: Survival mode
+[ok] dest: DTD MAIN STORE🤑💰
+[ok] dest: GMONEY STORE💵
+[ok] watching 3 resolved source chat(s)
+[ok] promo: DTD MAIN STORE🤑💰
+[ok] promo: GMONEY STORE💵
+[warn] bio '?? Premium Vendor · @DTDSTOREBOT · dtdpaymentsbot.pages.dev': 'utf-8' codec can't encode characters in position 0-1: surrogates not allowed
+[warn] bio '?? Premium Vendor · @DTDSTOREBOT': 'utf-8' codec can't encode characters in position 0-1: surrogates not allowed
+[warn] about DTD MAIN STORE🤑💰: 'utf-8' codec can't encode characters in position 0-1: surrogates not allowed
+[warn] about GMONEY STORE💵: 'utf-8' codec can't encode characters in position 0-1: surrogates not allowed
+[ok] product promo: DTD MAIN STORE🤑💰
+[ok] product promo: DTD PREMIUM🤑🏦
+[ok] delay=2.0-8.0s translate=True catch_up=0
+[ok] promo every ~30-60 min, rotating 2 chat(s), 10 variants
+[ok] product promo every ~0h, rotating 2 chat(s)
+[ok] daily story every day ~09:00 to 2 chat(s), banners rotating daily
+[ok] channel -> chat feed mirror every ~120s (2 channel(s))
+[ok] control plane active (promo / story / pin via agent_commands)
+[ok] channel agent active (react + comment on both channels)
+[ok] behavior tracker active (engagement analytics)
+[ok] store agent active (order monitoring + auto-promo)
+[ok] ecosystem heartbeat active (10 min cycle)
+[ok] listening...
+[ok] member management: welcome + activation on 2 channel(s)
+[ok] chat mirror: DTD MAIN STORE🤑💰
+[ok] chat mirror: DTD PREMIUM🤑🏦
+[ok] promo (image) -> GMONEY STORE💵
+[ok] product promo -> DTD MAIN STORE🤑💰
+[ok] promo -> DTD MAIN STORE🤑💰
+[ok] product promo -> DTD PREMIUM🤑🏦
+[ok] member scan: 1 new member(s) handled in DTD MAIN STORE🤑💰
+[info] 185373 in 5s
+[error] 185373: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185373: _safe_send_message() missing 1 required positional argument: 'text'
+[chat] mirrored 3161 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 3162 -> feed (DTD MAIN STORE🤑💰)
+[chat] mirrored 388 -> feed (DTD PREMIUM🤑🏦)
+[info] 62606 in 3s
+[error] 62606: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 62606: _safe_send_message() missing 1 required positional argument: 'text'
+[info] 185374 in 7s
+[error] 185374: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185374: _safe_send_message() missing 1 required positional argument: 'text'
+[info] 185375 in 6s
+[error] 185375: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185375: _safe_send_message() missing 1 required positional argument: 'text'
+[info] 185376 in 3s
+[error] 185376: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185376: _safe_send_message() missing 1 required positional argument: 'text'
+[info] 185377 in 3s
+[error] 185377: _safe_send_message() missing 1 required positional argument: 'text'
+[error] 185377: _safe_send_message() missing 1 required positional argument: 'text'

@@ -1,0 +1,12 @@
+Service: active
+Process: 3331579       02:50 /opt/dtd-mirror/venv/bin/python scripts/telethon_mirror.py
+OK count: 74
+Error count: 6
+Skip count: 0
+
+=== Mirror forwarding (last 5) ===
+[ok] promo (plain) -> DTD MAIN STORE🤑💰
+[ok] product promo (plain) -> DTD MAIN STORE🤑💰
+
+=== Incoming from sources (last 5) ===
+
