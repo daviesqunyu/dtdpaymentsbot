@@ -2,6 +2,15 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { CheckoutStep, CartItem, Order } from '@/types'
 
+const ssrStorage = {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+}
+
+const safeStorage = () =>
+  typeof window !== 'undefined' ? localStorage : ssrStorage
+
 interface CartState {
   items: CartItem[]
   addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void
@@ -45,7 +54,7 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: 'dtd_cart',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(safeStorage),
     }
   )
 )
