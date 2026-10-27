@@ -27,7 +27,7 @@ const PAYMENT_METHODS = new Set([
   "Paystack QR"
 ]);
 
-function normalizePaymentMethod(method) {
+export function normalizePaymentMethod(method) {
   const value = String(method || "USDT").trim();
   if (PAYMENT_METHODS.has(value)) return value;
   const lower = value.toLowerCase();
@@ -275,6 +275,40 @@ app.get("/api/config", (_req, res) => {
       { id: "Paystack", label: "Card / Bank · Global", type: "paystack" }
     ]
   });
+});
+
+app.get("/api/products", async (_req, res) => {
+  try {
+    let products = [];
+    if (supabaseAdmin) {
+      const { data, error } = await supabaseAdmin
+        .from("products")
+        .select("id,name,description,price_usd,image_url,active")
+        .eq("active", true)
+        .order("created_at", { ascending: false });
+      if (!error && Array.isArray(data)) products = data;
+    }
+    res.json({ products });
+  } catch (error) {
+    res.json({ products: [], error: String(error.message || error) });
+  }
+});
+
+app.get("/api/products/gated", async (_req, res) => {
+  try {
+    let products = [];
+    let unlocked = false;
+    if (supabaseAdmin) {
+      const { data, error } = await supabaseAdmin
+        .from("products")
+        .select("id,name,description,price_usd,image_url,active")
+        .order("created_at", { ascending: false });
+      if (!error && Array.isArray(data)) products = data;
+    }
+    res.json({ unlocked, products });
+  } catch (error) {
+    res.json({ unlocked: false, products: [], error: String(error.message || error) });
+  }
 });
 
 app.post("/api/orders", async (req, res) => {

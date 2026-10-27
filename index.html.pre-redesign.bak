@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DTD STORE - Premium Digital Products</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+
+  <!-- Custom CSS (inline critical styles) -->
+  <style>
+    :root {
+      --bg: #0a0a12;
+      --bg-secondary: #12121a;
+      --surface: #1a1a24;
+      --card: #161622;
+      --border: #2a2a3a;
+      --muted: #6b6b80;
+      --foreground: #f0f0f5;
+      --accent: #10b981;
+      --accent-hover: #059669;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --transition: all 0.2s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--foreground);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Custom Tailwind config */
+    @layer base {
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: var(--border);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: var(--accent);
+      }
+    }
+
+    @layer components {
+      .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed bg-[var(--accent)] text-[var(--bg)] shadow-sm hover:shadow-[0_4px_12px_rgba(16,185,119,0.3)];
+      }
+      
+      .btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--foreground)];
+      }
+      
+      .btn-outline {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:bg-[var(--bg-secondary)] border border-[var(--accent)] text-[var(--accent)] hover:text-[var(--foreground)];
+      }
+      
+      .btn-danger {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:bg-[var(--danger)] text-[var(--bg)];
+      }
+      
+      .card {
+        @apply bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-[var(--card-shadow)] padding-6 transition-[var(--transition)];
+      }
+      
+      .card-hover {
+        @apply card hover:border-[var(--accent)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.4)];
+      }
+      
+      .input-field {
+        @apply w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:rounded-lg transition-[var(--transition)];
+      }
+      
+      .select-field {
+        @apply w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:rounded-lg cursor-pointer appearance-none bg-right-[15px];
+      }
+      
+      .badge {
+        @apply inline-flex items-center gap-1.5 rounded-full text-xs font-medium px-2.5 py-1.5 bg-[var(--bg-secondary)] text-[var(--muted)];
+      }
+      
+      .badge-accent {
+        @apply bg-[var(--accent)] text-[var(--bg)] rounded-full text-xs font-medium px-2.5 py-1.5;
+      }
+      
+      .nav-link {
+        @apply relative group text-[var(--muted)] transition-colors duration-200;
+      }
+      
+      .nav-link::after {
+        @apply content-'' absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--accent)] transition-all duration-200;
+      }
+      
+      .nav-link:hover {
+        @apply text-[var(--foreground)];
+      }
+      
+      .nav-link:hover::after {
+        @apply w-full;
+      }
+      
+      .theme-btn {
+        @apply p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-[var(--transition)];
+      }
+    }
+  </style>
+</head>
+<body class="dark">
+
+  <!-- ============================================
+     TOP NAVIGATION BAR
+  ============================================ -->
+  <nav class="border-b border-[var(--border)] bg-[var(--bg-secondary)] sticky top-0 z-50">
+    <div class="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-2">
+        <span class="text-2xl font-bold [--fg]:text-[var(--foreground)] [--bg]:text-[var(--accent)]">₮ DTD STORE</span>
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#products" class="nav-link group [&>span]:text-[var(--foreground)]:transition-colors">Store</a>
+        <a href="#gated" class="nav-link group [&>span]:text-[var(--foreground)]:transition-colors">Gated Store</a>
+        <a href="#track" class="nav-link group [&>span]:text-[var(--foreground)]:transition-colors">Track Order</a>
+        <a href="#chat" class="nav-link group [&>span]:text-[var(--foreground)]:transition-colors">Chat</a>
+      </div>
+
+      <!-- Right Side: Cart & Network -->
+      <div class="flex items-center gap-4">
+        <!-- Network Status -->
+        <div class="flex items-center gap-2 text-sm">
+          <span class="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse"></span>
+          <span class="text-[var(--muted)]">Network Status: <span class="font-medium">ONLINE</span></span>
+        </div>
+
+        <!-- Shopping Cart -->
+        <div class="relative group">
+          <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] text-[var(--muted)] hover:text-[var(--foreground)] transition-[var(--transition)]" aria-label="View cart">
+            <i class="fas fa-shopping-bag"></i>
+            <span id="cart-counter" class="absolute -top-0.5 -right-0.5 rounded-full bg-[var(--accent)] text-[var(--bg)] text-xs font-mini min-w-5 min-h-5">0</span>
+          </button>
+        </div>
+
+        <!-- User Profile / Menu -->
+        <div class="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-secondary)]/90 transition-colors">
+          <i class="fas fa-user text-[var(--muted)]"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================================
+     HERO / PRODUCT SHOWCASE SECTION
+  ============================================ -->
+  <section id="hero" class="py-16 md:py-24 bg-gradient-to-b from-[var(--bg)] via-[var(--bg-secondary)] to-[var(--surface)]">
+    <div class="max-w-[1400px] mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-8 items-center">
+        <!-- Hero Text -->
+        <div>
+          <span class="inline-block mb-3 px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--bg-secondary)] text-[var(--accent)]">Open 24/7</span>
+          <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight [--fg]:text-[var(--foreground)] [--bg]:text-[var(--accent)] mb-4">
+            Premium Digital<br />
+            <span class="block">Storefront</span>
+          </h1>
+          <p class="text-lg md:text-base text-[var(--muted)] mb-6 max-w-lg">
+            Secure digital products with instant delivery. Domains, VPN access, SMTP vaults, and crypto payment solutions.
+          </p>
+          <div class="grid grid-cols-2 gap-3 mb-6">
+            <button class="btn-primary">Shop Now</button>
+            <a href="#gated" class="btn-outline">Browse Catalog</a>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-sm">
+            <div class="text-center">
+              <div class="text-[var(--accent)] text-xl font-bold">26+</div>
+              <div class="text-[var(--muted)]">Products</div>
+            </div>
+            <div class="text-center">
+              <div class="text-[var(--accent)] text-xl font-bold">3</div>
+              <div class="text-[var(--muted)]">Payment Methods</div>
+            </div>
+            <div class="text-center">
+              <div class="text-[var(--accent)] text-xl font-bold">24/7</div>
+              <div class="text-[var(--muted)]">Support</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product Quick Stats -->
+        <div class="lg:hidden hidden">
+          <p class="text-[var(--muted)] text-sm mb-4">Featured products are available in the full catalog view.</p>
+        </div>
+
+        <!-- Featured Products Grid (mobile) -->
+        <div class="space-y-4">
+          <!-- Featured cards will be injected by JS -->
+        </div>
+      </div>
+
+      <!-- Featured Products -->
+      <div class="lg:col-span-1">
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <!-- Mobile featured products -->
+        </div>
+        <div class="grid grid-cols-3 gap-4" id="featured-products">
+          <!-- Featured products injected by JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products Section -->
+  <section id="products" class="py-12 md:py-20 bg-[var(--bg-secondary)]">
+    <div class="max-w-[1400px] mx-auto px-6">
+      <div class="mb-8">
+        <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--bg-secondary)] text-[var(--accent)]">All Categories</span>
+        <h2 class="text-2xl md:text-3xl font-bold mt-2 [--fg]:text-[var(--foreground)] [--bg]:text-[var(--accent)]">Product Showcase</h2>
+        <p class="text-[var(--muted)] mt-1">segmented by categories (e.g., Infrastructure/SMTP, Storage/Vaults, Accounts)</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="product-grid">
+        <!-- Product cards injected by JS -->
+      </div>
+
+      <div class="mt-6 flex justify-center">
+        <button class="btn-primary">Load More</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gated/Secure Section -->
+  <section id="gated" class="py-12 md:py-20 bg-[var(--bg)]">
+    <div class="max-w-[1400px] mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-8 items-center">
+        <div>
+          <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--bg-secondary)] text-[var(--accent)]">Secure Access</span>
+          <h2 class="text-4xl md:text-5xl font-bold [--fg]:text-[var(--foreground)] [--bg]:text-[var(--accent)] mb-4">Gated / Premium Section</h2>
+          <p class="text-[var(--muted)] mb-6">Premium digital assets require verified access. Unlock instant delivery with a minimum $5 USDT/BTC deposit.</p>
+          <div class="space-y-3">
+            <button class="btn-primary w-full">Make Deposit</button>
+            <a href="https://t.me/DTDSTOREBOT" class="btn-outline w-full" target="_blank" rel="noopener">
+              <i class="fab-telegram telegram mr-2"></i>Connect via Telegram
+            </a>
+          </div>
+        </div>
+        <!-- Gated product cards -->
+        <div class="space-y-4" id="gated-products">
+          <!-- Gated products injected by JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+<!-- Order Tracking Section -->
+<section id="track" class="py-12 md:py-20 bg-[var(--bg-secondary)]">
+  <div class="max-w-[800px] mx-auto px-6">
+    <div class="mb-8">
+      <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--bg-secondary)] text-[var(--info)]">Order Tracking</span>
+      <h2 class="text-3xl font-bold mb-4 [--fg]:text-[var(--foreground)] [--bg]:text-[var(--info)]">Live Order Tracking Dashboard</h2>
+      <p class="text-[var(--muted)] mb-6">Enter your Order ID below to fetch processing status and delivery ETA.</p>
+    </div>
+
+    <div class="card p-6">
+      <form id="track-order-form" class="tracking-form">
+        <div class="tracking-panel">
+          <h3 class="tracking-title text-sm font-medium uppercase tracking-letter-spacing mb-4">Order Lookup</h3>
+          <div class="field-group">
+            <div class="form-field">
+              <label class="label-field" for="order-id">Order ID</label>
+              <input type="text" id="order-id" class="input-field font-mono" placeholder="DTD-abc123" required />
+              <span class="validation-icon">✓</span>
+              <div class="field-error text-xs text-[var(--danger)] hidden" id="order-id-error">Order ID is required</div>
+            </div>
+            <div class="form-field">
+              <label class="label-field" for="order-email">Email</label>
+              <input type="email" id="order-email" class="input-field" placeholder="you@example.com" required />
+              <span class="validation-icon">✓</span>
+              <div class="field-error text-xs text-[var(--danger)] hidden" id="order-email-error">Valid email is required</div>
+            </div>
+          </div>
+        </div>
+        <div class="submit-area">
+          <button type="submit" class="btn-primary w-full tracking-submit" id="trackBtn">Track Order</button>
+          <div class="submitting-state hidden" id="submittingState">
+            <span class="spinner mr-2"></span>Checking status...
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div id="track-results" class="mt-6">
+      <div class="p-4 rounded-lg bg-[var(--bg-secondary)]" id="track-status"></div>
+    </div>
+  </div>
+</section>
+
+  <!-- Chat / Support Section -->
+  <section id="chat" class="py-12 md:py-20 bg-[var(--bg)]">
+    <div class="max-w-[1200px] mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Chat Window -->
+        <div>
+          <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--bg-secondary)] text-[var(--accent)]">Live Support</span>
+          <h2 class="text-3xl font-bold mb-4 [--fg]:text-[var(--foreground)] [--bg]:text-[var(--accent)]">Store Chat & Support</h2>
+          <p class="text-[var(--muted)] mb-6">Get instant help with your order or product inquiries.</p>
+
+          <!-- Chat History -->
+          <div class="h-96 bg-[var(--card)] border border-[var(--border)] rounded-lg overflow-y-auto p-4" id="chat-history">
+            <!-- Chat messages injected by JS -->
+            <div class="p-3 rounded-md mb-3" style="background: var(--bg-secondary);">
+              <div class="flex">
+                <div class="w-8 h-8 rounded-full bg-[var(--accent)] flex items-center justify-center mr-3">
+                  <i class="fas fa-robot text-[var(--bg)] text-xs"></i>
+                </div>
+                <div>
+                  <p class="text-sm">Hello! How can I help you with your order today?</p>
+                  <p class="text-[var(--muted)] text-xs">Online</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Input -->
+          <form id="chat-form" class="mt-4 pt-6 border-t border-[var(--border)]">
+            <div class="grid grid-cols-3 gap-2">
+              <input type="text" id="chat-input" class="input-field flex-1" placeholder="Type message..." required />
+              <button type="submit" class="btn-primary px-4">Send</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Quick Links / Contact -->
+        <div>
+          <h3 class="font-medium mb-4">Quick Links</h3>
+          <ul class="space-y-3 text-sm">
+            <li><a href="#products" class="text-[var(--muted)] hover:text-[var(--accent)]">Products</a></li>
+            <li><a href="#track" class="text-[var(--muted)] hover:text-[var(--accent)]">Track Order</a></li>
+            <li><a href="https://t.me/DTDSTOREBOT" class="text-[var(--muted)] hover:text-[var(--accent)]" target="_blank">Telegram Bot</a></li>
+            <li><a href="#gated" class="text-[var(--muted)] hover:text-[var(--accent)]">Gated Store</a></li>
+          </ul>
+
+          <div class="mt-4 pt-4 border-t border-[var(--border)]">
+            <h4 class="font-medium text-sm mb-2">Contact</h4>
+            <p class="text-[var(--muted)] text-xs">
+              <i class="fas fa-envelope mr-1"></i> support@dtdstore.example<br />
+              <i class="fas fa-telegram mr-1"></i> @DTDSTOREBOT
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="footer" class="py-8 bg-[var(--bg-secondary)] mt-auto">
+    <div class="max-w-[1400px] mx-auto px-6">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 text-sm text-[var(--muted)]">
+        <div>
+          <h4 class="font-medium mb-3 [--fg]:text-[var(--foreground)] [--bg]:text-[var(--accent)]">DTD STORE</h4>
+          <p>Premium digital products storefront. Secure payments, instant delivery.</p>
+        </div>
+        <div>
+          <h4 class="font-medium mb-3 [--fg]:text-[var(--foreground)] [--bg]:text-[var(--accent)]">Products</h4>
+          <ul class="space-y-2">
+            <li><a href="#products" class-hover:text-[var(--accent)]">Infrastructure</a></li>
+            <li><a href="#gated" class-hover:text-[var(--accent)]">Vaults</a></li>
+            <li><a href="#" class-hover:text-[var(--accent)]">Accounts</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium mb-3 [--fg]:text-[var(--foreground)] [--bg]:text-[var(--accent)]">Support</h4>
+          <ul class="space-y-2">
+            <li><a href="#track" class-hover:text-[var(--accent)]">Track Order</a></li>
+            <li><a href="#chat" class-hover:text-[var(--accent)]">Chat Support</a></li>
+            <li><a href="mailto:support@dtdstore.example" class-hover:text-[var(--accent)]">Email</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium mb-3 [--fg]:text-[var(--foreground)] [--bg]:text-[var(--accent)]">Company</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class-hover:text-[var(--accent)]">About</a></li>
+            <li><a href="#" class-hover:text-[var(--accent)]">Privacy</a></li>
+            <li><a href="#" class-hover:text-[var(--accent)]">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-6 border-t border-[var(--border)] flex flex-col lg:flex-row justify-between items-center gap-4">
+        <p class="text-sm [--fg]:text-[var(--foreground)] [--bg]:text-[var(--muted)]">2024 DTD STORE. All rights reserved.</p>
+        <div class="flex items-center gap-3">
+          <a href="https://t.me/DTDSTOREBOT" class-hover:text-[var(--accent)] transition-colors" target="_blank" rel="noopener">
+            <i class="fab-telegram"></i>
+          </a>
+          <a href="#" class-hover:text-[var(--accent)] transition-colors">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ============================================
+    // DUMMY JSON DATA - Digital Assets
+    // ============================================
+    const digitalAssets = [
+      // Infrastructure/SMTP Category
+      {
+        id: 1,
+        name: "SMTP Server Elite",
+        category: "Infrastructure/SMTP",
+        price: "$29.99",
+        badge: "Secure",
+        description: "High-volume SMTP server with dedicated IP and auto-scaling",
+        image: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=400&h=300&fit=crop",
+        badgeColor: "bg-[var(--accent)]",
+        badgeText: "Secure",
+        action: "Add to Cart"
+      },
+      {
+        id: 2,
+        name: "SMTP Server Pro",
+        category: "Infrastructure/SMTP",
+        price: "$49.99",
+        badge: "Premium",
+        description: "Dedicated IP + 10K emails/day + real-time analytics",
+        image: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=400&h=300&fit=crop",
+        badgeColor: "bg-[var(--danger)]",
+        badgeText: "Premium",
+        action: "Add to Cart"
+      },
+
+      // Storage/Vaults Category
+      {
+        id: 3,
+        name: "Encrypted Vault Pro",
+        category: "Storage/Vaults",
+        price: "$19.99",
+        badge: "Stock",
+        description: "End-to-end encrypted storage with 1TB capacity",
+        image: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=400&h=300&fit=crop",
+        badgeColor: "bg-[var(--accent)]",
+        badgeText: "Stock",
+        action: "Add to Cart"
+      },
+      {
+        id: 4,
+        name: "Encrypted Vault Enterprise",
+        category: "Storage/Vaults",
+        price: "$59.99",
+        badge: "Limited",
+        description: "Unlimited storage + team collaboration + priority support",
+        image: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=400&h=300&fit=crop",
+        badgeColor: "bg-[var(--warning)]",
+        badgeText: "Limited",
+        action: "Add to Cart"
+      },
+
+      // Accounts Category
+      {
+        id: 4,
+        name: "Crypto Wallet Pro",
+        category: "Accounts",
+        price: "$39.99",
+        badge: "Verified",
+        description: "Multi-currency wallet with 2FA and hardware wallet integration",
+        image: "https://images.unsplash.com/photo-1639762681485-07477f95aa40?w=400&h=300&fit=crop",
+        badgeColor: "bg-[var(--info)]",
+        badgeText: "Verified",
+        action: "Add to Cart"
+      },
+      {
+        id: 6,
+        name: "Domain Portfolio",
+        category: "Accounts",
+        price: "$79.99",
+        badge: "Premium",
+        description: "100+ premium domains with DNS management and forwarding",
+        image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&fit=crop",
+        badgeColor: "bg-[var(--danger)]",
+        badgeText: "Premium",
+        action: "Add to Cart"
+      },
+
+      // Additional products
+      {
+        id: 7,
+        name: "DNS Manager Elite",
+        category: "Infrastructure/SMTP",
+        price: "$14.99",
+        badge: "Essential",
+        description: "Complete DNS management with premium DNS resolution",
+        image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=300&fit=crop",
+        badgeColor: "bg-[var(--info)]",
+        badgeText: "Essential",
+        action: "Add to Cart"
+      },
+      {
+        id: 8,
+        name: "VPN Access Plus",
+        category: "Storage/Vaults",
+        price: "$12.99",
+        badge: "Stock",
+        description: "High-speed VPN with 50+ server locations and no-logs policy",
+        image: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=400&h=300&fit=crop",
+        badgeColor: "bg-[var(--accent)]",
+        badgeText: "Stock",
+        action: "Add to Cart"
+      }
+    ];
+
+    // ============================================
+    // STATE & HELPER FUNCTIONS
+    // ============================================
+    const state = {
+      cartCount: parseInt(localStorage.getItem('cartCount') || '0'),
+      currentView: 'products'
+    };
+
+    // Render cart counter
+    function renderCartCounter() {
+      const counter = document.getElementById('cart-counter');
+      if (counter) {
+        counter.textContent = state.cartCount;
+        counter.style.display = state.cartCount > 0 ? 'block' : 'none';
+      }
+    }
+
+    // Render product card
+    function renderProductCard(asset) {
+      return `
+        <div class="group card-hover p-4 rounded-lg flex flex-col h-full" data-index="${asset.id}">
+          <!-- Image -->
+          <div class="relative w-full h-48 rounded-t-lg overflow-hidden mb-4">
+            <img src="${asset.image}" 
+                 alt="${asset.name}" 
+                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                 loading="lazy"
+                 style="aspect-ratio/1">
+          </div>
+
+          <!-- Badge -->
+          <span class="absolute top-2 left-2 ${asset.badgeColor} z-10">${asset.badgeText}</span>
+
+          <!-- Content -->
+          <div class="pt-4">
+            <h3 class="font-medium mb-1 line-clamp-2">${asset.name}</h3>
+            <p class="text-sm text-[var(--muted)] line-clamp-2 mb-3">${asset.description}</p>
+            
+            <!-- Price & Action -->
+            <div class="flex items-baseline justify-between mt-3">
+              <span class="text-[var(--accent)] font-bold">${asset.price}</span>
+              <button class="add-to-cart text-[var(--accent)] text-sm hover:underline">${asset.action}</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Render product grid
+    function renderProductGrid(filter = 'all') {
+      const grid = document.getElementById('product-grid');
+      if (!grid) return;
+
+      const filteredAssets = digitalAssets.filter(asset => 
+        filter === 'all' || asset.category === filter
+      );
+
+      grid.innerHTML = filteredAssets.map(renderProductCard).join('');
+
+      // Add to cart functionality
+      document.querySelectorAll('.add-to-cart').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const card = btn.closest('.group');
+          const index = parseInt(card.dataset.index);
+          addToCart(index);
+        });
+      });
+    }
+
+    // Add to cart
+    function addToCart(index) {
+      const asset = digitalAssets[index];
+      state.cartCount++;
+      localStorage.setItem('cartCount', state.cartCount);
+      renderCartCounter();
+
+      // Show feedback
+      const originalText = btn.textContent;
+      btn.textContent = 'Added ✓';
+      btn.style.background = 'var(--accent)';
+      btn.style.color = 'var(--bg)';
+      
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = '';
+        btn.style.color = '';
+      }, 1500);
+    }
+
+    // Render gated products
+    function renderGatedProducts() {
+      const grid = document.getElementById('gated-products');
+      if (!grid) return;
+
+      grid.innerHTML = digitalAssets
+        .filter(a => a.category === 'Storage/Vaults' || a.category === 'Accounts')
+        .map(renderProductCard)
+        .join('');
+    }
+
+    // Track order
+    document.getElementById('track-order-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const orderId = document.getElementById('order-id').value.trim();
+      const email = document.getElementById('order-email').value.trim();
+
+      if (!orderId || !email) {
+        showNotification('Please fill in both Order ID and Email', 'error');
+        return;
+      }
+
+      // Show loading state
+      const resultsDiv = document.getElementById('track-status');
+      resultsDiv.innerHTML = `
+        <div class="animate-spin rounded-full border-2 border-[var(--accent)] border-t-0 w-6 h-6 mx-auto mb-3"></div>
+        <p class="text-sm">Fetching order status...</p>
+      `;
+
+      // Simulate API call
+      setTimeout(() => {
+        const statusDiv = document.getElementById('track-status');
+        statusDiv.innerHTML = `
+          <div class="p-4 rounded-lg bg-[var(--accent)]/10 border border-[var(--accent)]/20">
+            <p class="font-medium">Order DTD-abc123</p>
+            <p class="text-sm mt-1">Status: <span class="font-medium text-[var(--accent)]">Processing</span></p>
+            <p class="text-sm mt-1">Estimated delivery: 2-4 business days</p>
+            <p class="text-sm mt-1">Payment: <span class="font-medium">USDT (TRC20)</span></p>
+          </div>
+        `;
+        document.getElementById('track-results').classList.remove('hidden');
+      }, 1500);
+    });
+
+    // Telegram bot link
+    document.querySelectorAll('a[href*="t.me/DTDSTOREBOT"]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        // Track the click
+        console.log('Telegram bot clicked');
+      });
+    });
+
+    // Notification system
+    function showNotification(message, type = 'info') {
+      const colors = {
+        success: 'var(--accent)',
+        error: 'var(--danger)',
+        info: 'var(--info)'
+      };
+
+      // Create notification element
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-lg ${
+        colors[type] ? `bg-[${colors[type]}]` : ''
+      } text-[var(--foreground)] transition-all duration-300`;
+      notification.textContent = message;
+
+      document.body.appendChild(notification);
+
+      // Auto-remove after 3 seconds
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+      // Render product grids
+      renderProductGrid('all');
+      renderProductGrid('Infrastructure/SMTP');
+      renderProductGrid('Storage/Vaults');
+      renderProductGrid('Accounts');
+      renderGatedProducts();
+      renderCartCounter();
+
+      // Navbar hover effect
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('mouseenter', () => {
+          document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('hover:text-[var(--foreground)']));
+          link.classList.add('hover:text-[var(--foreground)']);
+        });
+      });
+
+      // Chat form
+      document.getElementById('chat-form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        let message = input.value.trim();
+        // XSS sanitization: escape HTML special characters
+        message = message.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, ''');
+        if (!message) return;
+        
+        // Add message to chat history
+        const chatHistory = document.getElementById('chat-history');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'p-3 rounded-md mb-3';
+        msgDiv.style.background = 'var(--bg-secondary)';
+        msgDiv.innerHTML = `
+          <div class="flex">
+            <div class="w-8 h-8 rounded-full bg-[var(--accent)] flex items-center justify-center mr-3">
+              <i class="fas fa-robot text-[var(--bg)] text-xs"></i>
+            </div>
+            <div>
+              <p class="text-sm">${message}</p>
+              <p class="text-[var(--muted)] text-xs">You</p>
+            </div>
+          </div>
+        `;
+        chatHistory.appendChild(msgDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+        input.value = '';
+      });
+    });
+  </script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
