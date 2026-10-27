@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
+    "test": "vitest run",
     "pages:secrets": "node scripts/push-secrets.mjs",
     "sync:vps-env": "python scripts/sync_env_vps.py",
     "deploy:vps-mail": "python scripts/deploy_smtp_sms_vps.py",
@@ -29,6 +30,7 @@
     "mysql2": "^3.23.4"
   },
   "devDependencies": {
+    "vitest": "^5.0.5",
     "wrangler": "^4.22.0"
   }
 }

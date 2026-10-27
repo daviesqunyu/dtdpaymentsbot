@@ -1,0 +1,876 @@
+/* DTD Store — Frontend Application */
+const API = ''; // relative to same origin
+const VENICE_API_BASE = 'https://venice.ai';
+const VENICE_MODEL = 'z-ai-glm-5-3-flash';
+const VENICE_API_KEY = process.env.VENICE_API_KEY || '';
+
+const TELEGRAM_BOT = 'https://t.me/DTDSTOREBOT';
+const TELEGRAM_CHANNEL = 'https://t.me/+ysMSObZyNWpjNTA0';
+
+const state = {
+  cart: JSON.parse(localStorage.getItem('dtd_cart') || '[]'),
+  checkout: { step: 'idle', email: '', paymentMethod: null, txHash: '', order: null },
+  user: null,
+  products: [],
+  gatedUnlocked: false,
+  category: 'all',
+  analyticsId: 'dtd-' + Math.random().toString(36).slice(2),
+};
+
+// ── Product images that match each product category ──
+const PRODUCT_IMAGES = {
+  'p1': 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=400&h=300&fit=crop',
+  'p2': 'https://images.unsplash.com/photo-1621761058067-208120684075?w=400&h=300&fit=crop',
+  'p3': 'https://images.unsplash.com/photo-1525263383900-22d9059fbb50?w=400&h=300&fit=crop',
+  'p4': 'https://images.unsplash.com/photo-1563986768494-4dee576363e3?w=400&h=300&fit=crop',
+  'p5': 'https://images.unsplash.com/photo-1649003901951-96726025990b?w=400&h=300&fit=crop',
+  'p6': 'https://images.unsplash.com/photo-1550745166-6dc28322c571?w=400&h=300&fit=crop',
+  'p7': 'https://images.unsplash.com/photo-1618494616103-2eac970872e6?w=400&h=300&fit=crop',
+  'p8': 'https://images.unsplash.com/photo-1556157382-97eda2a665db?w=400&h=300&fit=crop',
+  'd1': 'https://images.unsplash.com/photo-1531247476477-d862c9cf429d?w=400&h=300&fit=crop',
+  'd2': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&fit=crop',
+  'd3': 'https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?w=400&h=300&fit=crop',
+  'd4': 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop',
+  'ns1': 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=300&fit=crop',
+  'ns2': 'https://images.unsplash.com/photo-1558494949-ef648b0677c0?w=400&h=300&fit=crop',
+  'ns3': 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&h=300&fit=crop',
+  'rdp1': 'https://images.unsplash.com/photo-1587202372777-af2403e5ef8a?w=400&h=300&fit=crop',
+  'rdp2': 'https://images.unsplash.com/photo-1531297380636-0576629b65ed?w=400&h=300&fit=crop',
+  'rdp3': 'https://images.unsplash.com/photo-1555089966-82971e9f8441?w=400&h=300&fit=crop',
+  'rdp4': 'https://images.unsplash.com/photo-1550745167-983dd235188c?w=400&h=300&fit=crop',
+  'c1': 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=300&fit=crop',
+  'c2': 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=300&fit=crop',
+  'c3': 'https://images.unsplash.com/photo-1661956603527-91238503d337?w=400&h=300&fit=crop',
+  'ai1': 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop',
+  'ai2': 'https://images.unsplash.com/photo-1639762681485-07477f95aa40?w=400&h=300&fit=crop',
+  'ai3': 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=300&fit=crop',
+  'ai4': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=300&fit=crop',
+};
+
+const PRODUCT_CATEGORIES = [
+  { id: 'all', label: 'All Products', icon: '📦' },
+  { id: 'domains', label: 'Domains', icon: '🌐' },
+  { id: 'dns', label: 'DNS Servers', icon: '🔀' },
+  { id: 'rdp', label: 'RDP / VPS', icon: '🖥️' },
+  { id: 'cloud', label: 'Cloud Hosting', icon: '☁️' },
+  { id: 'ai', label: 'AI Tools', icon: '🤖' },
+  { id: 'crypto', label: 'Crypto & Payments', icon: '₿' },
+  { id: 'gated', label: 'Gated / Premium', icon: '🔒' },
+];
+
+const DEFAULT_PRODUCTS = [
+  { id: 'p1', name: 'DTD Premium Store Access', category: 'crypto', description: 'Lifetime access to the full DTD digital store catalog with all premium features.', price_usd: 49, isGated: false },
+  { id: 'p2', name: 'USDT TRC20 Wallet Setup Guide', category: 'crypto', description: 'Complete step-by-step guide to securing and funding your TRC20 wallet safely.', price_usd: 19, isGated: false },
+  { id: 'p3', name: 'Bitcoin Cold Storage Guide', category: 'crypto', description: 'Offline BTC storage setup and recovery instructions for maximum security.', price_usd: 29, isGated: false },
+  { id: 'p4', name: 'SMTP Vault Credentials', category: 'gated', description: 'Premium SMTP credentials for high-volume email delivery and marketing.', price_usd: 79, isGated: true },
+  { id: 'p5', name: 'Spot Desk Signals Pack', category: 'crypto', description: 'Weekly Binance spot trading signals with entry, exit, and stop-loss targets.', price_usd: 39, isGated: false },
+  { id: 'p6', name: 'OTP Interceptor Module', category: 'gated', description: 'Live OTP capture and forwarding tool for verified buyers.', price_usd: 99, isGated: true },
+  { id: 'p7', name: 'Store Chat Priority Access', category: 'crypto', description: 'Direct priority line to store support with guaranteed callback within 24 hours.', price_usd: 15, isGated: false },
+  { id: 'p8', name: 'Digital Product Bundle', category: 'all', description: 'All guides, tools, and modules in one discounted bundle with lifetime updates.', price_usd: 149, isGated: false },
+  { id: 'd1', name: '.com Domain Registration', category: 'domains', description: 'Premium .com domain with full DNS control and WHOIS privacy protection included.', price_usd: 12, isGated: false },
+  { id: 'd2', name: '.io Domain Registration', category: 'domains', description: 'Tech-focused .io domain ideal for startups, SaaS, and Web3 projects.', price_usd: 40, isGated: false },
+  { id: 'd3', name: '.xyz Domain Registration', category: 'domains', description: 'Affordable .xyz domain perfect for crypto and NFT projects.', price_usd: 8, isGated: false },
+  { id: 'd4', name: 'Premium .net Domain', category: 'domains', description: 'Established .net domain with priority support and enhanced security.', price_usd: 15, isGated: false },
+  { id: 'ns1', name: 'Custom DNS Server Setup', category: 'dns', description: 'Private DNS server with full A, AAAA, CNAME, MX, and TXT record management.', price_usd: 29, isGated: false },
+  { id: 'ns2', name: 'DNS Failover Cluster', category: 'dns', description: 'High-availability DNS failover with geo-routing and automated health checks.', price_usd: 79, isGated: false },
+  { id: 'ns3', name: 'DNSSEC Signing Service', category: 'dns', description: 'DNSSEC key generation and zone signing for maximum domain security.', price_usd: 49, isGated: false },
+  { id: 'rdp1', name: 'Windows RDP - Basic', category: 'rdp', description: 'Windows Server RDP with 2 vCPU, 4GB RAM, 100GB SSD storage.', price_usd: 39, isGated: false },
+  { id: 'rdp2', name: 'Windows RDP - Pro', category: 'rdp', description: 'Windows Server RDP with 4 vCPU, 8GB RAM, 200GB SSD, admin access.', price_usd: 79, isGated: false },
+  { id: 'rdp3', name: 'Windows RDP - Enterprise', category: 'rdp', description: 'Windows Server RDP with 8 vCPU, 16GB RAM, 500GB SSD, dedicated IP.', price_usd: 149, isGated: false },
+  { id: 'rdp4', name: 'Linux VPS - Ubuntu', category: 'rdp', description: 'Ubuntu Linux VPS with root access, SSH, 2 vCPU, 4GB RAM.', price_usd: 29, isGated: false },
+  { id: 'c1', name: 'Cloud Hosting - Starter', category: 'cloud', description: 'Shared cloud hosting with cPanel, free SSL, and unlimited bandwidth.', price_usd: 9, isGated: false },
+  { id: 'c2', name: 'Cloud Hosting - Business', category: 'cloud', description: 'Business cloud hosting with dedicated IP, daily backups, priority support.', price_usd: 29, isGated: false },
+  { id: 'c3', name: 'Cloud Hosting - Enterprise', category: 'cloud', description: 'Enterprise cloud with load balancing, auto-scaling, dedicated server.', price_usd: 99, isGated: false },
+  { id: 'ai1', name: 'AI Content Generator', category: 'ai', description: 'AI-powered content generation for blogs, ads, and product descriptions.', price_usd: 19, isGated: false },
+  { id: 'ai2', name: 'AI Trading Bot', category: 'ai', description: 'Automated crypto trading bot with Binance integration and risk management.', price_usd: 99, isGated: true },
+  { id: 'ai3', name: 'AI Customer Support Bot', category: 'ai', description: 'Train an AI support bot on your docs and FAQ - Telegram + web widget.', price_usd: 49, isGated: false },
+  { id: 'ai4', name: 'AI Image Generator', category: 'ai', description: 'Unlimited AI image generation with full commercial usage rights.', price_usd: 29, isGated: false },
+];
+
+// ── DOM helpers ──
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
+}
+
+function sanitizeInput(s) {
+  if (typeof s !== 'string') return '';
+  return s
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
+    .replace(/"/g, '"')
+    .replace(/'/g, ''')
+    .replace(/\\/g, '&#92;')
+    .substring(0, 500);
+}
+
+// Validation patterns
+const PATTERNS = {
+  orderId: /^DTD-[A-Za-z0-9]{3,16}$/,
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+};
+
+function saveCart() {
+  localStorage.setItem('dtd_cart', JSON.stringify(state.cart));
+  updateCartCount();
+}
+
+function updateCartCount() {
+  const badge = $('#cartBadge');
+  const total = state.cart.reduce((sum, item) => sum + item.quantity, 0);
+  if (badge) {
+    badge.textContent = total;
+    badge.style.display = total > 0 ? 'block' : 'none';
+  }
+}
+
+// ── API ──
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (opts.body && typeof opts.body !== 'string') opts.body = JSON.stringify(opts.body);
+  const res = await fetch(`${API}${path}`, { ...opts, headers: { ...headers, ...(opts.headers || {}) }, credentials: 'include' });
+  let data;
+  try { data = await res.json(); } catch { data = {}; }
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data;
+}
+
+// ── Analytics ──
+function analyticsEvent(eventType, data = {}) {
+  try {
+    const payload = {
+      clientId: state.analyticsId,
+      sessionId: sessionStorage.getItem('dtd_session') || (() => { const s = crypto.randomUUID?.() || Math.random().toString(36).slice(2); sessionStorage.setItem('dtd_session', s); return s; })(),
+      eventType, path: window.location.pathname, referrer: document.referrer,
+      userAgent: navigator.userAgent, data, ts: Date.now(),
+    };
+    fetch('/api/analytics', { method: 'POST', body: JSON.stringify({ events: [payload] }), headers: { 'Content-Type': 'application/json' }, keepalive: true }).catch(() => {});
+  } catch {}
+}
+function trackPageView() { analyticsEvent('page_view', { title: document.title }); }
+function trackProductView(p) { analyticsEvent('product_view', { product_id: p.id, product_name: p.name, price_usd: p.price_usd }); }
+function trackAddToCart(p) { analyticsEvent('add_to_cart', { product_id: p.id, product_name: p.name, price_usd: p.price_usd }); }
+function trackPurchase(o) { analyticsEvent('purchase', { order_id: o.id, total_usd: o.total_usd }); }
+
+// ── Product HTML ──
+function productImage(p) {
+  const imgUrl = PRODUCT_IMAGES[p.id] || 'https://images.unsplash.com/photo-1550684838-1028418563f2?w=400&h=300&fit=crop';
+  return `<img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(p.name)}" loading="lazy">`;
+}
+
+function productCardHTML(p) {
+  const badgeClass = p.isGated ? 'badge-gated' : 'badge-active';
+  const badgeText = p.isGated ? 'GATED' : 'ACTIVE';
+  return `
+    <div class="product-card page-enter reveal" style="animation-delay:${Math.random() * 0.3}s" onclick="window.location='/payment'">
+      <div class="product-badge ${badgeClass}">${badgeText}</div>
+      <div class="product-image">${productImage(p)}</div>
+      <div class="product-overlay">
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); app.addToCart('${escapeHtml(p.id)}', '${escapeHtml(p.name)}', ${Number(p.price_usd)})">Quick Add</button>
+        <a href="/payment" class="btn btn-primary btn-sm">Buy Now</a>
+      </div>
+      <div class="product-content">
+        <div class="product-category">${p.category.toUpperCase()}</div>
+        <h3 class="product-title">${escapeHtml(p.name)}</h3>
+        <p class="product-desc">${escapeHtml(p.description || '')}</p>
+      </div>
+      <div class="product-footer">
+        <div class="product-price">$${Number(p.price_usd).toFixed(2)}</div>
+        <button class="btn btn-primary btn-sm" onclick="app.addToCart('${escapeHtml(p.id)}', '${escapeHtml(p.name)}', ${Number(p.price_usd)})">Add to Cart</button>
+      </div>
+    </div>
+  `;
+}
+
+// ── App object (global for inline handlers) ──
+const app = {
+  addToCart(id, name, price) {
+    const existing = state.cart.find(i => i.id === id);
+    if (existing) existing.quantity += 1;
+    else state.cart.push({ id, name, price, quantity: 1 });
+    saveCart();
+    trackAddToCart({ id, name, price });
+    const btn = event.currentTarget;
+    const original = btn.textContent;
+    btn.textContent = 'Added ✓';
+    btn.style.background = 'var(--neon-green)';
+    btn.style.color = 'var(--bg)';
+    setTimeout(() => { btn.textContent = original; btn.style.background = ''; btn.style.color = ''; }, 1200);
+  },
+
+  removeFromCart(id) {
+    state.cart = state.cart.filter(i => i.id !== id);
+    saveCart();
+    renderCart();
+  },
+
+  async loadProducts() {
+    try {
+      const { products } = await api('/api/products');
+      state.products = Array.isArray(products) ? products : DEFAULT_PRODUCTS;
+    } catch { state.products = DEFAULT_PRODUCTS; }
+  },
+
+  renderProducts(containerId, filterCategory = null) {
+    const container = $(containerId);
+    if (!container) return;
+    let list = state.products.length ? state.products : DEFAULT_PRODUCTS;
+    if (filterCategory && filterCategory !== 'all') list = list.filter(p => p.category === filterCategory);
+    container.innerHTML = list.map(p => productCardHTML(p)).join('');
+    container.querySelectorAll('.product-card').forEach(card => {
+      card.style.animationDelay = `${Math.random() * 0.3}s`;
+    });
+  },
+
+  renderCategories() {
+    const scroll = $('#catScroll');
+    if (!scroll) return;
+    scroll.innerHTML = PRODUCT_CATEGORIES.map(c => `
+      <button class="cat-btn${c.id === state.category ? ' active' : ''}" onclick="app.filterCategory('${c.id}')">${c.icon} ${c.label}</button>
+    `).join('');
+  },
+
+  filterCategory(cat) {
+    state.category = cat;
+    this.renderCategories();
+    this.renderProducts('#homeGrid', cat);
+  },
+
+  async renderHome() {
+    const container = $('#app');
+    trackPageView();
+    await this.loadProducts();
+
+    const featured = state.products.slice(0, 4);
+    container.innerHTML = `
+      <div class="ambient"></div>
+
+      <section class="section-bg bg-hero page-enter">
+        <div class="hero">
+          <div class="hero-content">
+            <div class="eyebrow"><span class="kicker-dot"></span>Open 24/7</div>
+            <h1 class="page-title">DTD <span class="gradient-text">STORE</span></h1>
+            <p class="page-subtitle">Premium digital products — domains, DNS, RDP, cloud hosting, AI tools, and secure crypto payments. Instant delivery to your email.</p>
+            <div class="hero-actions">
+              <a href="/payment" class="btn btn-primary btn-lg btn-glow">Start Shopping</a>
+              <a href="${TELEGRAM_BOT}" class="btn btn-outline btn-lg" target="_blank" rel="noopener">Telegram Bot</a>
+              <a href="#products" class="btn btn-ghost btn-lg">Browse Catalog</a>
+            </div>
+            <div class="hero-stats">
+              <div class="stat-card float" style="animation-delay:0s">
+                <div class="stat-number">26+</div><div class="stat-label">Products</div>
+              </div>
+              <div class="stat-card float" style="animation-delay:0.2s">
+                <div class="stat-number">3</div><div class="stat-label">Payment Methods</div>
+              </div>
+              <div class="stat-card float" style="animation-delay:0.4s">
+                <div class="stat-number">24/7</div><div class="stat-label">Support</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cat-section">
+        <div class="cat-hint">👉 Swipe categories</div>
+        <div class="cat-scroll" id="catScroll"></div>
+      </section>
+
+      <section class="section-bg bg-products slider-section">
+        <div class="slider-head">
+          <div>
+            <span class="eyebrow">Featured this week</span>
+            <h2 style="font-size:1.25rem;font-weight:800;color:var(--text);margin:0">Featured Products</h2>
+          </div>
+          <div class="slider-nav">
+            <button class="slider-btn" id="btnSliderPrev">&#10094;</button>
+            <button class="slider-btn" id="btnSliderNext">&#10095;</button>
+          </div>
+        </div>
+        <div class="product-slider">
+          <div class="product-slider-track" id="sliderTrack">
+            ${featured.map(p => `<div class="slider-slide">${productCardHTML(p)}</div>`).join('')}
+          </div>
+        </div>
+        <div class="slider-dots" id="sliderDots">
+          ${featured.map((_, i) => `<button class="slider-dot${i===0?' active':''}" data-slide="${i}"></button>`).join('')}
+        </div>
+      </section>
+
+      <section id="products" class="products-section">
+        <div class="slider-head">
+          <div>
+            <span class="eyebrow">Full catalog</span>
+            <h2 style="font-size:1.25rem;font-weight:800;color:var(--text);margin:0">All Products</h2>
+          </div>
+        </div>
+        <div class="product-grid" id="homeGrid"></div>
+      </section>
+
+      <section class="section-bg bg-ai ai-section">
+        <div class="ai-card glass">
+          <div class="ai-header">
+            <span class="ai-icon">🤖</span>
+            <h2>DTD AI Assistant</h2>
+          </div>
+          <p class="ai-desc">Ask about products, payments, domains, DNS, RDP, or get help with your order.</p>
+          <div class="ai-chat" id="aiChat">
+            <div class="ai-message ai-received">Hello! I'm your DTD Store assistant. How can I help you today?</div>
+          </div>
+          <div class="ai-input-row">
+            <input type="text" id="aiInput" class="form-input" placeholder="Type your question…" />
+            <button class="btn btn-primary btn-sm" id="aiSend">Send</button>
+          </div>
+          <div class="ai-quick">
+            <button class="ai-qbtn" data-q="What products do you sell?">Products</button>
+            <button class="ai-qbtn" data-q="How do I pay with USDT?">USDT Payment</button>
+            <button class="ai-qbtn" data-q="Track my order">Track Order</button>
+            <button class="ai-qbtn" data-q="Contact support">Support</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="mt-4 text-center">
+        <a href="/payment" class="btn btn-primary btn-block btn-glow">Start Shopping</a>
+      </div>
+    `;
+
+    this.renderCategories();
+    this.renderProducts('#homeGrid');
+    this.initSlider(featured.length);
+    this.bindAI();
+  },
+
+  initSlider(count) {
+    if (!count) return;
+    const track = $('#sliderTrack');
+    const dots = $$('#sliderDots .slider-dot');
+    const prev = $('#btnSliderPrev');
+    const next = $('#btnSliderNext');
+    let index = 0;
+    function update() {
+      if (!track) return;
+      const first = track.querySelector('.slider-slide');
+      if (!first) return;
+      const rect = first.getBoundingClientRect();
+      const slideWidth = rect.width + 16;
+      track.scrollTo({ left: index * slideWidth, behavior: 'smooth' });
+      dots.forEach((d, i) => d.classList.toggle('active', i === index));
+    }
+    if (next) next.onclick = () => { index = (index + 1) % count; update(); };
+    if (prev) prev.onclick = () => { index = (index - 1 + count) % count; update(); };
+    dots.forEach((d, i) => d.onclick = () => { index = i; update(); });
+    setInterval(() => { index = (index + 1) % count; update(); }, 4000);
+    update();
+  },
+
+async function veniceAIRequest(messages) {
+  if (!VENICE_API_KEY) {
+    return "Venice AI API key not configured. Please set VENICE_API_KEY in environment.";
+  }
+  try {
+    const res = await fetch(`${VENICE_API_BASE}/v1/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${VENICE_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: VENICE_MODEL,
+        messages: messages,
+        stream: false,
+        temperature: 0.7
+      })
+    });
+    if (res.status === 401) {
+      addMsg('⚠️ Unauthorized: Invalid Venice API key. Check VENICE_API_KEY environment variable.', 'error');
+      return null;
+    }
+    if (!res.ok) {
+      addMsg(`⚠️ Venice AI error (${res.status}): Network or server issue.', 'error');
+      return null;
+    }
+    const data = await res.json();
+    if (!data.choices || data.choices.length === 0) {
+      addMsg('⚠️ Venice AI returned no response.', 'error');
+      return null;
+    }
+    return data.choices[0].message.content;
+  } catch (e) {
+    if (e instanceof TypeError && e.message.includes('fetch')) {
+      addMsg('⚠️ Network error: Could not reach Venice AI. Check your connection.', 'error');
+    } else {
+      addMsg(`⚠️ Venice AI exception: ${e.message}`, 'error');
+    }
+    return null;
+  }
+}
+
+bindAI() {
+    const input = $('#aiInput');
+    const send = $('#aiSend');
+    const chat = $('#aiChat');
+    const quick = $$('.ai-qbtn');
+    function addMsg(text, type) {
+      const div = document.createElement('div');
+      div.className = `ai-message ai-${type}`;
+      div.textContent = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+    async function sendToVenice(msg) {
+      const botReply = await veniceAIRequest([
+        { role: 'user', content: msg }
+      ]);
+      if (botReply) {
+        addMsg(botReply, 'received');
+      } else {
+        addMsg("I'm having trouble reaching the AI service right now. Please try again shortly.", 'error');
+      }
+    }
+    if (send) send.onclick = () => { const v = input.value.trim(); if (!v) return; addMsg(v, 'sent'); input.value = ''; sendToVenice(v); };
+    if (input) input.onkeypress = (e) => { if (e.key === 'Enter') send.onclick(); };
+    quick.forEach(b => b.onclick = () => { input.value = b.dataset.q; send.onclick(); });
+  },
+
+  renderCart() {
+    const container = $('#cartContainer');
+    if (!container) return;
+    const total = state.cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    container.innerHTML = `
+      <div class="ambient"></div>
+      <section style="max-width:520px;margin:0 auto">
+        <div class="eyebrow"><span class="kicker-dot"></span>Shopping Cart</div>
+        <h1 class="page-title">Your Cart</h1>
+        ${state.cart.length ? state.cart.map(i => `
+          <div class="card mb-4" style="display:flex;align-items:center;gap:1rem">
+            <img src="${PRODUCT_IMAGES[i.id] || ''}" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius-sm)">
+            <div style="flex:1">
+              <div class="product-title" style="margin-bottom:0.25rem">${escapeHtml(i.name)}</div>
+              <div class="product-price" style="font-size:0.95rem">$${Number(i.price).toFixed(2)}</div>
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem">
+                <button class="btn btn-outline btn-sm" onclick="app.changeQty('${i.id}', -1)">−</button>
+                <span>${i.quantity}</span>
+                <button class="btn btn-outline btn-sm" onclick="app.changeQty('${i.id}', 1)">+</button>
+                <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="app.removeFromCart('${i.id}')">Remove</button>
+              </div>
+            </div>
+          </div>
+        `).join('') : `<div class="text-center py-10"><div style="font-size:3rem;margin-bottom:1rem" aria-hidden="true">🛒</div><p class="text-cyber-muted">Your cart is empty.</p><a href="/" class="btn btn-primary">Start Shopping</a></div>`}
+        <div class="mt-4">
+          <div style="display:flex;justify-content:space-between;margin-bottom:1rem">
+            <span class="text-cyber-muted">Total</span>
+            <span class="product-price">$${total.toFixed(2)}</span>
+          </div>
+          <a href="/payment" class="btn btn-primary btn-block">Checkout</a>
+        </div>
+      </section>
+    `;
+  },
+
+  changeQty(id, delta) {
+    const item = state.cart.find(i => i.id === id);
+    if (!item) return;
+    item.quantity += delta;
+    if (item.quantity <= 0) this.removeFromCart(id);
+    else saveCart();
+    this.renderCart();
+  },
+};
+
+// ── Router ──
+const routes = {
+  '/': () => app.renderHome(),
+  '/payment': () => renderPayment(),
+  '/dtdshopcc': () => renderGated(),
+  '/trade': () => renderTrade(),
+  '/smtp': () => renderSmtp(),
+  '/chat': () => renderChat(),
+  '/track': () => renderTrack(),
+  '/cart': () => app.renderCart(),
+};
+
+function router() {
+  const path = window.location.pathname;
+  const render = routes[path];
+  if (render) render();
+  else {
+    $('#app').innerHTML = `<div class="text-cyber-neon-red text-center mt-10">404 — Page not found</div>`;
+  }
+}
+
+// ── Boot ──
+window.addEventListener('DOMContentLoaded', () => {
+  const appEl = document.createElement('div');
+  appEl.id = 'app';
+  document.body.prepend(appEl);
+
+  // Cart badge in header
+  updateCartCount();
+
+  // Mobile menu
+  const btnMenu = document.getElementById('btnMenuToggle');
+  const btnClose = document.getElementById('btnNavClose');
+  const sideNav = document.getElementById('sideNav');
+  if (btnMenu && sideNav) btnMenu.onclick = () => sideNav.classList.toggle('open');
+  if (btnClose && sideNav) btnClose.onclick = () => sideNav.classList.remove('open');
+
+  router();
+  window.addEventListener('popstate', router);
+});
+
+// ── Placeholder renders for other pages (kept lightweight) ──
+async function renderPayment() {
+  $('#app').innerHTML = `
+    <div class="ambient"></div>
+    <section style="max-width:520px;margin:0 auto">
+      <div class="eyebrow"><span class="kicker-dot"></span>Secure Checkout</div>
+      <h1 class="page-title">Checkout</h1>
+      <p class="page-subtitle mb-4">Pay with USDT (TRC20), Bitcoin (BTC), or Paystack card/bank.</p>
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label">Delivery Email</label>
+          <input type="email" id="checkoutEmail" class="form-input" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Payment Method</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" id="pmUsdt">USDT (TRC20)</button>
+            <button class="toggle-btn" id="pmBtc">Bitcoin</button>
+            <button class="toggle-btn" id="pmPaystack">Card / Bank</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount (USD)</label>
+          <input type="number" id="checkoutAmount" class="form-input" value="49" min="1">
+        </div>
+        <button class="btn btn-primary btn-block mt-4" id="btnCheckout">Continue to Payment</button>
+      </div>
+      <div id="checkoutAlert"></div>
+      <p class="text-center text-cyber-muted text-sm mt-4">Join <a href="${TELEGRAM_BOT}" target="_blank" rel="noopener" style="color:var(--neon)">Telegram Bot</a> for support.</p>
+    </section>
+  `;
+  let method = 'usdt';
+  $$('#pmUsdt,#pmBtc,#pmPaystack').forEach(b => b.onclick = () => {
+    $$('.toggle-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    method = b.id.replace('pm', '').toLowerCase();
+  });
+  $('#btnCheckout').onclick = async () => {
+    const email = $('#checkoutEmail').value.trim();
+    const amount = Number($('#checkoutAmount').value);
+    const alertEl = $('#checkoutAlert');
+    if (!email || !amount) { alertEl.innerHTML = '<div class="alert alert-error">Enter email and amount.</div>'; return; }
+    try {
+      await api('/api/orders', { method: 'POST', body: { customerName: 'Store Customer', customerEmail: email, paymentMethod: method, totalUsd: amount, items: [] } });
+      state.checkout.step = 'paid';
+      alertEl.innerHTML = '<div class="alert alert-success">Order created successfully!</div>';
+      setTimeout(() => { window.location.href = '/track'; }, 1500);
+    } catch (e) { alertEl.innerHTML = '<div class="alert alert-error">' + escapeHtml(e.message) + '</div>'; }
+  };
+}
+
+async function renderGated() {
+  $('#app').innerHTML = `
+    <div class="ambient"></div>
+    <section style="max-width:700px;margin:0 auto">
+      <div class="eyebrow"><span class="kicker-dot"></span>Gated Catalog</div>
+      <h1 class="page-title">DTDSHOP.CC</h1>
+      <p class="page-subtitle mb-4">Premium products requiring verified $5+ USDT/BTC deposit.</p>
+      <div class="card mb-4">
+        <div class="alert alert-error">🔒 Gated catalog locked. Complete a verified $5+ USDT/BTC crypto deposit to unlock premium products.</div>
+        <div class="milestone-timeline mb-4">
+          <div class="milestone-step active" id="milestone-deposit">
+            <div class="milestone-circle">💰</div>
+            <div class="milestone-label">Deposit $5+</div>
+            <div class="milestone-desc">Send USDT (TRC20) or BTC to your wallet</div>
+          </div>
+          <div class="milestone-step" id="milestone-verify">
+            <div class="milestone-circle">✅</div>
+            <div class="milestone-label">Verify Deposit</div>
+            <div class="milestone-desc">System confirms your transaction</div>
+          </div>
+          <div class="milestone-step" id="milestone-unlock">
+            <div class="milestone-circle">🔓</div>
+            <div class="milestone-label">Unlock Premium</div>
+            <div class="milestone-desc">Gain access to gated products</div>
+          </div>
+        </div>
+      </div>
+      <div class="milestone-cta">
+        <a href="/payment" class="btn btn-primary btn-block">Make Deposit</a>
+        <p class="text-cyber-muted text-sm mt-2">Minimum $5 USDT or BTC required</p>
+      </div>
+    </section>
+  `;
+}
+
+async function renderTrade() {
+  $('#app').innerHTML = `
+    <div class="ambient"></div>
+    <section>
+      <div class="eyebrow"><span class="kicker-dot"></span>Spot Desk</div>
+      <h1 class="page-title">Spot Desk</h1>
+      <p class="page-subtitle mb-4">Live Binance trading — candlestick charts, order book, and order execution.</p>
+      <div class="card">
+        <h3 style="margin-bottom:1rem;color:var(--text)">Market Ticker</h3>
+        <div class="table">
+          <thead><tr><th>Symbol</th><th>Price</th><th>24h Change</th><th>Bid</th><th>Ask</th></tr></thead>
+          <tbody id="tickerBody"><tr><td colspan="5" class="text-cyber-muted text-sm">Loading…</td></tr></tbody>
+        </div>
+      </div>
+    </section>
+  `;
+  try {
+    const res = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+    const tickers = await res.json();
+    const symbols = ['BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','XRPUSDT','DOGEUSDT'];
+    $('#tickerBody').innerHTML = symbols.map(s => {
+      const t = tickers.find(x => x.symbol === s);
+      if (!t) return '';
+      const change = Number(t.priceChangePercent);
+      const color = change >= 0 ? 'var(--neon-green)' : 'var(--neon-red)';
+      return `<tr><td><span class="mono">${s}</span></td><td><span class="mono">${Number(t.lastPrice).toFixed(2)}</span></td><td style="color:${color}">${change.toFixed(2)}%</td><td><span class="mono">${Number(t.bidPrice).toFixed(2)}</span></td><td><span class="mono">${Number(t.askPrice).toFixed(2)}</span></td></tr>`;
+    }).join('');
+  } catch { $('#tickerBody').innerHTML = `<tr><td colspan="5" class="text-cyber-muted text-sm">Unable to load market data.</td></tr>`; }
+}
+
+async function renderSmtp() {
+  $('#app').innerHTML = `
+    <div class="ambient"></div>
+    <section style="max-width:600px;margin:0 auto">
+      <div class="eyebrow"><span class="kicker-dot"></span>SMTP Vault</div>
+      <h1 class="page-title">SMTP Vault</h1>
+      <p class="page-subtitle mb-4">Bulk email, carrier SMS gateways, and live OTP inbox. Admin unlock required.</p>
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label">Admin JWT Token</label>
+          <input type="password" id="smtpAdminJwt" class="form-input" placeholder="Paste admin JWT">
+        </div>
+        <button class="btn btn-primary btn-sm" id="smtpBtnUnlock">Unlock</button>
+        <div id="smtpAlert"></div>
+      </div>
+    </section>
+  `;
+  $('#smtpBtnUnlock').onclick = async () => {
+    const jwt = $('#smtpAdminJwt').value.trim();
+    const alertEl = $('#smtpAlert');
+    try {
+      const r = await api('/api/smtp/unlock', { method: 'POST', body: { mode: 'admin', adminJwt: jwt } });
+      alertEl.innerHTML = '<div class="alert alert-success">✅ Admin console unlocked.</div>';
+    } catch (e) { alertEl.innerHTML = '<div class="alert alert-error">' + escapeHtml(e.message) + '</div>'; }
+  };
+}
+
+async function renderChat() {
+  $('#app').innerHTML = `
+    <div class="ambient"></div>
+    <section style="max-width:900px;margin:0 auto">
+      <div class="eyebrow"><span class="kicker-dot"></span>Store Chat</div>
+      <h1 class="page-title">Store Chat</h1>
+      <p class="page-subtitle mb-4">Live chat support. Request callbacks or message us on Telegram.</p>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap">
+        <div style="flex:1;min-width:280px">
+          <div class="card mb-4">
+            <div class="chat-messages" id="chatMessages">
+              <div class="text-cyber-muted text-sm text-center mt-4">Connecting to chat feed…</div>
+            </div>
+          </div>
+          <form id="chatForm" class="chat-form">
+            <input type="text" id="chatMessage" class="chat-input" placeholder="Type a message…" required>
+            <input type="text" id="chatContact" class="chat-input" placeholder="Phone or @username (optional)">
+            <button type="submit" class="btn btn-primary btn-sm">Send</button>
+          </form>
+        </div>
+        <div style="width:340px">
+          <div class="card">
+            <h3 style="margin-bottom:1rem;color:var(--text)">Request Callback</h3>
+            <form id="callbackForm">
+              <div class="form-group"><label class="form-label">Name</label><input type="text" id="cbName" class="form-input" placeholder="Your name" required></div>
+              <div class="form-group"><label class="form-label">Contact</label><input type="text" id="cbContact" class="form-input" placeholder="Phone or @username" required></div>
+              <div class="form-group"><label class="form-label">Topic</label><input type="text" id="cbTopic" class="form-input" placeholder="What do you need help with?"></div>
+              <button class="btn btn-primary btn-block btn-sm" type="submit">Request Callback</button>
+            </form>
+            <div id="cbStatus" class="mt-2 text-cyber-muted text-sm"></div>
+          </div>
+          <div class="card mt-4">
+            <h3 style="margin-bottom:1rem;color:var(--text)">Join Telegram</h3>
+            <p class="text-cyber-muted text-sm mb-3">Get instant support and updates on our Telegram bot.</p>
+            <a href="${TELEGRAM_BOT}" class="btn btn-outline btn-block" target="_blank" rel="noopener">Open Telegram Bot</a>
+            <a href="${TELEGRAM_CHANNEL}" class="btn btn-ghost btn-block mt-2" target="_blank" rel="noopener">Join Channel</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+  $('#chatForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const message = sanitizeInput($('#chatMessage').value.trim());
+    const contact = sanitizeInput($('#chatContact').value.trim());
+    if (!message) return;
+    try {
+      await api('/api/telegram/message', { method: 'POST', body: { message, name: 'Store Customer', contact: contact || undefined } });
+      $('#chatMessage').value = '';
+    } catch (err) { alert(err.message); }
+  };
+  $('#callbackForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const status = $('#cbStatus');
+    try {
+      await api('/api/call-requests', { method: 'POST', body: { name: $('#cbName').value.trim(), phone: $('#cbContact').value.trim(), topic: $('#cbTopic').value.trim(), message: 'Callback requested', preferredTime: '' } });
+      status.textContent = '✅ Callback requested — we will contact you shortly.';
+      status.style.color = 'var(--neon-green)';
+      $('#callbackForm').reset();
+    } catch (err) { status.textContent = '❌ ' + err.message; status.style.color = 'var(--neon-red)'; }
+  };
+}
+
+async function renderTrack() {
+  $('#app').innerHTML = `
+    <div class="ambient"></div>
+    <section style="max-width:520px;margin:0 auto">
+      <div class="eyebrow"><span class="kicker-dot"></span>Track Order</div>
+      <h1 class="page-title">Track Order</h1>
+      <p class="page-subtitle mb-4">Enter your Order ID and email to check payment and delivery status.</p>
+      <div class="card tracking-card">
+        <div class="tracking-panel">
+          <h3 class="tracking-title text-sm font-medium uppercase tracking-letter-spacing mb-4">Order Lookup</h3>
+          <div class="field-group">
+            <div class="form-field">
+              <label class="label-field" for="order-id">Order ID</label>
+              <input type="text" id="trackOrderId" class="input-field font-mono" placeholder="e.g. DTD-abc123" required />
+              <span class="validation-icon">✓</span>
+              <div class="field-error text-xs text-[var(--danger)] hidden" id="trackOrderIdError">Order ID is required</div>
+            </div>
+            <div class="form-field">
+              <label class="label-field" for="trackEmail">Email</label>
+              <input type="email" id="trackEmail" class="input-field" placeholder="you@example.com" required />
+              <span class="validation-icon">✓</span>
+              <div class="field-error text-xs text-[var(--danger)] hidden" id="trackEmailError">Valid email is required</div>
+            </div>
+          </div>
+        </div>
+        <div class="submit-area">
+          <button type="submit" class="btn-primary w-full tracking-submit" id="trackBtn">Track Order</button>
+          <div class="submitting-state hidden" id="submittingState">
+            <span class="spinner mr-2"></span>Checking status...
+          </div>
+        </div>
+      </div>
+      <div id="trackResult" class="mt-6"></div>
+    </section>
+  `;
+  $('#trackBtn').onclick = async () => {
+    const rawOrderId = $('#trackOrderId').value.trim();
+    const rawEmail = $('#trackEmail').value.trim();
+    const orderId = sanitizeInput(rawOrderId);
+    const email = sanitizeInput(rawEmail);
+    const resultEl = $('#trackResult');
+    const orderIdError = $('#trackOrderIdError');
+    const emailError = $('#trackEmailError');
+    const submittingState = $('#submittingState');
+    const trackBtn = $('#trackBtn');
+    const orderIdInput = $('#trackOrderId');
+    const emailInput = $('#trackEmail');
+
+    // Reset previous errors and styles
+    if (orderIdError) orderIdError.classList.add('hidden');
+    if (emailError) emailError.classList.add('hidden');
+    if (orderIdInput) orderIdInput.classList.remove('has-error');
+    if (emailInput) emailInput.classList.remove('has-error');
+
+    // Validate order ID pattern
+    if (!orderId || !PATTERNS.orderId.test(orderId)) {
+      if (orderIdError) orderIdError.textContent = 'Order ID must match format: DTD-abc123';
+      if (orderIdError) orderIdError.classList.remove('hidden');
+      if (orderIdInput) orderIdInput.classList.add('has-error');
+      return;
+    }
+
+    // Validate email pattern
+    if (!email || !PATTERNS.email.test(email)) {
+      if (emailError) emailError.textContent = 'Please enter a valid email address';
+      if (emailError) emailError.classList.remove('hidden');
+      if (emailInput) emailInput.classList.add('has-error');
+      return;
+    }
+
+    // Show submitting state, hide result
+    if (submittingState) submittingState.classList.remove('hidden');
+    if (trackBtn) trackBtn.classList.add('hidden');
+
+    try {
+      const { order } = await api(`/api/orders/status?orderId=${encodeURIComponent(orderId)}&email=${encodeURIComponent(email)}`);
+      resultEl.innerHTML = `
+        <div class="alert alert-success">✅ Order found</div>
+        <table class="table mt-2">
+          <tr><th>Order ID</th><td>${escapeHtml(order.id)}</td></tr>
+          <tr><th>Payment Method</th><td>${escapeHtml(order.paymentMethod || '—')}</td></tr>
+          <tr><th>Payment Status</th><td><span class="mono">${escapeHtml(order.paymentStatus || '—')}</span></td></tr>
+          <tr><th>Order Status</th><td>${escapeHtml(order.statusLabel || order.orderStatus || '—')}</td></tr>
+          <tr><th>Amount Paid</th><td>$${Number(order.totalUsd || order.amountPaid || 0).toFixed(2)} USD</td></tr>
+        </table>
+      `;
+      resultEl.classList.remove('hidden');
+    } catch (e) {
+      resultEl.innerHTML = '<div class="alert alert-error">' + escapeHtml(e.message) + '</div>';
+      resultEl.classList.remove('hidden');
+    } finally {
+      // Hide submitting state
+if (submittingState) submittingState.classList.add('hidden');
+    if (trackBtn) trackBtn.classList.remove('hidden');
+  }
+}
+
+// Real-time validation for tracking form
+document.addEventListener('DOMContentLoaded', () => {
+  const trackOrderIdInput = document.getElementById('trackOrderId');
+  const trackEmailInput = document.getElementById('trackEmail');
+  const orderIdError = document.getElementById('trackOrderIdError');
+  const emailError = document.getElementById('trackEmailError');
+
+  if (trackOrderIdInput) {
+    trackOrderIdInput.oninput = () => {
+      const value = sanitizeInput(trackOrderIdInput.value.trim());
+      if (value && PATTERNS.orderId.test(value)) {
+        trackOrderIdInput.classList.remove('has-error');
+        if (orderIdError) orderIdError.classList.add('hidden');
+      }
+    };
+    trackOrderIdInput.onblur = () => {
+      const value = sanitizeInput(trackOrderIdInput.value.trim());
+      if (!value || !PATTERNS.orderId.test(value)) {
+        trackOrderIdInput.classList.add('has-error');
+        if (orderIdError) {
+          orderIdError.textContent = 'Order ID must match format: DTD-abc123';
+          orderIdError.classList.remove('hidden');
+        }
+      }
+    };
+  }
+
+  if (trackEmailInput) {
+    trackEmailInput.oninput = () => {
+      const value = sanitizeInput(trackEmailInput.value.trim());
+      if (value && PATTERNS.email.test(value)) {
+        trackEmailInput.classList.remove('has-error');
+        if (emailError) emailError.classList.add('hidden');
+      }
+    };
+    trackEmailInput.onblur = () => {
+      const value = sanitizeInput(trackEmailInput.value.trim());
+      if (!value || !PATTERNS.email.test(value)) {
+        trackEmailInput.classList.add('has-error');
+        if (emailError) {
+          emailError.textContent = 'Please enter a valid email address';
+          emailError.classList.remove('hidden');
+        }
+      }
+    };
+  }
+});
+  };
+}
