@@ -110,12 +110,13 @@ const PRODUCT_CATALOG = [
     category: "rdp",
     subcategory: "VPS",
     price: 39.99,
-    badge: "POPULAR",
+    badge: "ACTIVE",
     badgeColor: "accent",
-    description: "Windows Server RDP with 2 vCPU, 4GB RAM, 100GB SSD storage. Full admin access.",
-    image: "https://images.unsplash.com/photo-1587202372777-af2403e5ef8a?w=800&h=600&fit=crop",
+    description: "Windows Server RDP with 2 vCPU, 4GB RAM, 100GB SSD storage. Full admin access. Instant activation.",
+    image: "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=800&h=600&fit=crop",
     inStock: true,
-    featured: true
+    featured: true,
+    active: true
   },
   {
     id: "rdp-pro",
@@ -123,12 +124,13 @@ const PRODUCT_CATALOG = [
     category: "rdp",
     subcategory: "VPS",
     price: 79.99,
-    badge: "PRO",
+    badge: "ACTIVE",
     badgeColor: "info",
-    description: "Windows Server RDP with 4 vCPU, 8GB RAM, 200GB SSD, dedicated IP. Enhanced performance.",
-    image: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&h=600&fit=crop",
+    description: "Windows Server RDP with 4 vCPU, 8GB RAM, 200GB SSD, dedicated IP. Enhanced performance. 24/7 uptime.",
+    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=600&fit=crop",
     inStock: true,
-    featured: true
+    featured: true,
+    active: true
   },
   {
     id: "ai-bot",
