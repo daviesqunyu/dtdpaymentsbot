@@ -237,7 +237,7 @@ function createProductCard(product, isFeatured) {
   return `
     <div class="product-card" data-product-id="${product.id}">
       <div class="product-image-container">
-        <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
+        <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=600&fit=crop'">
         <span class="product-badge ${badgeClass}">${product.badge}</span>
         ${product.gated ? '<span class="gated-lock"><i class="fas fa-lock"></i></span>' : ''}
       </div>
@@ -249,10 +249,10 @@ function createProductCard(product, isFeatured) {
           <div class="product-price">$${product.price.toFixed(2)}</div>
           ${product.gated ? 
             `<a href="payment.html" class="btn btn-sm btn-primary">Unlock</a>` :
-            `<button class="btn btn-sm btn-primary" onclick="addToCart('${product.id}')">
-              <i class="fas fa-cart-plus"></i>
-              Add to Cart
-            </button>`
+            `<a href="payment.html" class="btn btn-sm btn-primary">
+              <i class="fas fa-credit-card"></i>
+              Buy Now
+            </a>`
           }
         </div>
       </div>
