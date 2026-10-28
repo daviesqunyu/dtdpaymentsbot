@@ -61,7 +61,7 @@ const PRODUCT_CATALOG = [
     badge: "VERIFIED",
     badgeColor: "info",
     description: "Multi-currency wallet with 2FA and hardware wallet integration. Secure crypto management.",
-    image: "https://images.unsplash.com/photo-1639762681485-07477f95aa40?w=800&h=600&fit=crop",
+    image: "https://images.unsplash.com/photo-1605750712893-33a1c9681e4e?w=800&h=600&fit=crop",
     inStock: true,
     featured: false
   },
@@ -169,7 +169,7 @@ const PRODUCT_CATALOG = [
     badge: "ACTIVE",
     badgeColor: "accent",
     description: "ScreenConnect/ConnectWise Control remote support software. Full license access with instant delivery.",
-    image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&h=600&fit=crop",
+    image: "https://images.unsplash.com/photo-1558655146618-a2199f26c4f6?w=800&h=600&fit=crop",
     inStock: true,
     featured: true,
     active: true
@@ -267,7 +267,7 @@ const PRODUCT_CATALOG = [
     badge: "PRO",
     badgeColor: "accent",
     description: "Managed DNS zone hosting with advanced routing, failover, and DNSSEC support.",
-    image: "https://images.unsplash.com/photo-1558494949-ef648b0677c0?w=800&h=600&fit=crop",
+    image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=600&fit=crop",
     inStock: true,
     featured: true,
     active: true

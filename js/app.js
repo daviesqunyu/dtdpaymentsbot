@@ -5,6 +5,9 @@ let cart = JSON.parse(localStorage.getItem('dtd_cart_new') || '[]');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+  // Show loading state while app initializes
+  showLoadingState();
+  
   // Check if we're on index page or other pages
   const path = window.location.pathname;
   if (path === '/' || path.endsWith('/index.html') || path === '') {
@@ -15,12 +18,35 @@ document.addEventListener('DOMContentLoaded', () => {
     renderGatedProducts();
     initCategoryFilter();
     initSmoothScrolling();
+    hideLoadingState();
   } else {
     // For other pages like payment.html, track.html etc
     initCart();
     initMobileMenu();
+    hideLoadingState();
   }
 });
+
+function showLoadingState() {
+  const appEl = document.getElementById('app');
+  if (!appEl) return;
+  appEl.innerHTML = `
+    <div style="position:fixed;inset:0;background:var(--cyber-bg);display:flex;align-items:center;justify-content:center;z-index:100;">
+      <div style="background:var(--cyber-bg);border:4px solid var(--cyber-border);border-radius:12px;padding:2rem;">
+        <div style="width:40px;height:40px;border:4px solid var(--cyber-neon);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1rem;"></div>
+        <p style="color:var(--cyber-text);font-family:'JetBrains Mono',monospace;">Loading...</p>
+      </div>
+    </div>
+  `;
+  const style = document.createElement('style');
+  style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+  document.head.appendChild(style);
+}
+
+function hideLoadingState() {
+  const loading = document.querySelector('div[style*="position:fixed"]');
+  if (loading) loading.remove();
+}
 
 function initMobileMenu() {
   const btnMenu = document.getElementById('btnMenuToggle');
