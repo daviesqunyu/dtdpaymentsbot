@@ -89,7 +89,29 @@
           <button id="btnMenuToggle" class="nav-link" style="padding:0.5rem;background:none;color:var(--cyber-text);font-size:1.5rem" aria-label="Toggle menu" aria-expanded="false">☰</button>
         </div>
       </header>
-      <main id="app" class="content"></main>
+      <main id="app" class="content">
+        <section style="max-width:600px;margin:0 auto;padding:2rem 1rem;">
+          <div class="eyebrow"><span class="kicker-dot"></span>Track Order</div>
+          <h1 class="page-title">Track Order</h1>
+          <p class="page-subtitle mb-4">Enter your Order ID and email to check payment and delivery status.</p>
+          
+          <div class="card" style="padding:1.5rem;margin-top:1.5rem;">
+            <form id="trackForm">
+              <div style="margin-bottom:1rem;">
+                <label class="form-label" style="display:block;margin-bottom:0.25rem;color:var(--cyber-text);">Order ID *</label>
+                <input type="text" id="trackOrderId" required style="width:100%;padding:0.5rem;background:var(--cyber-bg);border:1px solid var(--cyber-border);color:var(--cyber-text);border-radius:4px;font-family:'JetBrains Mono',monospace;">
+              </div>
+              <div style="margin-bottom:1rem;">
+                <label class="form-label" style="display:block;margin-bottom:0.25rem;color:var(--cyber-text);">Email Address *</label>
+                <input type="email" id="trackEmail" required style="width:100%;padding:0.5rem;background:var(--cyber-bg);border:1px solid var(--cyber-border);color:var(--cyber-text);border-radius:4px;">
+              </div>
+              <button type="submit" class="btn btn-primary btn-block" style="width:100%;padding:0.75rem;background:var(--cyber-neon);color:var(--cyber-bg);border:none;border-radius:6px;font-weight:600;cursor:pointer;">Track Order</button>
+            </form>
+          </div>
+          
+          <div id="trackResult"></div>
+        </section>
+      </main>
     </div>
   </div>
 
@@ -99,5 +121,6 @@
       navigator.serviceWorker.register("/service-worker.js").then((r) => console.log("SW ready:", r.scope)).catch((e) => console.log("SW err:", e));
     }
   </script>
+  <script src="js/track.js"></script>
 </body>
 </html>
