@@ -5,14 +5,34 @@ let cart = JSON.parse(localStorage.getItem('dtd_cart_new') || '[]');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-  initNavigation();
-  initCart();
-  renderFeaturedProducts();
-  renderAllProducts();
-  renderGatedProducts();
-  initCategoryFilter();
-  initSmoothScrolling();
+  // Check if we're on index page or other pages
+  const path = window.location.pathname;
+  if (path === '/' || path.endsWith('/index.html') || path === '') {
+    initNavigation();
+    initCart();
+    renderFeaturedProducts();
+    renderAllProducts();
+    renderGatedProducts();
+    initCategoryFilter();
+    initSmoothScrolling();
+  } else {
+    // For other pages like payment.html, track.html etc
+    initCart();
+    initMobileMenu();
+  }
 });
+
+function initMobileMenu() {
+  const btnMenu = document.getElementById('btnMenuToggle');
+  const btnClose = document.getElementById('btnNavClose');
+  const sideNav = document.getElementById('sideNav');
+  if (btnMenu && sideNav) {
+    btnMenu.onclick = () => sideNav.classList.toggle('open');
+  }
+  if (btnClose && sideNav) {
+    btnClose.onclick = () => sideNav.classList.remove('open');
+  }
+}
 
 // Navigation
 function initNavigation() {
@@ -93,24 +113,20 @@ function addToCart(productId) {
   const product = PRODUCT_CATALOG.find(p => p.id === productId);
   if (!product) return;
   
-  const existing = cart.find(item => item.id === productId);
-  if (existing) {
-    existing.quantity += 1;
-  } else {
-    cart.push({
-      id: productId,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      quantity: 1
-    });
-  }
-  
-  localStorage.setItem('dtd_cart_new', JSON.stringify(cart));
-  updateCartBadge();
-  
-  // Show feedback
-  showToast('Added to cart!');
+  // Redirect to payment with product
+  const orderData = {
+    items: [{
+      product_id: product.id,
+      product_name: product.name,
+      quantity: 1,
+      unit_price_usd: product.price
+    }],
+    totalUsd: product.price,
+    usdtAddress: 'TN3W4H6rK2UMVEv7B4mRqG45nG5sPXsHmL',
+    btcAddress: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
+  };
+  sessionStorage.setItem('dtd_order', JSON.stringify(orderData));
+  window.location.href = 'payment.html';
 }
 
 function removeFromCart(productId) {
@@ -133,6 +149,29 @@ function updateCartQuantity(productId, delta) {
   localStorage.setItem('dtd_cart_new', JSON.stringify(cart));
   updateCartBadge();
   renderCartModal();
+}
+
+function checkoutCart() {
+  if (cart.length === 0) {
+    showToast('Cart is empty');
+    return;
+  }
+  const orderData = {
+    items: cart.map(item => ({
+      product_id: item.id,
+      product_name: item.name,
+      quantity: item.quantity,
+      unit_price_usd: item.price
+    })),
+    totalUsd: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+    usdtAddress: 'TN3W4H6rK2UMVEv7B4mRqG45nG5sPXsHmL',
+    btcAddress: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
+  };
+  sessionStorage.setItem('dtd_order', JSON.stringify(orderData));
+  localStorage.removeItem('dtd_cart_new');
+  cart = [];
+  updateCartBadge();
+  window.location.href = 'payment.html';
 }
 
 function renderCartModal() {
@@ -222,7 +261,7 @@ function renderGatedProducts() {
         <p class="gated-product-desc">${escapeHtml(product.description)}</p>
         <div class="gated-product-footer">
           <span class="gated-product-price">$${product.price.toFixed(2)}</span>
-          <a href="payment.html" class="btn btn-sm btn-primary">Unlock</a>
+          <button onclick="addToCart('${product.id}')" class="btn btn-sm btn-primary">Unlock</button>
         </div>
       </div>
     </div>
@@ -248,11 +287,11 @@ function createProductCard(product, isFeatured) {
         <div class="product-footer">
           <div class="product-price">$${product.price.toFixed(2)}</div>
           ${product.gated ? 
-            `<a href="payment.html" class="btn btn-sm btn-primary">Unlock</a>` :
-            `<a href="payment.html" class="btn btn-sm btn-primary">
+            `<button onclick="addToCart('${product.id}')" class="btn btn-sm btn-primary">Unlock</button>` :
+            `<button onclick="addToCart('${product.id}')" class="btn btn-sm btn-primary">
               <i class="fas fa-credit-card"></i>
               Buy Now
-            </a>`
+            </button>`
           }
         </div>
       </div>
@@ -329,3 +368,4 @@ function escapeHtml(text) {
 window.addToCart = addToCart;
 window.removeFromCart = removeFromCart;
 window.updateCartQuantity = updateCartQuantity;
+window.checkoutCart = checkoutCart;

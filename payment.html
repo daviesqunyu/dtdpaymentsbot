@@ -89,7 +89,72 @@
           <button id="btnMenuToggle" class="nav-link" style="padding:0.5rem;background:none;color:var(--cyber-text);font-size:1.5rem" aria-label="Toggle menu" aria-expanded="false">☰</button>
         </div>
       </header>
-      <main id="app" class="content"></main>
+      <main id="app" class="content">
+        <section style="max-width:800px;margin:0 auto;padding:2rem 1rem;">
+          <div class="eyebrow"><span class="kicker-dot"></span>Secure Checkout</div>
+          <h1 class="page-title">Checkout</h1>
+          <p class="page-subtitle mb-4">Pay with USDT (TRC20), Bitcoin, or Paystack card/bank.</p>
+          
+          <div id="paymentMessage"></div>
+          
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem;">
+            <div class="card">
+              <div style="color:var(--cyber-neon);font-weight:600;margin-bottom:1rem;">Order Details</div>
+              <div id="orderSummary"></div>
+            </div>
+            
+            <div class="card">
+              <div style="color:var(--cyber-neon);font-weight:600;margin-bottom:1rem;">Payment</div>
+              
+              <div style="margin-bottom:1rem;">
+                <label class="form-label" style="display:block;margin-bottom:0.5rem;color:var(--cyber-text);">Payment Method</label>
+                <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                  <div class="payment-method" data-method="paystack" style="padding:0.75rem;border:2px solid var(--cyber-border);border-radius:6px;cursor:pointer;transition:all 0.2s;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                      <input type="radio" name="paymentMethod" checked style="accent-color:var(--cyber-neon);">
+                      <span style="color:var(--cyber-text);">Card / Bank (Paystack)</span>
+                    </div>
+                  </div>
+                  <div class="payment-method" data-method="usdt" style="padding:0.75rem;border:2px solid var(--cyber-border);border-radius:6px;cursor:pointer;transition:all 0.2s;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                      <input type="radio" name="paymentMethod" style="accent-color:var(--cyber-neon);">
+                      <span style="color:var(--cyber-text);">USDT (TRC20)</span>
+                    </div>
+                  </div>
+                  <div class="payment-method" data-method="bitcoin" style="padding:0.75rem;border:2px solid var(--cyber-border);border-radius:6px;cursor:pointer;transition:all 0.2s;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                      <input type="radio" name="paymentMethod" style="accent-color:var(--cyber-neon);">
+                      <span style="color:var(--cyber-text);">Bitcoin (BTC)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <form id="paymentForm">
+                <div style="margin-bottom:0.75rem;">
+                  <label class="form-label" style="display:block;margin-bottom:0.25rem;color:var(--cyber-text);">Full Name *</label>
+                  <input type="text" id="customerName" required style="width:100%;padding:0.5rem;background:var(--cyber-bg);border:1px solid var(--cyber-border);color:var(--cyber-text);border-radius:4px;">
+                </div>
+                <div style="margin-bottom:0.75rem;">
+                  <label class="form-label" style="display:block;margin-bottom:0.25rem;color:var(--cyber-text);">Email Address *</label>
+                  <input type="email" id="customerEmail" required style="width:100%;padding:0.5rem;background:var(--cyber-bg);border:1px solid var(--cyber-border);color:var(--cyber-text);border-radius:4px;">
+                </div>
+                <div style="margin-bottom:0.75rem;">
+                  <label class="form-label" style="display:block;margin-bottom:0.25rem;color:var(--cyber-text);">Telegram Username (optional)</label>
+                  <input type="text" id="telegramUsername" placeholder="@username" style="width:100%;padding:0.5rem;background:var(--cyber-bg);border:1px solid var(--cyber-border);color:var(--cyber-text);border-radius:4px;">
+                </div>
+                
+                <div id="paystackDetails" style="display:block;">
+                  <div style="color:var(--cyber-muted);font-size:0.875rem;margin-bottom:0.75rem;">You'll be redirected to Paystack to complete payment securely.</div>
+                </div>
+                <div id="cryptoDetails" style="display:none;"></div>
+                
+                <button type="submit" id="submitPayment" class="btn btn-primary btn-block" style="width:100%;padding:0.75rem;margin-top:1rem;background:var(--cyber-neon);color:var(--cyber-bg);border:none;border-radius:6px;font-weight:600;cursor:pointer;">Complete Payment</button>
+              </form>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   </div>
 
@@ -99,5 +164,7 @@
       navigator.serviceWorker.register("/service-worker.js").then((r) => console.log("SW ready:", r.scope)).catch((e) => console.log("SW err:", e));
     }
   </script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script src="js/payment.js"></script>
 </body>
 </html>
