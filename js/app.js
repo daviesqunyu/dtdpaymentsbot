@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // For other pages like payment.html, track.html etc
     initCart();
     initMobileMenu();
+    initNavigation();
     hideLoadingState();
   }
 });
