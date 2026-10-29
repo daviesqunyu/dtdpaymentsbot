@@ -49,14 +49,13 @@
     <div class="nav-container">
       <div class="nav-brand">
         <div class="brand-icon">
-          <i class="fas fa-bolt"></i>
+          <svg width="40" height="40" viewBox="0 0 32 32" fill="currentColor">
+            <path d="M16 4.2c2.3 0 4.4 1.9 4.4 4.2v8.6c0 2.3-1.8 4.2-4.4 4.2s-4.4-1.9-4.4-4.2V8.6c0-2.3 1.7-4.2 4.4-4.2s4.4 1.9 4.4 4.2v8.6c0 2.6 2 4.8 4.6 5.5s4.5 1.7 6.2 2.5c.6.2.8.1 1.2-.2.1-.1.2-.3.2-.5s-.1-.3-.2-.5c-1.5-1.1-2.7-2.6-3.6-4.2s-1.8-3.3-1.8-5.2V4.2c0-2.5-1.6-4.7-3.8-5.2zM12.9 16l2.8 2.8 1.4-1.4L19 12.6l-3.9 3.9L14.6 19zM7.5 18.5c-1.4 0-2.6-1.1-2.6-2.5s1.2-2.5 2.6-2.5c1.4 0 2.6 1.1 2.6 2.5s-1.2 2.5-2.6 2.5zM24.8 7.6c-1.1 0-2 .4-2.7 1.1l1.3 2.1H6.8l-1.3-2.1c-.7-.7-1.5-1.1-2.4-1.1c-1.5 0-2.5.9-2.7 1.1l1.4-2.2H21.6c-1.3 1.5-2 2.6-2.4 4.4l1.3 2.2c.6-.9 1.5-1.8 2.7-2.1h1.5c.6 0 1.2.2 1.6.6l-1.5 2.5h1.6c.6 0 1.2.2 1.6.6l1.5-2.5h1.4c.6 0 1.2.2 1.6.6l-1.6 2.6h1.4c.6 0 1.2.2 1.6.6l1.6-2.5h1.5c.6 0 1.2 0 1.6-.6l1.5 2.5h1.6c.6 0 1.2-.2 1.6-.6l-1.5-2.5h1.4c.6 0 1.2-.2 1.6-.6l1.6 2.6c.7 1.4 1.5 2.6 2.6 3.5l-1.5 2.5h1.4c.6 0 1.2-.1 1.6-.6l1.6-2.5h1.5c.6 0 1.2 0 1.6.6l1.5-2.5h1.4c.6 0 1.2 0 1.6.6l1.5 2.5h1.6c.6 0 1.2 0.1 1.6.6l-1.5-2.5h1.5c.6 0 1.2 0 1.6.6l1.5 2.5h1.6c.6 0 1.1-.1 1.6-.6l1.4 2.2c.7-1.4 1.5-2.6 2.6-3.5z">
+            </path>
+          </svg>
         </div>
         <span class="brand-text">DTD STORE</span>
       </div>
-      
-      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
-        <i class="fas fa-bars"></i>
-      </button>
       
       <div class="nav-menu" id="navMenu">
         <a href="#home" class="nav-link active" data-nav="home">
@@ -149,27 +148,29 @@
             <div class="hero-card">
               <div class="hero-card-header">
                 <div class="card-dots">
-                  <span></span><span></span><span></span>
+                  <span style="background: var(--accent-danger);"></span>
+                  <span style="background: var(--accent-warning);"></span>
+                  <span style="background: var(--accent-success);"></span>
                 </div>
                 <span class="card-title">DTD STORE</span>
               </div>
               <div class="hero-card-content">
                 <div class="feature-item">
-                  <i class="fas fa-shield-alt feature-icon"></i>
+                  <i class="fas fa-shield-alt feature-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--accent-primary);"></i>
                   <div>
                     <div class="feature-title">Secure Payments</div>
                     <div class="feature-desc">USDT, BTC & More</div>
                   </div>
                 </div>
                 <div class="feature-item">
-                  <i class="fas fa-bolt feature-icon"></i>
+                  <i class="fas fa-bolt feature-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--accent-primary);"></i>
                   <div>
                     <div class="feature-title">Instant Delivery</div>
                     <div class="feature-desc">Automated fulfillment</div>
                   </div>
                 </div>
                 <div class="feature-item">
-                  <i class="fas fa-headset feature-icon"></i>
+                  <i class="fas fa-headset feature-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--accent-primary);"></i>
                   <div>
                     <div class="feature-title">24/7 Support</div>
                     <div class="feature-desc">Live assistance</div>
@@ -177,10 +178,37 @@
                 </div>
               </div>
             </div>
+            <div class="hero-shapes">
+              <span class="shape circle" style="--c: #3b82f6; left: 10%; top: -10%; width: 100px; height: 100px; animation: float 6s ease-in-out infinite;"></span>
+              <span class="shape square" style="--c: #10b981; right: 15%; bottom: -20%; width: 80px; height: 80px; animation: slide 8s ease-in-out infinite;"></span>
+            </div>
           </div>
         </div>
       </div>
     </section>
+
+    <style>
+      .hero-shapes .shape {
+        position: absolute;
+        border-radius: var(--radius-xl);
+        opacity: 0.15;
+        animation-timing-function: ease-in-out;
+      }
+      .hero-shapes .circle {
+        animation-name: float;
+      }
+      .hero-shapes .square {
+        animation-name: slide;
+      }
+      @keyframes float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(30px, -30px) scale(1.1); }
+      }
+      @keyframes slide {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(-40px, 40px) scale(1.1); }
+      }
+    </style>
 
     <!-- Featured Products -->
     <section class="featured-section">

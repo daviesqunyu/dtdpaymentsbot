@@ -109,23 +109,26 @@
               <div style="margin-bottom:1rem;">
                 <label class="form-label" style="display:block;margin-bottom:0.5rem;color:var(--cyber-text);">Payment Method</label>
                 <div style="display:flex;flex-direction:column;gap:0.5rem;">
-                  <div class="payment-method" data-method="paystack" style="padding:0.75rem;border:2px solid var(--cyber-border);border-radius:6px;cursor:pointer;transition:all 0.2s;">
+                  <div class="payment-method" data-method="paystack" style="padding:0.75rem;border:2px solid var(--cyber-border);border-radius:6px;cursor:pointer;transition:all 0.2s;background:var(--bg-card);">
                     <div style="display:flex;align-items:center;gap:0.5rem;">
                       <input type="radio" name="paymentMethod" checked style="accent-color:var(--cyber-neon);">
                       <span style="color:var(--cyber-text);">Card / Bank (Paystack)</span>
                     </div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Secure card & bank transfer</div>
                   </div>
-                  <div class="payment-method" data-method="usdt" style="padding:0.75rem;border:2px solid var(--cyber-border);border-radius:6px;cursor:pointer;transition:all 0.2s;">
+                  <div class="payment-method" data-method="usdt" style="padding:0.75rem;border:2px solid var(--cyber-border);border-radius:6px;cursor:pointer;transition:all 0.2s;background:var(--bg-card);">
                     <div style="display:flex;align-items:center;gap:0.5rem;">
                       <input type="radio" name="paymentMethod" style="accent-color:var(--cyber-neon);">
                       <span style="color:var(--cyber-text);">USDT (TRC20)</span>
                     </div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Fast crypto stablecoin</div>
                   </div>
-                  <div class="payment-method" data-method="bitcoin" style="padding:0.75rem;border:2px solid var(--cyber-border);border-radius:6px;cursor:pointer;transition:all 0.2s;">
+                  <div class="payment-method" data-method="bitcoin" style="padding:0.75rem;border:2px solid var(--cyber-border);border-radius:6px;cursor:pointer;transition:all 0.2s;background:var(--bg-card);">
                     <div style="display:flex;align-items:center;gap:0.5rem;">
                       <input type="radio" name="paymentMethod" style="accent-color:var(--cyber-neon);">
                       <span style="color:var(--cyber-text);">Bitcoin (BTC)</span>
                     </div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Decentralized crypto</div>
                   </div>
                 </div>
               </div>
@@ -147,7 +150,24 @@
                 <div id="paystackDetails" style="display:block;">
                   <div style="color:var(--cyber-muted);font-size:0.875rem;margin-bottom:0.75rem;">You'll be redirected to Paystack to complete payment securely.</div>
                 </div>
-                <div id="cryptoDetails" style="display:none;"></div>
+                <div id="cryptoDetails" style="display:none;">
+                  <div style="color:var(--cyber-muted);font-size:0.875rem;margin-bottom:0.75rem;">Scan QR code to pay with crypto</div>
+                  <div style="display:flex;justify-content:center;margin:1rem 0;">
+                    <canvas id="usdtQrCanvas" width="120" height="120" style="border:1px solid var(--cyber-border);border-radius:6px;"></canvas>
+                    <canvas id="btcQrCanvas" width="120" height="120" style="border:1px solid var(--cyber-border);border-radius:6px; margin-left:1rem; display:none;"></canvas>
+                  </div>
+                  <div style="display:flex;gap:2rem;">
+                    <div style="text-align:center;">
+                      <div style="font-size:0.75rem;color:var(--text-secondary);">USDT Address</div>
+                      <code style="color:var(--accent-success);font-size:0.8rem;word-break:break-all;">TN3W4H6rK2UMVEv7B4mRqG45nG5sPXsHmL</code>
+                    </div>
+                    <div style="text-align:center;">
+                      <div style="font-size:0.75rem;color:var(--text-secondary);">BTC Address</div>
+                      <code style="color:var(--accent-warning);font-size:0.8rem;word-break:break-all;">bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</code>
+                    </div>
+                  </div>
+                  <small style="color:var(--text-muted);font-size:0.7rem; margin-top:0.5rem;">QR codes generated via Google Chart API</small>
+                </div>
                 
                 <button type="submit" id="submitPayment" class="btn btn-primary btn-block" style="width:100%;padding:0.75rem;margin-top:1rem;background:var(--cyber-neon);color:var(--cyber-bg);border:none;border-radius:6px;font-weight:600;cursor:pointer;">Complete Payment</button>
               </form>
@@ -163,6 +183,83 @@
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/service-worker.js").then((r) => console.log("SW ready:", r.scope)).catch((e) => console.log("SW err:", e));
     }
+  </script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+<script>
+    // QR Code generation for crypto payments
+    document.addEventListener('DOMContentLoaded', () => {
+      // Generate USDT QR code
+      const usdtQrCanvas = document.getElementById('usdtQrCanvas');
+      if (usdtQrCanvas) {
+        const usdtQrImage = new Image();
+        usdtQrImage.onload = () => usdtQrCanvas.getContext('2d').drawImage(usdtQrImage, 0, 0);
+        usdtQrImage.src = 'https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=TN3W4H6rK2UMVEv7B4mRqG45nG5sPXsHmL&choe=UTF-8';
+      }
+      
+      // Generate BTC QR code
+      const btcQrCanvas = document.getElementById('btcQrCanvas');
+      if (btcQrCanvas) {
+        const btcQrImage = new Image();
+        btcQrImage.onload = () => btcQrCanvas.getContext('2d').drawImage(btcQrImage, 0, 0);
+        btcQrImage.src = 'https://chart.googleapis.com/chart?chs=120x120&cht=qr&l=bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh&choe=UTF-8';
+      }
+    });
+    
+    // Form submission handler
+    document.addEventListener('DOMContentLoaded', () => {
+      const paymentForm = document.getElementById('paymentForm');
+      if (paymentForm) {
+        paymentForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+          const customerName = document.getElementById('customerName')?.value;
+          const customerEmail = document.getElementById('customerEmail')?.value;
+          const telegramUsername = document.getElementById('telegramUsername')?.value;
+          
+          if (!paymentMethod) {
+            showToast('Please select a payment method');
+            return;
+          }
+          
+          // Show loading state
+          const submitBtn = document.getElementById('submitPayment');
+          const originalText = submitBtn.textContent;
+          submitBtn.textContent = 'Processing...';
+          submitBtn.disabled = true;
+          
+          try {
+            const response = await fetch('/api/orders', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                customerName,
+                customerEmail,
+                telegramUsername,
+                paymentMethod
+              })
+            });
+            
+            const result = await response.json();
+            
+            if (result.ok && result.order_id) {
+              // Redirect to track page
+              window.location.href = `track.html?order=${result.order_id}`;
+            } else {
+              showToast('Payment failed: ' + (result.error || 'Unknown error'));
+              submitBtn.textContent = originalText;
+              submitBtn.disabled = false;
+            }
+          } catch (error) {
+            showToast('Error connecting to server');
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+          }
+        });
+      }
+    });
   </script>
   <script src="https://js.paystack.co/v1/inline.js"></script>
   <script src="js/payment.js"></script>

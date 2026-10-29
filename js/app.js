@@ -125,6 +125,17 @@ function initCart() {
   }
   
   updateCartBadge();
+  
+  // Cart count animation on click
+  if (cartBtn) {
+    cartBtn.addEventListener('click', () => {
+      const badge = document.getElementById('cartBadge');
+      if (badge) {
+        badge.style.transform = 'scale(1.2)';
+        setTimeout(() => { badge.style.transform = 'scale(1)'; }, 150);
+      }
+    });
+  }
 }
 
 function updateCartBadge() {
@@ -139,6 +150,29 @@ function updateCartBadge() {
 function addToCart(productId) {
   const product = PRODUCT_CATALOG.find(p => p.id === productId);
   if (!product) return;
+  
+  // Add to cart array
+  const existingItem = cart.find(item => item.id === product.id);
+  if (existingItem) {
+    existingItem.quantity += 1;
+  } else {
+    cart.push({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      quantity: 1
+    });
+  }
+  
+  // Persist to localStorage
+  localStorage.setItem('dtd_cart_new', JSON.stringify(cart));
+  
+  // Update badge
+  updateCartBadge();
+  
+  // Show toast
+  showToast('Added to cart');
   
   // Redirect to payment with product
   const orderData = {
