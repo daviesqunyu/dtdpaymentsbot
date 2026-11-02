@@ -1,5 +1,7 @@
 /* DTD Store - Unified Catalog */
-const PRODUCT_CATALOG = [
+
+// Product catalog data - made available globally for browser usage
+window.PRODUCT_CATALOG = [
   {
     id: "smtp-elite",
     name: "SMTP Server Elite",
@@ -422,11 +424,133 @@ const PRODUCT_CATALOG = [
     image: "https://images.unsplash.com/photo-1556909185-21b6c7e7c2e5?w=800&h=600&fit=crop",
     inStock: true,
     featured: true
+  },
+  // Additional Products
+  {
+    id: "smtp-reseller-2",
+    name: "SMTP Reseller Plus",
+    category: "infrastructure",
+    subcategory: "SMTP",
+    price: 79.99,
+    badge: "PRO",
+    badgeColor: "info",
+    description: "White-label SMTP platform with client management, branding, and commission tracking. Start your own email service business.",
+    image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=600&fit=crop",
+    inStock: true,
+    featured: true
+  },
+  {
+    id: "vault-mini",
+    name: "Encrypted Mini Vault",
+    category: "storage",
+    subcategory: "Vaults",
+    price: 14.99,
+    badge: "STOCK",
+    badgeColor: "accent",
+    description: "Compact encrypted storage with 256GB capacity. Military-grade encryption for personal files and documents.",
+    image: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=600&fit=crop",
+    inStock: true,
+    featured: false
+  },
+  {
+    id: "domain-auction",
+    name: "Domain Auction Service",
+    category: "accounts",
+    subcategory: "Domains",
+    price: 99.99,
+    badge: "PREMIUM",
+    badgeColor: "danger",
+    description: "Participate in premium domain auctions with competitive bidding. Secure transfer and escrow protection included.",
+    image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&h=600&fit=crop",
+    inStock: true,
+    featured: false
+  },
+  {
+    id: "rdp-gaming",
+    name: "Gaming RDP Pro",
+    category: "rdp",
+    subcategory: "VPS",
+    price: 119.99,
+    badge: "ACTIVE",
+    badgeColor: "info",
+    description: "Windows Server RDP with dedicated GPU, 8 vCPU, 16GB RAM. Perfect for game hosting and streaming with low latency.",
+    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=600&fit=crop",
+    inStock: true,
+    featured: true,
+    active: true
+  },
+  {
+    id: "ai-content",
+    name: "AI Content Generator",
+    category: "ai",
+    subcategory: "Automation",
+    price: 49.99,
+    badge: "GATED",
+    badgeColor: "danger",
+    description: "AI-powered content creation tool with 1000+ templates. Blog posts, articles, marketing copy, and code generation in seconds.",
+    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop",
+    inStock: true,
+    featured: false,
+    gated: true
+  },
+  {
+    id: "linux-enterprise",
+    name: "Linux Enterprise VPS",
+    category: "rdp",
+    subcategory: "VPS",
+    price: 69.99,
+    badge: "ACTIVE",
+    badgeColor: "accent",
+    description: "Ubuntu Enterprise Linux VPS with 4 vCPU, 8GB RAM, 250GB SSD, pre-configured Docker and monitoring. Full root access.",
+    image: "https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=800&h=600&fit=crop",
+    inStock: true,
+    featured: false,
+    active: true
+  },
+  {
+    id: "cloud-server",
+    name: "Cloud Server Business",
+    category: "storage",
+    subcategory: "Hosting",
+    price: 129.99,
+    badge: "LIMITED",
+    badgeColor: "warning",
+    description: "Business cloud server with 16 vCPU, 32GB RAM, 1TB SSD, dedicated IP, and 24/7 enterprise support. Scale your applications instantly.",
+    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop",
+    inStock: true,
+    featured: false
+  },
+  {
+    id: "domain-io",
+    name: ".IO Domain Registration",
+    category: "accounts",
+    subcategory: "Domains",
+    price: 39.99,
+    badge: "NEW",
+    badgeColor: "info",
+    description: "Register a .IO tech domain with full DNS control, WHOIS privacy, and startup branding. Ideal for tech companies and developers.",
+    image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=600&fit=crop",
+    inStock: true,
+    featured: true,
+    active: true
+  },
+  {
+    id: "smtp-dedicated",
+    name: "Dedicated SMTP IP",
+    category: "infrastructure",
+    subcategory: "SMTP",
+    price: 49.99,
+    badge: "ESSENTIAL",
+    badgeColor: "accent",
+    description: "Dedicated IP address for your SMTP server. Improved deliverability, better reputation, and whitelabel branding options.",
+    image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=600&fit=crop",
+    inStock: true,
+    featured: false
   }
 ];
 
 // Category definitions
-const CATEGORIES = [
+window.CATEGORIES = [
   { id: "all", name: "All Products", icon: "grid" },
   { id: "infrastructure", name: "Infrastructure/SMTP", icon: "server" },
   { id: "storage", name: "Storage/Vaults", icon: "hard-drive" },
@@ -435,7 +559,3 @@ const CATEGORIES = [
   { id: "ai", name: "AI Tools", icon: "brain" },
   { id: "gated", name: "Gated/Premium", icon: "lock" }
 ];
-
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { PRODUCT_CATALOG, CATEGORIES };
-}

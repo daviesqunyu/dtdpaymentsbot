@@ -27,6 +27,60 @@
   <meta name="apple-mobile-web-app-title" content="DTD Store" />
 </head>
 <body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <div class="brand-icon">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <span class="brand-text">DTD STORE</span>
+      </div>
+      
+      <div class="nav-menu" id="navMenu">
+        <a href="index.html" class="nav-link active" data-nav="home">
+          <i class="fas fa-home"></i>
+          <span>Home</span>
+        </a>
+        <a href="#products" class="nav-link" data-nav="products">
+          <i class="fas fa-shopping-bag"></i>
+          <span>Store</span>
+        </a>
+        <a href="#gated" class="nav-link" data-nav="gated">
+          <i class="fas fa-lock"></i>
+          <span>Gated Store</span>
+        </a>
+        <a href="track.html" class="nav-link">
+          <i class="fas fa-truck"></i>
+          <span>Track Order</span>
+        </a>
+        <a href="chat.html" class="nav-link">
+          <i class="fas fa-comments"></i>
+          <span>Chat</span>
+        </a>
+        <a href="payment.html" class="nav-link">
+          <i class="fas fa-credit-card"></i>
+          <span>Payment</span>
+        </a>
+        <a href="admin.html" class="nav-link">
+          <i class="fas fa-shield-alt"></i>
+          <span>Admin</span>
+        </a>
+      </div>
+      
+      <div class="nav-actions">
+        <div class="network-status">
+          <span class="status-dot"></span>
+          <span class="status-text">ONLINE</span>
+        </div>
+        <button class="cart-btn" id="cartBtn" aria-label="Shopping cart">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="cart-badge" id="cartBadge">0</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
   <div class="shell">
     <aside class="sidenav" id="sideNav" aria-label="Main navigation">
       <div class="sidenav-head">
@@ -263,5 +317,58 @@
   </script>
   <script src="https://js.paystack.co/v1/inline.js"></script>
   <script src="js/payment.js"></script>
+  
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="nav-brand">
+            <div class="brand-icon">
+              <i class="fas fa-bolt"></i>
+            </div>
+            <span class="brand-text">DTD STORE</span>
+          </div>
+          <p class="footer-desc">
+            Premium digital products storefront. Secure payments, instant delivery.
+          </p>
+        </div>
+        <div class="footer-links">
+          <h4 class="footer-title">Products</h4>
+          <ul>
+            <li><a href="#products">Infrastructure</a></li>
+            <li><a href="#products">Storage & Vaults</a></li>
+            <li><a href="#products">RDP/VPS</a></li>
+            <li><a href="#products">AI Tools</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4 class="footer-title">Support</h4>
+          <ul>
+            <li><a href="track.html">Track Order</a></li>
+            <li><a href="chat.html">Chat Support</a></li>
+            <li><a href="https://t.me/DTDSTOREBOT" target="_blank">Telegram Bot</a></li>
+            <li><a href="payment.html">Payment Info</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4 class="footer-title">Company</h4>
+          <ul>
+            <li><a href="#home">About</a></li>
+            <li><a href="#home">Privacy Policy</a></li>
+            <li><a href="#home">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 DTD STORE. All rights reserved.</p>
+        <div class="footer-social">
+          <a href="https://t.me/DTDSTOREBOT" target="_blank" rel="noopener" aria-label="Telegram">
+            <i class="fab fa-telegram"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
