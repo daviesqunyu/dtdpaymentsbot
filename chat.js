@@ -106,7 +106,7 @@ function renderRails() {
     ? `<a class="chat-rail-btn is-wa" href="${escapeHtml(r.whatsappChannelUrl)}" target="_blank" rel="noopener noreferrer">WhatsApp channel</a>`
     : `<span class="chat-rail-hint">Set WHATSAPP_CHANNEL_URL to link your WhatsApp channel</span>`;
   el.innerHTML = `
-    <a class="chat-rail-btn is-tg" href="${escapeHtml(r.telegramBotUrl || "https://t.me/Dtdpaymentbot")}" target="_blank" rel="noopener noreferrer">@${escapeHtml(r.telegramBotUsername || "Dtdpaymentbot")}</a>
+    <a class="chat-rail-btn is-tg" href="${escapeHtml(r.telegramBotUrl || "https://t.me/DTDSTOREBOT")}" target="_blank" rel="noopener noreferrer">@${escapeHtml(r.telegramBotUsername || "DTDSTOREBOT")}</a>
     <a class="chat-rail-btn is-tg" href="${escapeHtml(r.telegramChannelUrl || "https://t.me/DTDMAINSTORE")}" target="_blank" rel="noopener noreferrer">TG @${escapeHtml(r.telegramChannelUsername || "DTDMAINSTORE")}</a>
     ${wa}
   `;
@@ -190,7 +190,7 @@ async function signInMiniApp() {
   const initData = telegramInitData();
   if (!initData) {
     if (status) {
-      status.textContent = "Open this page from @Dtdpaymentbot Mini App, or use Link Telegram below.";
+      status.textContent = "Open this page from @DTDSTOREBOT Mini App, or use Link Telegram below.";
       status.dataset.sticky = "1";
     }
     return;
@@ -226,7 +226,7 @@ async function startClaim() {
   if (box) {
     box.hidden = false;
     box.innerHTML = `
-      <p>Send this in <a href="${escapeHtml(data.deepLink)}" target="_blank" rel="noopener noreferrer">@Dtdpaymentbot</a>:</p>
+      <p>Send this in <a href="${escapeHtml(data.deepLink)}" target="_blank" rel="noopener noreferrer">@DTDSTOREBOT</a>:</p>
       <p class="chat-code"><code>/chatsign ${escapeHtml(data.code)}</code></p>
       <button type="button" class="primary-button" id="chatClaimDone">I've sent it — finish</button>
     `;

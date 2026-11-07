@@ -39,6 +39,10 @@
           <span class="side-link-icon" aria-hidden="true">◎</span>
           Orders
         </button>
+        <button type="button" class="side-link" data-admin-page="escrow">
+          <span class="side-link-icon" aria-hidden="true">◇</span>
+          Escrow
+        </button>
       </nav>
 
       <div class="side-footer">
@@ -104,6 +108,7 @@
               <div class="admin-actions-stack">
                 <button type="button" class="primary-button" data-admin-page="products">Manage products</button>
                 <button type="button" class="secondary-button" data-admin-page="orders">Review orders</button>
+                <button type="button" class="secondary-button" data-admin-page="escrow">Manage escrow</button>
                 <button id="publishAllProducts" class="secondary-button" type="button">Publish all products</button>
                 <button id="resetProducts" class="danger-button" type="button">Reset sample products</button>
               </div>
@@ -113,10 +118,11 @@
               <p class="section-subtext">Official surfaces buyers and support use.</p>
               <ul class="admin-link-list">
                 <li><a href="index.html#products">Store catalog</a></li>
-                <li><a href="https://t.me/Dtdpaymentbot" target="_blank" rel="noopener noreferrer">@Dtdpaymentbot</a></li>
+                <li><a href="https://t.me/DTDSTOREBOT" target="_blank" rel="noopener noreferrer">@DTDSTOREBOT</a></li>
                 <li><a href="mailto:contact@dvtechnologies.xyz">contact@dvtechnologies.xyz</a></li>
                 <li><a href="https://dvtechnologies.xyz" target="_blank" rel="noopener noreferrer">DV Technologies</a></li>
-                <li><a href="https://t.me/Davetheedev" target="_blank" rel="noopener noreferrer">@Davetheedev</a></li>
+                <li><a href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">Owner @Glock7money</a></li>
+                <li><a href="index.html#escrow">Escrow lookup</a></li>
               </ul>
             </article>
           </div>
@@ -186,6 +192,58 @@
             </div>
             <div id="adminOrders" class="admin-orders"></div>
           </section>
+        </section>
+
+        <!-- ESCROW -->
+        <section id="adminEscrowPage" class="page admin-page" data-admin-page="escrow" hidden>
+          <div class="admin-layout">
+            <form id="escrowForm" class="checkout-form admin-form">
+              <div class="panel-title-row">
+                <h2>Create escrow</h2>
+              </div>
+              <label>
+                Title
+                <input name="title" type="text" placeholder="P2P deal / account sale" required />
+              </label>
+              <div class="form-row two-columns">
+                <label>
+                  Amount (USD)
+                  <input name="amountUsd" type="number" min="1" step="0.01" placeholder="100" required />
+                </label>
+                <label>
+                  Fee (optional)
+                  <input name="escrowFee" type="number" min="0" step="0.01" placeholder="0" />
+                </label>
+              </div>
+              <div class="form-row two-columns">
+                <label>
+                  Buyer @username
+                  <input name="buyerTelegram" type="text" placeholder="@buyer" required />
+                </label>
+                <label>
+                  Seller @username
+                  <input name="sellerTelegram" type="text" placeholder="@seller" required />
+                </label>
+              </div>
+              <label>
+                Description
+                <textarea name="description" rows="3" placeholder="What is being escrowed?"></textarea>
+              </label>
+              <p id="escrowDepositHint" class="form-note">Deposit wallet loads after sign-in.</p>
+              <div class="admin-actions">
+                <button class="primary-button" type="submit">Create escrow</button>
+                <button id="refreshEscrow" class="secondary-button" type="button">Refresh list</button>
+              </div>
+            </form>
+
+            <section class="admin-list-panel" aria-labelledby="escrowListTitle">
+              <div class="panel-title-row">
+                <h2 id="escrowListTitle">Open sessions</h2>
+                <span id="escrowSessionCount" class="count-pill">0</span>
+              </div>
+              <div id="adminEscrowList" class="admin-orders"></div>
+            </section>
+          </div>
         </section>
       </main>
     </div>

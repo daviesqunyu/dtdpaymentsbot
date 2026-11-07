@@ -78,9 +78,9 @@ function initTelegramBot(config) {
 
   const username = botConfig.telegramBotUsername
     ? `@${String(botConfig.telegramBotUsername).replace(/^@/, "")}`
-    : "@Dtdpaymentbot";
+    : "@DTDSTOREBOT";
 
-  const botUrl = botConfig.telegramBotUrl || `https://t.me/Dtdpaymentbot`;
+  const botUrl = botConfig.telegramBotUrl || `https://t.me/DTDSTOREBOT`;
   if (botUrl) {
     openTelegramLink.href = botUrl;
     openTelegramLink.hidden = false;

@@ -4,6 +4,32 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
 import { processTelegramUpdate } from "./functions/lib/bot-commands.js";
+import {
+  getStoreConfig,
+  normalizePaymentMethod,
+  dbPaymentMethod,
+  buildOrderTelegramMessage,
+  notifyOrderTelegram as notifyOrderTelegramShared,
+  insertOrder as insertOrderShared,
+  getSupabase,
+  sendTelegram as sendTelegramShared
+} from "./functions/lib/store.js";
+import {
+  createStarsCheckout,
+  loadStarsInvoice,
+  starsEnabled,
+  usdToStars
+} from "./functions/lib/stars.js";
+import {
+  createEscrowSession,
+  getDepositAddress,
+  getEscrowByCode,
+  getEscrowMessages,
+  getEscrowTransactions,
+  isAdminBearer,
+  listEscrowSessions,
+  transitionEscrow
+} from "./functions/lib/escrow.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 5173);
@@ -12,208 +38,16 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 const supabaseAdmin = supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
 
-const PAYMENT_METHODS = new Set([
-  "Crypto",
-  "USDT",
-  "Bitcoin",
-  "Paystack",
-  "Paystack Card",
-  "Paystack Bank",
-  "Paystack USSD",
-  "Paystack Mobile Money",
-  "Paystack QR"
-]);
-
-function normalizePaymentMethod(method) {
-  const value = String(method || "USDT").trim();
-  if (PAYMENT_METHODS.has(value)) return value;
-  const lower = value.toLowerCase();
-  if (lower.includes("paystack")) return "Paystack";
-  if (lower.includes("usdt") || lower.includes("trc20") || lower.includes("tron")) return "USDT";
-  if (lower.includes("bitcoin") || lower === "btc") return "Bitcoin";
-  if (lower.includes("crypto")) return "Crypto";
-  return "USDT";
-}
-
-function dbPaymentMethod(method) {
-  const value = String(method || "").toLowerCase();
-  if (
-    value.includes("crypto") ||
-    value.includes("bitcoin") ||
-    value === "btc" ||
-    value.includes("usdt") ||
-    value.includes("trc20") ||
-    value.includes("tron")
-  ) {
-    return "Crypto";
-  }
-  return "Paystack";
-}
-
 async function sendTelegram(chatId, message, options = {}) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token || !chatId) return { ok: false, reason: "not_configured" };
-
-  const text = typeof message === "string" ? message : String(message?.text || "");
-  const body = {
-    chat_id: chatId,
-    text,
-    parse_mode: "HTML",
-    disable_web_page_preview: true
-  };
-  const markup = options.reply_markup || (typeof message === "object" && message?.reply_markup);
-  if (markup) body.reply_markup = markup;
-
-  const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    console.error("Telegram error:", error);
-    return { ok: false, reason: response.status === 401 ? "unauthorized" : "send_failed" };
-  }
-
-  return { ok: true };
-}
-
-function buildOrderTelegramMessage({
-  customerName,
-  customerEmail,
-  telegramUsername,
-  normalizedMethod,
-  paymentReference,
-  productAccount,
-  totalUsd,
-  items,
-  orderId,
-  visitorIp,
-  userAgent
-}) {
-  const itemLines = items.map((item) => `• ${item.product_name} x${item.quantity}`).join("\n");
-  return [
-    "<b>🛒 New DTD Store Order</b>",
-    orderId ? `🔖 Order ID: <code>${orderId}</code>` : null,
-    `👤 Name: ${customerName}`,
-    `📧 Email: ${customerEmail}`,
-    telegramUsername ? `💬 Telegram: @${String(telegramUsername).replace(/^@/, "")}` : null,
-    `💳 Payment: ${normalizedMethod}`,
-    paymentReference ? `🔗 Ref: <code>${paymentReference}</code>` : null,
-    productAccount ? `🔑 Account: ${productAccount}` : null,
-    `💵 Total: $${Number(totalUsd || 0).toFixed(2)} USD`,
-    visitorIp ? `🌐 IP: <code>${visitorIp}</code>` : null,
-    userAgent ? `🖥 Device: ${userAgent.substring(0, 80)}` : null,
-    "",
-    "<b>Items:</b>",
-    itemLines
-  ]
-    .filter(Boolean)
-    .join("\n");
+  return sendTelegramShared(process.env, chatId, message, options);
 }
 
 async function notifyOrderTelegram(message) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) return;
-
-  const channelIds = [
-    process.env.TELEGRAM_CHANNEL_ID,
-    process.env.TELEGRAM_BACKUP_CHANNEL_ID,
-    process.env.TELEGRAM_GROUP_ID
-  ].filter((id, index, arr) => id && arr.indexOf(id) === index);
-
-  const adminId = process.env.TELEGRAM_ADMIN_CHAT_ID;
-
-  for (const channelId of channelIds) {
-    await sendTelegram(channelId, message);
-  }
-
-  if (adminId) {
-    const adminNote = channelIds.length
-      ? `<b>Order alert (copy)</b>\n${message.replace("<b>New DTD Store order</b>\n", "")}`
-      : message;
-    await sendTelegram(adminId, adminNote);
-  }
+  await notifyOrderTelegramShared(process.env, message);
 }
 
 async function insertOrder(orderPayload, items) {
-  if (!supabaseAdmin) {
-    throw new Error("Supabase is not configured on the server.");
-  }
-
-  const rpcItems = items.map((item) => ({
-    product_id: item.product_id || "",
-    product_name: item.product_name,
-    quantity: item.quantity,
-    unit_price_usd: item.unit_price_usd
-  }));
-
-  const { data: rpcOrderId, error: rpcError } = await supabaseAdmin.rpc("create_store_order", {
-    p_customer_name: orderPayload.customer_name,
-    p_customer_phone: orderPayload.customer_phone,
-    p_telegram_username: orderPayload.telegram_username,
-    p_delivery_details: orderPayload.delivery_details,
-    p_payment_method: orderPayload.payment_method,
-    p_total_usd: orderPayload.total_usd,
-    p_items: rpcItems
-  });
-
-  if (!rpcError && rpcOrderId) return rpcOrderId;
-
-  const attempts = [
-    orderPayload,
-    {
-      customer_name: orderPayload.customer_name,
-      customer_phone: orderPayload.customer_phone,
-      telegram_username: orderPayload.telegram_username,
-      delivery_details: orderPayload.delivery_details,
-      payment_method: orderPayload.payment_method,
-      total_usd: orderPayload.total_usd
-    }
-  ];
-
-  let order = null;
-  let lastError = rpcError;
-
-  for (const payload of attempts) {
-    const { data, error } = await supabaseAdmin
-      .from("orders")
-      .insert(payload)
-      .select("id")
-      .single();
-
-    if (!error) {
-      order = data;
-      break;
-    }
-
-    lastError = error;
-    if (!String(error.message || "").includes("column")) break;
-  }
-
-  if (!order) {
-    const message = lastError?.message || "Order insert failed";
-    if (message.includes("row-level security") || message.includes("create_store_order")) {
-      throw new Error(
-        "Order save blocked. Add SUPABASE_SERVICE_ROLE_KEY to .env and run supabase-migration.sql in Supabase."
-      );
-    }
-    throw lastError || new Error(message);
-  }
-
-  const orderItems = items.map((item) => ({
-    order_id: order.id,
-    product_id: item.product_id || null,
-    product_name: item.product_name,
-    quantity: item.quantity,
-    unit_price_usd: item.unit_price_usd
-  }));
-
-  const { error: itemsError } = await supabaseAdmin.from("order_items").insert(orderItems);
-  if (itemsError) throw itemsError;
-
-  return order.id;
+  return insertOrderShared(process.env, orderPayload, items);
 }
 
 const app = express();
@@ -245,33 +79,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.get("/api/config", (_req, res) => {
-  const botUsername = String(process.env.TELEGRAM_BOT_USERNAME || "").replace(/^@/, "");
-  const telegramReady = Boolean(
-    process.env.TELEGRAM_BOT_TOKEN &&
-      (process.env.TELEGRAM_ADMIN_CHAT_ID || process.env.TELEGRAM_CHANNEL_ID)
-  );
-
-  res.json({
-    paystackPublicKey: process.env.PAYSTACK_PUBLIC_KEY || "",
-    paystackCurrency: process.env.PAYSTACK_CURRENCY || "KES",
-    paystackConversionRate: Number(process.env.PAYSTACK_CONVERSION_RATE || 129),
-    usdtTrc20Address: process.env.USDT_TRC20_ADDRESS || "",
-    usdtNetwork: "TRC20",
-    btcAddress: process.env.BTC_ADDRESS || "",
-    btcNetwork: "BTC",
-    storeUrl: process.env.STORE_URL || "https://dtdpaymentsbot.pages.dev",
-    companyUrl: process.env.COMPANY_URL || "https://dvtechnologies.xyz",
-    companyName: process.env.COMPANY_NAME || "DV Technologies",
-    supportEmail: String(process.env.SUPPORT_EMAIL || "contact@dvtechnologies.xyz").trim().toLowerCase(),
-    telegramBotUsername: botUsername,
-    telegramBotUrl: botUsername ? `https://t.me/${botUsername}` : "",
-    telegramEnabled: telegramReady,
-    paymentOptions: [
-      { id: "USDT", label: "USDT (TRC20)", type: "crypto", asset: "USDT", network: "TRC20" },
-      { id: "Bitcoin", label: "Bitcoin (BTC)", type: "crypto", asset: "BTC", network: "BTC" },
-      { id: "Paystack", label: "Card / Bank / Mobile Money", type: "paystack" }
-    ]
-  });
+  res.json(getStoreConfig(process.env));
 });
 
 app.post("/api/orders", async (req, res) => {
@@ -557,7 +365,7 @@ app.post("/api/telegram/webhook", async (req, res) => {
     }
 
     await processTelegramUpdate(process.env, req.body, {
-      getSupabase: () => supabaseAdmin,
+      getSupabase: () => supabaseAdmin || getSupabase(process.env),
       sendTelegram: async (_env, chatId, message, options) => sendTelegram(chatId, message, options)
     });
 
@@ -565,6 +373,249 @@ app.post("/api/telegram/webhook", async (req, res) => {
   } catch (error) {
     console.error("Telegram webhook error:", error);
     res.json({ ok: true });
+  }
+});
+
+app.post("/api/stars/invoice", async (req, res) => {
+  try {
+    if (!starsEnabled(process.env)) {
+      return res.status(400).json({ ok: false, error: "Stars payments are not enabled." });
+    }
+    const body = req.body || {};
+    const items = Array.isArray(body.items) ? body.items : [];
+    const totalUsd = Number(body.totalUsd || 0);
+    if (!items.length && !(totalUsd > 0)) {
+      return res.status(400).json({ ok: false, error: "Cart is empty." });
+    }
+    const result = await createStarsCheckout(process.env, {
+      kind: "miniapp",
+      telegramUserId: body.telegramUserId || body.userId || null,
+      customerName: body.name || body.customerName || "Mini App buyer",
+      customerEmail: body.email || body.customerEmail || null,
+      telegramUsername: body.telegram || body.telegramUsername || null,
+      items: items.map((item) => ({
+        product_id: item.product_id || item.id || "",
+        product_name: item.product_name || item.name || "Product",
+        quantity: Number(item.quantity || 1),
+        unit_price_usd: Number(item.unit_price_usd || item.price_usd || 0)
+      })),
+      totalUsd
+    });
+    if (!result.ok) return res.status(400).json(result);
+    res.json({
+      ok: true,
+      invoice_url: result.invoice_url,
+      id: result.id,
+      stars: result.stars,
+      amountUsd: result.amountUsd,
+      rate: usdToStars(process.env, 1)
+    });
+  } catch (error) {
+    console.error("Stars invoice error:", error);
+    res.status(500).json({ ok: false, error: error.message || "Stars invoice failed" });
+  }
+});
+
+app.get("/api/stars/invoice", async (req, res) => {
+  try {
+    const id = String(req.query.id || "").trim();
+    if (id) {
+      const row = await loadStarsInvoice(process.env, id);
+      if (!row) return res.status(404).json({ ok: false, error: "Invoice not found" });
+      return res.json({
+        ok: true,
+        id: row.id,
+        status: row.status,
+        orderId: row.order_id || null,
+        stars: row.stars_amount,
+        totalUsd: row.total_usd
+      });
+    }
+    res.json({
+      ok: true,
+      starsEnabled: starsEnabled(process.env),
+      starsPerUsd: Number(process.env.STARS_PER_USD || 75)
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message || "Stars lookup failed" });
+  }
+});
+
+app.get("/api/orders/status", async (req, res) => {
+  try {
+    const orderId = String(req.query.orderId || "").trim();
+    const email = String(req.query.email || "").trim().toLowerCase();
+    if (!orderId || !email) {
+      return res.status(400).json({ error: "Provide orderId and email." });
+    }
+    const supabase = supabaseAdmin || getSupabase(process.env);
+    if (!supabase) return res.status(503).json({ error: "Order lookup unavailable." });
+
+    const { data, error } = await supabase
+      .from("orders")
+      .select(
+        "id,order_status,payment_method,payment_status,total_usd,created_at,customer_email,customer_phone,customer_name"
+      )
+      .eq("id", orderId)
+      .maybeSingle();
+
+    if (error) return res.status(500).json({ error: "Could not look up that order." });
+    if (!data) return res.status(404).json({ error: "Order not found." });
+
+    const storedEmail = String(data.customer_email || data.customer_phone || "")
+      .trim()
+      .toLowerCase();
+    if (storedEmail !== email) {
+      return res.status(403).json({ error: "Email does not match this order." });
+    }
+
+    const labels = {
+      new: "Order received",
+      confirmed: "Confirmed",
+      delivered: "Delivered",
+      cancelled: "Cancelled",
+      pending: "Payment pending",
+      paid: "Paid",
+      failed: "Payment failed",
+      refunded: "Refunded"
+    };
+    const orderStatus = data.order_status || "new";
+    const paymentStatus = data.payment_status || "pending";
+    res.json({
+      ok: true,
+      order: {
+        id: data.id,
+        status: orderStatus,
+        statusLabel: labels[orderStatus] || orderStatus,
+        paymentStatus,
+        paymentStatusLabel: labels[paymentStatus] || paymentStatus,
+        paymentMethod: data.payment_method,
+        totalUsd: Number(data.total_usd || 0),
+        createdAt: data.created_at,
+        customerName: data.customer_name
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Lookup failed." });
+  }
+});
+
+app.get("/api/escrow/session", async (req, res) => {
+  try {
+    const result = await getEscrowByCode(process.env, req.query.code);
+    if (!result.ok) {
+      return res.status(result.error === "Escrow not found." ? 404 : 400).json({ error: result.error });
+    }
+    const { session } = result;
+    const transactions = await getEscrowTransactions(process.env, session.id);
+    const messages = await getEscrowMessages(process.env, session.id);
+    res.json({
+      ok: true,
+      session: {
+        id: session.id,
+        code: session.code,
+        title: session.title,
+        description: session.description,
+        amountUsd: Number(session.amount_usd || 0),
+        currency: session.currency,
+        asset: session.asset,
+        network: session.network,
+        buyerTelegram: session.buyer_telegram,
+        sellerTelegram: session.seller_telegram,
+        depositAddress: session.deposit_address,
+        escrowFee: Number(session.escrow_fee || 0),
+        status: session.status,
+        createdAt: session.created_at,
+        fundedAt: session.funded_at,
+        releasedAt: session.released_at
+      },
+      transactions,
+      messages
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || "Could not load escrow." });
+  }
+});
+
+app.get("/api/escrow", async (req, res) => {
+  try {
+    const handle = String(req.query.handle || "").trim().replace(/^@/, "");
+    if (!handle) return res.status(400).json({ error: "Provide a Telegram handle." });
+    const supabase = supabaseAdmin || getSupabase(process.env);
+    if (!supabase) return res.status(503).json({ error: "Escrow storage unavailable." });
+    const { data, error } = await supabase
+      .from("escrow_sessions")
+      .select("code,title,amount_usd,status,created_at,buyer_telegram,seller_telegram")
+      .or(`buyer_telegram.eq.@${handle},seller_telegram.eq.@${handle}`)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (error) return res.status(500).json({ error: error.message || "Lookup failed." });
+    res.json({
+      ok: true,
+      handle,
+      escrows: (data || []).map((s) => ({
+        code: s.code,
+        title: s.title,
+        amountUsd: Number(s.amount_usd || 0),
+        status: s.status,
+        createdAt: s.created_at,
+        buyerTelegram: s.buyer_telegram,
+        sellerTelegram: s.seller_telegram
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || "Escrow lookup failed." });
+  }
+});
+
+app.get("/api/escrow/admin", async (req, res) => {
+  try {
+    const fakeReq = {
+      headers: { get: (name) => req.get(name) }
+    };
+    if (!(await isAdminBearer(process.env, fakeReq))) {
+      return res.status(401).json({ error: "Admin access required." });
+    }
+    const sessions = await listEscrowSessions(process.env);
+    res.json({ ok: true, depositAddress: getDepositAddress(process.env), sessions });
+  } catch (error) {
+    res.status(500).json({ error: error.message || "Escrow list failed." });
+  }
+});
+
+app.post("/api/escrow/admin", async (req, res) => {
+  try {
+    const fakeReq = {
+      headers: { get: (name) => req.get(name) }
+    };
+    if (!(await isAdminBearer(process.env, fakeReq))) {
+      return res.status(401).json({ error: "Admin access required." });
+    }
+    const body = req.body || {};
+    const action = String(body.action || "create").toLowerCase();
+    if (action === "create") {
+      const result = await createEscrowSession(process.env, body);
+      if (!result.ok) return res.status(400).json({ error: result.error });
+      return res.json({ ok: true, session: result.session });
+    }
+    if (["release", "cancel", "dispute", "confirm_deposit"].includes(action)) {
+      const statusMap = {
+        release: "released",
+        cancel: "cancelled",
+        dispute: "disputed",
+        confirm_deposit: "funded"
+      };
+      const result = await transitionEscrow(process.env, body.sessionId, statusMap[action], {
+        actor: "admin",
+        txHash: body.txHash || null,
+        message: body.reason || body.note || null
+      });
+      if (!result.ok) return res.status(400).json({ error: result.error });
+      return res.json({ ok: true, [statusMap[action]]: true });
+    }
+    res.status(400).json({ error: "Unknown action." });
+  } catch (error) {
+    res.status(500).json({ error: error.message || "Escrow admin failed." });
   }
 });
 

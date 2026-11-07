@@ -65,6 +65,7 @@
           </summary>
           <div class="nav-group-links">
             <a href="#track" data-nav="track">Track order</a>
+            <a href="#escrow" data-nav="escrow">Escrow</a>
           </div>
         </details>
 
@@ -225,7 +226,7 @@
               <img src="assets/store-feature-telegram.png" alt="Telegram bot shopping" width="640" height="640" loading="lazy" />
               <div>
                 <h3>Buy in Telegram</h3>
-                <p>Use @Dtdpaymentbot for in-chat checkout, tracking, and support.</p>
+                <p>Use @DTDSTOREBOT for in-chat checkout, tracking, and support.</p>
                 <a class="secondary-button" href="#telegram" data-nav="telegram">Open Telegram hub</a>
               </div>
             </article>
@@ -279,7 +280,7 @@
               <h2 id="telegramTitle">Telegram</h2>
               <p class="section-subtext">Premium-style bot + Mini App — shop, pay with ₮ USDT / ₿ BTC QR, track orders, and get support inside Telegram.</p>
               <ol class="page-steps">
-                <li>Open @Dtdpaymentbot · Menu → Mini App or /buy</li>
+                <li>Open @DTDSTOREBOT · Menu → Mini App or /buy</li>
                 <li>Choose ₮ USDT (TRC20 preferred), ₿ BTC, or 💳 Paystack</li>
                 <li>Paste tx hash or verify Paystack → send delivery email</li>
               </ol>
@@ -300,7 +301,7 @@
                 <li><code>/pay</code> ₮ USDT · ₿ BTC · Paystack</li>
                 <li><code>/order id email</code> track</li>
               </ul>
-              <a id="hubBotLink" class="primary-button" href="https://t.me/Dtdpaymentbot" target="_blank" rel="noopener noreferrer">Open @Dtdpaymentbot</a>
+              <a id="hubBotLink" class="primary-button" href="https://t.me/DTDSTOREBOT" target="_blank" rel="noopener noreferrer">Open @DTDSTOREBOT</a>
             </article>
             <article class="hub-card">
               <img class="hub-card-thumb" src="assets/store-feature-shop.png" alt="" width="320" height="320" loading="lazy" />
@@ -311,7 +312,7 @@
             <article class="hub-card">
               <h3>Owner support</h3>
               <p>Delivery questions and custom requests.</p>
-              <a id="hubOwnerLink" class="secondary-button" href="https://t.me/Davetheedev" target="_blank" rel="noopener noreferrer">Message @Davetheedev</a>
+              <a id="hubOwnerLink" class="secondary-button" href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">Message @Glock7money</a>
             </article>
             <article class="hub-card">
               <h3>Email support</h3>
@@ -391,7 +392,7 @@
                 <img src="assets/store-feature-shop.png" alt="" width="640" height="640" loading="lazy" />
                 <h3>How identity works</h3>
                 <ol>
-                  <li>Open Chat from @Dtdpaymentbot Mini App, or Link Telegram with a one-time code.</li>
+                  <li>Open Chat from @DTDSTOREBOT Mini App, or Link Telegram with a one-time code.</li>
                   <li>Your public Telegram @username is your handle on this feed.</li>
                   <li>Posts can mirror to the Telegram channel; share any post to WhatsApp.</li>
                 </ol>
@@ -415,7 +416,7 @@
               <p class="section-subtext">
                 Use your Order ID and the email from checkout. Need help?
                 Write <a href="mailto:contact@dvtechnologies.xyz">contact@dvtechnologies.xyz</a>
-                or message <a href="https://t.me/Davetheedev" target="_blank" rel="noopener noreferrer">@Davetheedev</a>.
+                or message <a href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">@Glock7money</a>.
               </p>
             </div>
             <div class="page-intro-media page-intro-media--single" aria-hidden="true">
@@ -442,7 +443,46 @@
                 <li>Order ID is on your confirmation email / Telegram receipt.</li>
                 <li>Use the same email you entered at checkout.</li>
                 <li>Crypto orders show paid after on-chain / admin confirm.</li>
+                <li>Need a protected deal? Open the Escrow page.</li>
                 <li>In Telegram: <code>/order ORDER_ID email@example.com</code></li>
+              </ul>
+            </aside>
+          </div>
+        </section>
+
+        <!-- ESCROW -->
+        <section id="escrow" class="page section-shell track-section page-with-visual" data-page="escrow" aria-labelledby="escrowTitle" hidden>
+          <div class="page-visual-bg" style="--page-visual: url('assets/store-hero-bg.png')" aria-hidden="true"></div>
+          <div class="page-intro">
+            <div class="page-intro-copy">
+              <p class="eyebrow">Protected deals</p>
+              <h2 id="escrowTitle">USDT Escrow</h2>
+              <p class="section-subtext">
+                Look up an escrow by code (e.g. <code>ESR-ABC123</code>) or your Telegram @username.
+                Admin creates sessions; funds go to the DTD deposit wallet until release.
+              </p>
+            </div>
+          </div>
+          <div class="track-layout">
+            <form id="escrowLookupForm" class="track-form glass page-form">
+              <label>
+                Escrow code
+                <input name="code" type="text" placeholder="ESR-XXXXXX" />
+              </label>
+              <label>
+                Or Telegram @username
+                <input name="handle" type="text" placeholder="@username" />
+              </label>
+              <button class="primary-button" type="submit">Look up escrow</button>
+              <p id="escrowLookupResult" class="track-result" role="status"></p>
+            </form>
+            <aside class="track-tips glass" aria-label="Escrow tips">
+              <h3>How it works</h3>
+              <ul>
+                <li>Buyer sends USDT TRC20 to the deposit address on the session.</li>
+                <li>Admin confirms deposit → status becomes <strong>funded</strong>.</li>
+                <li>When both sides agree, admin releases to the seller.</li>
+                <li>Disputes stay locked until admin decides.</li>
               </ul>
             </aside>
           </div>
@@ -604,7 +644,7 @@
               <p class="section-subtext">
                 Your own crypto trading desk: live candles, order book, Binance spot execution with
                 <strong>your</strong> keys, AI guide, and bots — including
-                <strong>@Dtdpaymentbot</strong> as a Telegram trading bot.
+                <strong>@DTDSTOREBOT</strong> as a Telegram trading bot.
               </p>
               <div class="trade-platform-pills" aria-hidden="true">
                 <span>Live charts</span>
@@ -765,7 +805,7 @@
               <div class="trade-panel-head"><h3>Binance API keys</h3></div>
               <div class="trade-keys-callout">
                 <p><strong>On Binance → API Management:</strong> enable <em>Spot &amp; Margin Trading</em> only. <strong>Disable Withdrawals</strong>.</p>
-                <p>Keys are saved in this browser’s localStorage only. Disconnect clears them. Link your Telegram chat ID so <strong>@Dtdpaymentbot</strong> can send fill alerts.</p>
+                <p>Keys are saved in this browser’s localStorage only. Disconnect clears them. Link your Telegram chat ID so <strong>@DTDSTOREBOT</strong> can send fill alerts.</p>
               </div>
               <form id="tradeKeysForm" class="trade-keys-form">
                 <label>
@@ -802,7 +842,7 @@
                 <span>USDT TRC20</span>
                 <span>Bitcoin</span>
                 <span>Paystack</span>
-                <span>@Dtdpaymentbot</span>
+                <span>@DTDSTOREBOT</span>
               </div>
             </div>
             <div class="page-intro-media" aria-hidden="true">
@@ -823,13 +863,13 @@
               <p>
                 Customers can pay with Telegram Stars. Stars land on your bot balance — open the bot’s
                 <strong>Balance / Monetization</strong> in Telegram to <strong>Buy Ads</strong> or withdraw via Fragment (TON).
-                Share your referral link from <code>/refer</code> in @Dtdpaymentbot. Full playbook: <code>/earn</code>.
+                Share your referral link from <code>/refer</code> in @DTDSTOREBOT. Full playbook: <code>/earn</code>.
               </p>
             </details>
             <details class="faq-item">
               <summary>How does crypto checkout work with the bot?</summary>
               <p>
-                In @Dtdpaymentbot: tap a product → choose <strong>USDT (TRC20)</strong> or Bitcoin → scan the QR / copy the address →
+                In @DTDSTOREBOT: tap a product → choose <strong>USDT (TRC20)</strong> or Bitcoin → scan the QR / copy the address →
                 send payment → paste your transaction hash → send your delivery email. Same flow on the website checkout.
               </p>
             </details>
@@ -839,7 +879,7 @@
             </details>
             <details class="faq-item">
               <summary>Can I order from Telegram?</summary>
-              <p>Yes — open @Dtdpaymentbot and use /buy. Track with /order.</p>
+              <p>Yes — open @DTDSTOREBOT and use /buy. Track with /order.</p>
             </details>
             <details class="faq-item">
               <summary>Who supports DTD Store?</summary>
@@ -861,7 +901,7 @@
               <p>
                 Email <a id="faqSupportEmail" href="mailto:contact@dvtechnologies.xyz">contact@dvtechnologies.xyz</a>
                 for tracking, payments, and channel questions — or message
-                <a href="https://t.me/Davetheedev" target="_blank" rel="noopener noreferrer">@Davetheedev</a>
+                <a href="https://t.me/Glock7money" target="_blank" rel="noopener noreferrer">@Glock7money</a>
                 on Telegram.
               </p>
             </details>
@@ -998,7 +1038,7 @@
               <div id="telegramPaymentPanel" class="telegram-payment-panel" hidden>
                 <p class="form-note" id="telegramPaymentNote">Contact our team on Telegram for updates.</p>
                 <a id="telegramPaymentLink" class="secondary-button full-width" href="#" target="_blank" rel="noopener noreferrer">
-                  Message @Dtdpaymentbot
+                  Message @DTDSTOREBOT
                 </a>
               </div>
             </div>

@@ -25,7 +25,7 @@ export async function onRequestGet(context) {
       userId: session?.id || null
     });
 
-    const bot = String(env.TELEGRAM_BOT_USERNAME || "Dtdpaymentbot").replace(/^@/, "");
+    const bot = String(env.TELEGRAM_BOT_USERNAME || "DTDSTOREBOT").replace(/^@/, "");
     const channel = String(env.TELEGRAM_CHANNEL_USERNAME || "DTDMAINSTORE").replace(/^@/, "");
     const wa = whatsappChannelUrl(env);
 

@@ -54,7 +54,7 @@ export async function trackReferralStart(env, { userId, username, referrerId }) 
 }
 
 export function referralLink(env, userId) {
-  const bot = String(env.TELEGRAM_BOT_USERNAME || "Dtdpaymentbot").replace(/^@/, "");
+  const bot = String(env.TELEGRAM_BOT_USERNAME || "DTDSTOREBOT").replace(/^@/, "");
   return `https://t.me/${bot}?start=ref_${userId}`;
 }
 

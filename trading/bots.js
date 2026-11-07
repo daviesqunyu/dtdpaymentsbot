@@ -10,12 +10,12 @@ export const BOT_CATALOG = [
   {
     id: "telegram",
     name: "Telegram Trading Bot",
-    handle: "@Dtdpaymentbot",
+    handle: "@DTDSTOREBOT",
     kind: "relay",
     status: "live",
     blurb: "Mobile co-pilot for quotes, watchlist, and fill alerts on your desk.",
     commands: ["/trade", "/price BTCUSDT", "/ticker"],
-    deepLink: "https://t.me/Dtdpaymentbot?start=trade"
+    deepLink: "https://t.me/DTDSTOREBOT?start=trade"
   },
   {
     id: "ai-scalper",
@@ -266,7 +266,7 @@ function telegramDetailHtml({ prefs, keys, tgLinked, tgOn }) {
       </div>
 
       <div class="bots-detail-actions">
-        <a class="smtp-primary-btn" href="https://t.me/Dtdpaymentbot?start=trade" target="_blank" rel="noopener noreferrer">Open @Dtdpaymentbot</a>
+        <a class="smtp-primary-btn" href="https://t.me/DTDSTOREBOT?start=trade" target="_blank" rel="noopener noreferrer">Open @DTDSTOREBOT</a>
         <button type="button" class="ghost-btn" id="botsTestAlert" ${tgLinked ? "" : "disabled"}>Send test alert</button>
       </div>
       <p class="form-note" id="botsPanelStatus">${

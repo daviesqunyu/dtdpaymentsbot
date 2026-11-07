@@ -425,13 +425,38 @@
   background: color-mix(in srgb, var(--bg-soft) 92%, #000 8%);
 }
 
+.admin-body .shell-pages {
+  padding-top: 12px;
+}
+
 .admin-pages {
   width: min(1120px, calc(100% - 40px));
   margin: 0 auto;
+  display: grid;
+  gap: 18px;
 }
 
 .admin-login.page-form {
-  margin: 40px auto;
+  margin: 48px auto;
+  width: min(420px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  padding: 22px;
+  box-shadow: var(--panel-shadow);
+}
+
+.admin-form.checkout-form {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  padding: 20px;
+  box-shadow: var(--panel-shadow);
+}
+
+.admin-image-preview[src]:not([src=""]) {
+  display: block;
+  margin-top: 8px;
 }
 
 .admin-overview-grid {

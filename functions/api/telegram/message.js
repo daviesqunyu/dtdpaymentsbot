@@ -57,7 +57,7 @@ ${productsText}
 Guidelines:
 - Keep your answers helpful, polite, and extremely concise (since you are chatting inside a small website widget).
 - Always recommend buying directly through the website checkout at the bottom of the page.
-- For support, tell them to contact @davetheedev on Telegram.
+- For support, tell them to contact @Glock7money on Telegram.
 - Do not make up products, prices, or payment details. If you don't know, tell them the admin will contact them.
 - If they ask about order delivery, tell them that digital products are processed immediately and they will be contacted on Telegram/Email.
 - Avoid repeating yourself.`;

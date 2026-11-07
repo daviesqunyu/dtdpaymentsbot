@@ -10,7 +10,7 @@ const blockedProductTerms = [
   "cvv"
 ];
 
-  let storeConfig = {
+let storeConfig = {
   paystackPublicKey: "",
   paystackCurrency: "KES",
   paystackConversionRate: 129,
@@ -20,6 +20,8 @@ const blockedProductTerms = [
   btcNetwork: "BTC",
   starsEnabled: true,
   starsPerUsd: 75,
+  telegramBotUsername: "DTDSTOREBOT",
+  telegramOwnerUsername: "Glock7money",
   paymentOptions: [
     { id: "USDT", label: "USDT (TRC20)", type: "crypto", asset: "USDT", network: "TRC20" },
     { id: "Bitcoin", label: "Bitcoin (BTC)", type: "crypto", asset: "BTC", network: "BTC" },
@@ -463,9 +465,9 @@ async function loadStoreConfig() {
 }
 
 function wireTelegramHubLinks() {
-  const botUrl = storeConfig.telegramBotUrl || "https://t.me/Dtdpaymentbot";
+  const botUrl = storeConfig.telegramBotUrl || "https://t.me/DTDSTOREBOT";
   const channelUrl = storeConfig.telegramChannelUrl || "https://t.me/DTDMAINSTORE";
-  const ownerUrl = storeConfig.telegramOwnerUrl || "https://t.me/Davetheedev";
+  const ownerUrl = storeConfig.telegramOwnerUrl || "https://t.me/Glock7money";
   const companyUrl = storeConfig.companyUrl || "https://dvtechnologies.xyz";
   const supportEmail = storeConfig.supportEmail || "contact@dvtechnologies.xyz";
   const mailUrl = `mailto:${supportEmail}`;
@@ -1016,8 +1018,8 @@ async function startStarsPayment() {
     return;
   }
   if (!isInsideTelegramMiniApp() || !window.Telegram?.WebApp?.openInvoice) {
-    showToast("Open the Mini App from @Dtdpaymentbot to pay with Stars.");
-    const bot = storeConfig.telegramBotUrl || "https://t.me/Dtdpaymentbot";
+    showToast("Open the Mini App from @DTDSTOREBOT to pay with Stars.");
+    const bot = storeConfig.telegramBotUrl || "https://t.me/DTDSTOREBOT";
     window.open(`${bot}?start=buy`, "_blank", "noopener,noreferrer");
     return;
   }
@@ -1072,7 +1074,7 @@ async function startStarsPayment() {
           }
         }
         showCheckoutSuccess(orderId, email);
-        showToast("Stars payment confirmed. Check @Dtdpaymentbot for delivery email prompt.");
+        showToast("Stars payment confirmed. Check @DTDSTOREBOT for delivery email prompt.");
       } else if (status === "cancelled") {
         showToast("Stars payment cancelled.");
       } else if (status === "failed") {
@@ -1481,6 +1483,7 @@ async function boot() {
   renderCart();
   await resumePaystackReturn();
   bindTrackOrderForm();
+  bindEscrowLookupForm();
 }
 
 function isInsideTelegramMiniApp() {
@@ -1633,6 +1636,68 @@ function bindTrackOrderForm() {
       ).toFixed(2)} · ${escapeHtml(order.paymentMethod || "n/a")}`;
     } catch {
       result.textContent = "Could not reach order tracker. Try again or message support.";
+    }
+  });
+}
+
+function bindEscrowLookupForm() {
+  const form = document.querySelector("#escrowLookupForm");
+  const result = document.querySelector("#escrowLookupResult");
+  if (!form || !result) return;
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const code = String(form.elements.code?.value || "").trim();
+    const handle = String(form.elements.handle?.value || "").trim().replace(/^@/, "");
+    if (!code && !handle) {
+      result.textContent = "Enter an escrow code or Telegram @username.";
+      return;
+    }
+    result.textContent = "Looking up...";
+    try {
+      if (code) {
+        const response = await fetch(`/api/escrow/session?code=${encodeURIComponent(code)}`);
+        const payload = await response.json();
+        if (!response.ok) {
+          result.textContent = payload.error || "Escrow not found.";
+          return;
+        }
+        const s = payload.session;
+        result.innerHTML = [
+          `<strong>${escapeHtml(s.code)}</strong> · ${escapeHtml(s.title)}`,
+          `$${Number(s.amountUsd || 0).toFixed(2)} ${escapeHtml(s.asset || "USDT")} (${escapeHtml(s.network || "TRC20")})`,
+          `Status: <strong>${escapeHtml(s.status)}</strong>`,
+          `Buyer ${escapeHtml(s.buyerTelegram)} → Seller ${escapeHtml(s.sellerTelegram)}`,
+          s.depositAddress
+            ? `Deposit: <code>${escapeHtml(s.depositAddress)}</code>`
+            : null
+        ]
+          .filter(Boolean)
+          .join("<br>");
+        return;
+      }
+
+      const response = await fetch(`/api/escrow?handle=${encodeURIComponent(handle)}`);
+      const payload = await response.json();
+      if (!response.ok) {
+        result.textContent = payload.error || "No escrows found.";
+        return;
+      }
+      const list = payload.escrows || [];
+      if (!list.length) {
+        result.textContent = `No escrows for @${handle}.`;
+        return;
+      }
+      result.innerHTML = list
+        .map(
+          (s) =>
+            `<div><strong>${escapeHtml(s.code)}</strong> · ${escapeHtml(s.title)} · $${Number(
+              s.amountUsd || 0
+            ).toFixed(2)} · <em>${escapeHtml(s.status)}</em></div>`
+        )
+        .join("");
+    } catch {
+      result.textContent = "Could not reach escrow API. Is the backend running?";
     }
   });
 }

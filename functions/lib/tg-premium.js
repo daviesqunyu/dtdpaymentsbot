@@ -1,5 +1,5 @@
 /**
- * Premium Telegram presentation helpers for @Dtdpaymentbot + channel copy.
+ * Premium Telegram presentation helpers for @DTDSTOREBOT + channel copy.
  * Uses rich HTML + curated emoji. Optional custom emoji IDs via env
  * (TG_EMOJI_*) if set in Pages secrets later — never required.
  */
@@ -144,8 +144,8 @@ export function premiumQuote(text) {
 }
 
 export function premiumFooterLines(env) {
-  const bot = String(env.TELEGRAM_BOT_USERNAME || "Dtdpaymentbot").replace(/^@/, "");
-  const owner = String(env.TELEGRAM_OWNER_USERNAME || "Davetheedev").replace(/^@/, "");
+  const bot = String(env.TELEGRAM_BOT_USERNAME || "DTDSTOREBOT").replace(/^@/, "");
+  const owner = String(env.TELEGRAM_OWNER_USERNAME || "Glock7money").replace(/^@/, "");
   const email = String(env.SUPPORT_EMAIL || "contact@dvtechnologies.xyz").trim().toLowerCase();
   const store = String(env.STORE_URL || "https://dtdpaymentsbot.pages.dev").replace(/\/$/, "");
   const company = String(env.COMPANY_URL || "https://dvtechnologies.xyz").replace(/\/$/, "");

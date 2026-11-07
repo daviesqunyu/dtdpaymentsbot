@@ -93,7 +93,7 @@ function companyUrl(env) {
 }
 
 function ownerHandle(env) {
-  return String(env.TELEGRAM_OWNER_USERNAME || "Davetheedev").replace(/^@/, "");
+  return String(env.TELEGRAM_OWNER_USERNAME || "Glock7money").replace(/^@/, "");
 }
 
 function supportEmail(env) {
@@ -101,7 +101,7 @@ function supportEmail(env) {
 }
 
 function botHandle(env) {
-  return String(env.TELEGRAM_BOT_USERNAME || "Dtdpaymentbot").replace(/^@/, "");
+  return String(env.TELEGRAM_BOT_USERNAME || "DTDSTOREBOT").replace(/^@/, "");
 }
 
 /** Title-case ALL CAPS names for cleaner menus (display only). */

@@ -3,7 +3,7 @@
  * Earnings: Stars balance → Fragment withdraw (TON) or Telegram Ads (Buy Ads).
  */
 
-import { insertOrder, updateOrderPayment, getSupabase } from "./store.js";
+import { insertOrder, updateOrderPayment, getSupabase, adminChatIds } from "./store.js";
 import { PX, premiumDivider, premiumHeader } from "./tg-premium.js";
 
 async function saveDeliverySession(env, userId, orderId, starsAmount) {
@@ -306,23 +306,20 @@ export async function handleStarsSuccessfulPayment(env, message, deps) {
 
   await saveDeliverySession(env, from.id, orderId, payment.total_amount);
 
-  if (env.TELEGRAM_ADMIN_CHAT_ID) {
-    await deps.sendTelegram(
-      env,
-      env.TELEGRAM_ADMIN_CHAT_ID,
-      [
-        `${PX.star} <b>STARS PAID — deliver now</b>`,
-        orderId ? `Order: <code>${esc(orderId)}</code>` : null,
-        `User: @${esc(from.username || from.id)}`,
-        `Stars: <b>${esc(String(payment.total_amount))}</b>`,
-        `Charge: <code>${esc(payment.telegram_payment_charge_id)}</code>`,
-        "",
-        "Buyer will send delivery email next.",
-        orderId ? `Mark done: /paid ${orderId}` : null
-      ]
-        .filter(Boolean)
-        .join("\n")
-    );
+  const starsAdminNote = [
+    `${PX.star} <b>STARS PAID — deliver now</b>`,
+    orderId ? `Order: <code>${esc(orderId)}</code>` : null,
+    `User: @${esc(from.username || from.id)}`,
+    `Stars: <b>${esc(String(payment.total_amount))}</b>`,
+    `Charge: <code>${esc(payment.telegram_payment_charge_id)}</code>`,
+    "",
+    "Buyer will send delivery email next.",
+    orderId ? `Mark done: /paid ${orderId}` : null
+  ]
+    .filter(Boolean)
+    .join("\n");
+  for (const adminId of adminChatIds(env)) {
+    await deps.sendTelegram(env, adminId, starsAdminNote);
   }
 
   await deps.sendTelegram(
@@ -344,7 +341,7 @@ export async function handleStarsSuccessfulPayment(env, message, deps) {
 }
 
 export function earnHelpMessage(env) {
-  const bot = String(env.TELEGRAM_BOT_USERNAME || "Dtdpaymentbot").replace(/^@/, "");
+  const bot = String(env.TELEGRAM_BOT_USERNAME || "DTDSTOREBOT").replace(/^@/, "");
   const store = String(env.STORE_URL || "https://dtdpaymentsbot.pages.dev").replace(/\/$/, "");
   return [
     premiumHeader("Earn with DTD + Telegram", PX.star),

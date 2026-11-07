@@ -152,7 +152,7 @@ export async function createLinkCode(env) {
   const code = randomCode(6);
   const expires = new Date(Date.now() + CLAIM_TTL_MS).toISOString();
   await createClaim(env, code, expires);
-  const bot = String(env.TELEGRAM_BOT_USERNAME || "Dtdpaymentbot").replace(/^@/, "");
+  const bot = String(env.TELEGRAM_BOT_USERNAME || "DTDSTOREBOT").replace(/^@/, "");
   return {
     code,
     expiresAt: expires,

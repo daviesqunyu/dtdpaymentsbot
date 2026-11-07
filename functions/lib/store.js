@@ -40,11 +40,11 @@ export function normalizePaymentMethod(method) {
 }
 
 export function dbPaymentMethod(method) {
-  // Prefer Paystack after schema fix; keep legacy Card / M-Pesa mappings.
+  // Schema currently allows Crypto / Paystack (+ legacy Card / M-Pesa / …).
+  // Keep asset detail in delivery_details / payment_reference for admin UI.
   const value = String(method || "").toLowerCase();
-  if (value.includes("star") || value === "xtr") {
-    return "Crypto";
-  }
+  if (value.includes("paystack")) return "Paystack";
+  if (value.includes("star") || value === "xtr") return "Crypto";
   if (
     value.includes("crypto") ||
     value.includes("bitcoin") ||
@@ -58,7 +58,7 @@ export function dbPaymentMethod(method) {
   if (value.includes("m-pesa") || value.includes("momo") || value.includes("mobile")) return "M-Pesa";
   if (value.includes("ussd")) return "USSD";
   if (value.includes("bank")) return "Bank";
-  if (value.includes("card") && !value.includes("paystack")) return "Card";
+  if (value.includes("card")) return "Card";
   return "Paystack";
 }
 
@@ -100,12 +100,20 @@ export function buildOrderTelegramMessage({
     .join("\n");
 }
 
+export function adminChatIds(env) {
+  return [
+    env.TELEGRAM_ADMIN_CHAT_ID,
+    env.TELEGRAM_SECOND_ADMIN_CHAT_ID
+  ].filter((id, index, arr) => id && arr.indexOf(id) === index);
+}
+
 export async function notifyOrderTelegram(env, message) {
   const token = env.TELEGRAM_BOT_TOKEN;
   if (!token) return;
 
-  const bot = String(env.TELEGRAM_BOT_USERNAME || "Dtdpaymentbot").replace(/^@/, "");
-  const owner = String(env.TELEGRAM_OWNER_USERNAME || "Davetheedev").replace(/^@/, "");
+  const bot = String(env.TELEGRAM_BOT_USERNAME || "DTDSTOREBOT").replace(/^@/, "");
+  const owner = String(env.TELEGRAM_OWNER_USERNAME || "Glock7money").replace(/^@/, "");
+  const channelUsername = String(env.TELEGRAM_CHANNEL_USERNAME || "").replace(/^@/, "");
   const email = String(env.SUPPORT_EMAIL || "contact@dvtechnologies.xyz").trim().toLowerCase();
   const store = String(env.STORE_URL || "https://dtdpaymentsbot.pages.dev").replace(/\/$/, "");
   const company = String(env.COMPANY_URL || "https://dvtechnologies.xyz").replace(/\/$/, "");
@@ -114,32 +122,35 @@ export async function notifyOrderTelegram(env, message) {
     "✨ <b>Official links</b>",
     `🤖 Telegram buy: @${bot}`,
     `🛒 Web store: ${store}`,
-    `📢 Channel: @${String(env.TELEGRAM_CHANNEL_USERNAME || "DTDMAINSTORE").replace(/^@/, "")}`,
+    channelUsername ? `📢 Channel: @${channelUsername}` : null,
     `🏢 DV Tech: ${company}`,
     `📧 Email: ${email}`,
     `👤 Support: @${owner}`
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
   const fullMessage = String(message || "").includes("Official links")
     ? message
     : `${message}${linksFooter}`;
 
-  const channelIds = [
-    env.TELEGRAM_CHANNEL_ID,
-    env.TELEGRAM_BACKUP_CHANNEL_ID,
-    env.TELEGRAM_GROUP_ID
-  ].filter((id, index, arr) => id && arr.indexOf(id) === index);
-
-  const adminId = env.TELEGRAM_ADMIN_CHAT_ID;
-
-  for (const channelId of channelIds) {
-    await sendTelegram(env, channelId, fullMessage);
+  // Order PII (email, IP, refs) goes to admins only — never dump onto public channels.
+  const admins = adminChatIds(env);
+  for (const adminId of admins) {
+    await sendTelegram(env, adminId, fullMessage);
   }
 
-  if (adminId) {
-    const adminNote = channelIds.length
-      ? `<b>Order alert (copy)</b>\n${fullMessage.replace("<b>New DTD Store order</b>\n", "")}`
-      : fullMessage;
-    await sendTelegram(env, adminId, adminNote);
+  const publicOrders = ["1", "true", "yes", "on"].includes(
+    String(env.TELEGRAM_ORDER_CHANNEL_PUBLIC || "").trim().toLowerCase()
+  );
+  if (publicOrders) {
+    const channelIds = [
+      env.TELEGRAM_CHANNEL_ID,
+      env.TELEGRAM_BACKUP_CHANNEL_ID,
+      env.TELEGRAM_GROUP_ID
+    ].filter((id, index, arr) => id && arr.indexOf(id) === index);
+    for (const channelId of channelIds) {
+      await sendTelegram(env, channelId, fullMessage);
+    }
   }
 }
 
@@ -248,9 +259,13 @@ export async function updateOrderPayment(env, orderId, fields) {
 }
 
 export function getStoreConfig(env) {
-  const botUsername = String(env.TELEGRAM_BOT_USERNAME || "").replace(/^@/, "");
-  const channelUsername = String(env.TELEGRAM_CHANNEL_USERNAME || "DTDMAINSTORE").replace(/^@/, "");
-  const ownerUsername = String(env.TELEGRAM_OWNER_USERNAME || "Davetheedev").replace(/^@/, "");
+  const botUsername = String(env.TELEGRAM_BOT_USERNAME || "DTDSTOREBOT").replace(/^@/, "");
+  const channelUsername = String(env.TELEGRAM_CHANNEL_USERNAME || "").replace(/^@/, "");
+  const ownerUsername = String(env.TELEGRAM_OWNER_USERNAME || "Glock7money").replace(/^@/, "");
+  const vendorUsername = String(env.TELEGRAM_VENDOR_USERNAME || ownerUsername).replace(/^@/, "");
+  const starsOn =
+    Boolean(env.TELEGRAM_BOT_TOKEN) &&
+    !["0", "false", "off", "no"].includes(String(env.STARS_ENABLED ?? "true").trim().toLowerCase());
   const telegramReady = Boolean(
     env.TELEGRAM_BOT_TOKEN && (env.TELEGRAM_ADMIN_CHAT_ID || env.TELEGRAM_CHANNEL_ID)
   );
@@ -263,6 +278,7 @@ export function getStoreConfig(env) {
     usdtNetwork: "TRC20",
     btcAddress: env.BTC_ADDRESS || "",
     btcNetwork: "BTC",
+    escrowDepositAddress: String(env.ESCROW_DEPOSIT_ADDRESS || env.USDT_TRC20_ADDRESS || "").trim(),
     storeUrl: env.STORE_URL || "https://dtdpaymentsbot.pages.dev",
     companyUrl: env.COMPANY_URL || "https://dvtechnologies.xyz",
     companyName: env.COMPANY_NAME || "DV Technologies",
@@ -271,20 +287,19 @@ export function getStoreConfig(env) {
     telegramBotUrl: botUsername ? `https://t.me/${botUsername}` : "",
     telegramChannelUsername: channelUsername,
     telegramChannelUrl: channelUsername ? `https://t.me/${channelUsername}` : "",
+    telegramChannelId: env.TELEGRAM_CHANNEL_ID || "",
     telegramOwnerUsername: ownerUsername,
     telegramOwnerUrl: ownerUsername ? `https://t.me/${ownerUsername}` : "",
+    telegramVendorUsername: vendorUsername,
+    telegramVendorUrl: vendorUsername ? `https://t.me/${vendorUsername}` : "",
     telegramEnabled: telegramReady,
     whatsappChannelUrl: String(env.WHATSAPP_CHANNEL_URL || "").trim() || null,
-    starsEnabled: Boolean(env.TELEGRAM_BOT_TOKEN) &&
-      !["0", "false", "off", "no"].includes(String(env.STARS_ENABLED ?? "true").trim().toLowerCase()),
+    starsEnabled: starsOn,
     starsPerUsd: Number(env.STARS_PER_USD || 75),
     paymentOptions: [
       { id: "USDT", label: "USDT (TRC20)", type: "crypto", asset: "USDT", network: "TRC20" },
       { id: "Bitcoin", label: "Bitcoin (BTC)", type: "crypto", asset: "BTC", network: "BTC" },
-      ...(Boolean(env.TELEGRAM_BOT_TOKEN) &&
-      !["0", "false", "off", "no"].includes(String(env.STARS_ENABLED ?? "true").trim().toLowerCase())
-        ? [{ id: "Stars", label: "Telegram Stars ⭐", type: "stars", asset: "XTR" }]
-        : []),
+      ...(starsOn ? [{ id: "Stars", label: "Telegram Stars ⭐", type: "stars", asset: "XTR" }] : []),
       { id: "Paystack", label: "Card / Bank / Local (USSD · M-Pesa)", type: "paystack" }
     ]
   };

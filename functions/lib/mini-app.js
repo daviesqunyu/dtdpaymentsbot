@@ -10,11 +10,11 @@ export function miniAppBaseUrl(env) {
 }
 
 export function botUsername(env) {
-  return String(env.TELEGRAM_BOT_USERNAME || "Dtdpaymentbot").replace(/^@/, "");
+  return String(env.TELEGRAM_BOT_USERNAME || "DTDSTOREBOT").replace(/^@/, "");
 }
 
 export function ownerUsername(env) {
-  return String(env.TELEGRAM_OWNER_USERNAME || "Davetheedev").replace(/^@/, "");
+  return String(env.TELEGRAM_OWNER_USERNAME || "Glock7money").replace(/^@/, "");
 }
 
 /** HTTPS path inside the Mini App (hash pages on the storefront). */

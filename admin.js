@@ -142,6 +142,7 @@ const ADMIN_TITLES = {
   overview: "Overview",
   products: "Products",
   orders: "Orders",
+  escrow: "Escrow",
   login: "Sign in"
 };
 
@@ -164,6 +165,10 @@ function showAdminPage(pageId) {
 
   const titleEl = document.querySelector("#adminShellTitle");
   if (titleEl) titleEl.textContent = ADMIN_TITLES[id] || "Admin";
+
+  if (id === "escrow" && signedIn) {
+    renderAdminEscrow().catch((error) => console.error(error));
+  }
 
   setAdminNavOpen(false);
 }
@@ -577,6 +582,146 @@ copyLiveLink.addEventListener("click", () => {
 });
 
 refreshOrders.addEventListener("click", renderAdminOrders);
+
+async function getAdminAccessToken() {
+  const { data } = await supabaseClient.auth.getSession();
+  return data?.session?.access_token || "";
+}
+
+async function escrowAdminFetch(path, options = {}) {
+  const token = await getAdminAccessToken();
+  if (!token) throw new Error("Sign in required.");
+  const response = await fetch(path, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...(options.headers || {})
+    }
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || `Escrow request failed (${response.status})`);
+  }
+  return payload;
+}
+
+async function renderAdminEscrow() {
+  const list = document.querySelector("#adminEscrowList");
+  const count = document.querySelector("#escrowSessionCount");
+  const hint = document.querySelector("#escrowDepositHint");
+  if (!list) return;
+
+  list.innerHTML = `<div class="empty-cart">Loading escrow sessions…</div>`;
+  try {
+    const payload = await escrowAdminFetch("/api/escrow/admin");
+    if (hint) {
+      hint.textContent = payload.depositAddress
+        ? `Deposit wallet: ${payload.depositAddress}`
+        : "Set ESCROW_DEPOSIT_ADDRESS or USDT_TRC20_ADDRESS in .env";
+    }
+    const sessions = payload.sessions || [];
+    if (count) count.textContent = `${sessions.length} session${sessions.length === 1 ? "" : "s"}`;
+    if (!sessions.length) {
+      list.innerHTML = `<div class="empty-cart">No escrow sessions yet. Create one on the left. Run supabase-escrow.sql if this errors.</div>`;
+      return;
+    }
+    list.innerHTML = sessions
+      .map((s) => {
+        const code = escapeHtml(s.code || "");
+        const title = escapeHtml(s.title || "");
+        const status = escapeHtml(s.status || "open");
+        const amount = formatter.format(Number(s.amount_usd || 0));
+        const buyer = escapeHtml(s.buyer_telegram || "");
+        const seller = escapeHtml(s.seller_telegram || "");
+        const id = escapeHtml(s.id || "");
+        return `
+          <article class="admin-order">
+            <div>
+              <div class="order-topline">
+                <strong>${code}</strong>
+                <span class="status-pill">${status}</span>
+              </div>
+              <p>${title} · ${amount}</p>
+              <p>${buyer} → ${seller}</p>
+              <p class="order-date">${formatDate(s.created_at)}</p>
+            </div>
+            <div class="admin-card-actions">
+              <button type="button" class="secondary-button" data-escrow-action="confirm_deposit" data-escrow-id="${id}">Confirm deposit</button>
+              <button type="button" class="primary-button" data-escrow-action="release" data-escrow-id="${id}">Release</button>
+              <button type="button" class="secondary-button" data-escrow-action="dispute" data-escrow-id="${id}">Dispute</button>
+              <button type="button" class="danger-button" data-escrow-action="cancel" data-escrow-id="${id}">Cancel</button>
+            </div>
+          </article>`;
+      })
+      .join("");
+  } catch (error) {
+    list.innerHTML = `<div class="empty-cart">${escapeHtml(error.message || "Escrow load failed")}. Run supabase-escrow.sql in Supabase if tables are missing.</div>`;
+    if (count) count.textContent = "0";
+  }
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+const escrowForm = document.querySelector("#escrowForm");
+const refreshEscrow = document.querySelector("#refreshEscrow");
+
+escrowForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = new FormData(escrowForm);
+  try {
+    const payload = await escrowAdminFetch("/api/escrow/admin", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "create",
+        title: String(data.get("title") || "").trim(),
+        amountUsd: Number(data.get("amountUsd") || 0),
+        escrowFee: Number(data.get("escrowFee") || 0),
+        buyerTelegram: String(data.get("buyerTelegram") || "").trim(),
+        sellerTelegram: String(data.get("sellerTelegram") || "").trim(),
+        description: String(data.get("description") || "").trim()
+      })
+    });
+    showToast(`Escrow created: ${payload.session?.code || "ok"}`);
+    escrowForm.reset();
+    await renderAdminEscrow();
+  } catch (error) {
+    showToast(error.message || "Could not create escrow");
+  }
+});
+
+refreshEscrow?.addEventListener("click", () => {
+  renderAdminEscrow().catch((error) => showToast(error.message || "Refresh failed"));
+});
+
+document.querySelector("#adminEscrowList")?.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-escrow-action]");
+  if (!button) return;
+  const action = button.dataset.escrowAction;
+  const sessionId = button.dataset.escrowId;
+  if (!action || !sessionId) return;
+  button.disabled = true;
+  const previous = button.textContent;
+  button.textContent = "Saving…";
+  try {
+    await escrowAdminFetch("/api/escrow/admin", {
+      method: "POST",
+      body: JSON.stringify({ action, sessionId })
+    });
+    showToast(`Escrow ${action.replace("_", " ")} saved`);
+    await renderAdminEscrow();
+  } catch (error) {
+    showToast(error.message || "Escrow update failed");
+    button.disabled = false;
+    button.textContent = previous;
+  }
+});
 
 bindAdminShell();
 refreshAuth();

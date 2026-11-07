@@ -48,7 +48,7 @@ import {
 import { buildPremiumStartKeyboard } from "./start-keyboard.js";
 import { blue, green, red } from "./tg-buttons.js";
 
-const OWNER = "davetheedev";
+const OWNER = "Glock7money";
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DEFAULT_STORE = "https://dtdpaymentsbot.pages.dev";
 
@@ -77,7 +77,7 @@ export function channelUsername(env) {
 }
 
 export function botUsername(env) {
-  return String(env.TELEGRAM_BOT_USERNAME || "Dtdpaymentbot").replace(/^@/, "");
+  return String(env.TELEGRAM_BOT_USERNAME || "DTDSTOREBOT").replace(/^@/, "");
 }
 
 /** Strict official links used in payment editors + forwarded channel footers. */

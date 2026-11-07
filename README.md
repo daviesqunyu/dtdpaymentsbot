@@ -1,7 +1,7 @@
 # DTD Store + Payments Bot
 
 Crypto-first product storefront with USDT (TRC20), BTC, and Paystack (KES) checkout, Supabase products/orders,
-Cloudflare Pages API, and Telegram automation for `@Dtdpaymentbot`.
+Cloudflare Pages API, and Telegram automation for `@DTDSTOREBOT`.
 
 Live store: https://dtdpaymentsbot.pages.dev
 
@@ -29,7 +29,7 @@ Paid **SMTP** product unlocks `#smtp` (Tools → SMTP + SMS). Admins can unlock 
 | Simple channel → group copy (Bot API) | Done (`TELEGRAM_CHANNEL_MIRROR`) |
 | Multi-source listen + rewrite links/usernames + footer + delay → your channel | **Telethon script added** (needs API_ID/HASH + sources) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Still empty in `.env` (orders may fail RLS) |
-| Bot admin on channels/group | **You still must add `@Dtdpaymentbot` as admin** |
+| Bot admin on channels/group | **You still must add `@DTDSTOREBOT` as admin** |
 
 ## Run locally
 
@@ -61,7 +61,7 @@ Bot API can only *copy* posts. For **edit text / replace links / footer / delay 
 MIRROR_SOURCE_CHANNELS=@SomeChannel,-1001234567890
 MIRROR_DEST_CHANNEL=-1004433496789
 STORE_URL=https://dtdpaymentsbot.pages.dev
-TELEGRAM_OWNER_USERNAME=Davetheedev
+TELEGRAM_OWNER_USERNAME=Glock7money
 SUPPORT_EMAIL=contact@dvtechnologies.xyz
 ```
 
@@ -74,11 +74,11 @@ npm run mirror:telethon
 
 First run asks for phone + login code and creates `telethon_sessions/dtd_mirror.session`.
 
-Every new source post is rewritten (links → store, usernames → `@Davetheedev`, footer added), delayed 5–30s, then posted to your destination channel **without “forwarded from”**.
+Every new source post is rewritten (links → store, usernames → `@Glock7money`, footer added), delayed 5–30s, then posted to your destination channel **without “forwarded from”**.
 
 ## Telegram bots
 
-- Primary: `@Dtdpaymentbot` (store + webhook automation)
+- Primary: `@DTDSTOREBOT` (store + webhook automation)
 - Secondary (optional): `@davistechbot`
-- Owner contact: `@Davetheedev`
+- Owner contact: `@Glock7money`
 - Support email: `contact@dvtechnologies.xyz`
